@@ -419,3 +419,4 @@ class RunnerController {
 
 // Global Runner instance
 const testRunner = new RunnerController();
+window.testRunner = testRunner;

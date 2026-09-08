@@ -48,14 +48,18 @@ class TestTree {
 
     return `
       <div class="fb mb-1" data-depth="${depth}" data-folder-path="${node.path}">
-        <div class="fr flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer border border-transparent hover:bg-slate-800/50 transition-all select-none group"
-             onclick="testTree.toggleFolder(this)" title="${node.path}">
-          <span class="arr text-[8px] text-slate-500 w-2.5 transition-transform duration-200 group-hover:text-purple-400">▶</span>
-          <span class="ftico text-xs flex-shrink-0">${ico}</span>
-          <span class="ftname text-xs font-semibold truncate flex-1" style="color:var(--folder-color)">${displayName}</span>
+        <div class="fr flex items-center gap-1.5 px-2 py-1.5 rounded border border-transparent hover:bg-slate-800/50 transition-all select-none group"
+             title="${node.path}">
+          <!-- Arrow: only toggles expand/collapse -->
+          <span class="arr text-[8px] text-slate-500 w-2.5 flex-shrink-0 transition-transform duration-200 group-hover:text-purple-400 cursor-pointer hover:text-purple-300"
+                onclick="testTree.toggleFolder(this.closest('.fr'))">▶</span>
+          <!-- Folder name/icon area: selects folder as target AND toggles -->
+          <span class="ftico text-xs flex-shrink-0 cursor-pointer" onclick="testTree.selectFolder(this.closest('.fr'), '${node.path}', '${displayName}')">${ico}</span>
+          <span class="ftname text-xs font-semibold truncate flex-1 cursor-pointer" style="color:var(--folder-color)"
+                onclick="testTree.selectFolder(this.closest('.fr'), '${node.path}', '${displayName}')">${displayName}</span>
           <span class="fcnt text-[9px] text-slate-500 flex-shrink-0 mr-1">${node.totalFiles}f</span>
           <button type="button" class="run-all text-[9px] px-2 py-0.5 rounded border border-slate-700 bg-slate-800/80 hover:border-violet-500 hover:text-purple-300 hover:bg-violet-950/40 text-slate-400 font-mono transition-all flex-shrink-0"
-                  onclick="event.stopPropagation(); testTree.runFolder('${node.path}', '${displayName}')"
+                  onclick="testTree.runFolder('${node.path}', '${displayName}')"
                   title="Run all tests in ${node.path}">Run all</button>
         </div>
         <div class="fl hidden ml-2.5 pl-2.5 border-l border-slate-800/80 mt-0.5">
@@ -78,6 +82,47 @@ class TestTree {
         if (arr) arr.style.transform = 'rotate(90deg)';
         el.classList.add('bg-violet-950/20', 'border-violet-800/40');
       }
+    }
+  }
+
+  selectFolder(frEl, folderPath, folderName) {
+    // Deselect all file items
+    document.querySelectorAll('.file').forEach(x => {
+      x.classList.remove('bg-violet-950/40', 'border-violet-500/80', 'ring-1', 'ring-violet-500/50');
+    });
+
+    // Deselect all folder rows
+    document.querySelectorAll('.fr').forEach(x => {
+      x.classList.remove('bg-violet-950/40', 'border-violet-500/80', 'ring-1', 'ring-violet-500/50');
+    });
+
+    // Highlight selected folder row
+    if (frEl) {
+      frEl.classList.add('bg-violet-950/40', 'border-violet-500/80', 'ring-1', 'ring-violet-500/50');
+
+      // Also expand folder when selected
+      const fl = frEl.nextElementSibling;
+      const arr = frEl.querySelector('.arr');
+      if (fl && fl.classList.contains('fl') && fl.classList.contains('hidden')) {
+        fl.classList.remove('hidden');
+        if (arr) arr.style.transform = 'rotate(90deg)';
+        frEl.classList.add('bg-violet-950/20', 'border-violet-800/40');
+      }
+    }
+
+    this.selectedPath = folderPath;
+    this.selectedName = `📁 ${folderName}`;
+
+    const badge = document.getElementById('selBadge');
+    const selText = document.getElementById('selText');
+    const breadPath = document.getElementById('breadPath');
+
+    if (badge) badge.classList.remove('opacity-60');
+    if (selText) selText.textContent = this.selectedName;
+    if (breadPath) breadPath.textContent = folderPath;
+
+    if (window.testRunner) {
+      window.testRunner.setTarget(folderPath, true);
     }
   }
 
@@ -131,6 +176,10 @@ class TestTree {
     this.selectedName = null;
 
     document.querySelectorAll('.file').forEach(x => {
+      x.classList.remove('bg-violet-950/40', 'border-violet-500/80', 'ring-1', 'ring-violet-500/50');
+    });
+
+    document.querySelectorAll('.fr').forEach(x => {
       x.classList.remove('bg-violet-950/40', 'border-violet-500/80', 'ring-1', 'ring-violet-500/50');
     });
 
@@ -245,3 +294,4 @@ class TestTree {
 
 // Global Tree instance
 const testTree = new TestTree();
+window.testTree = testTree;
