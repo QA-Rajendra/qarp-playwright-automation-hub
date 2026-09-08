@@ -180,6 +180,27 @@ function parseTestOutput(output, code) {
   return { code, passed, failed, skipped, total, failedTests };
 }
 
+// ── Port Finder (tries 9300–9305 by default) ──────────────────────────────
+function findAvailablePort(startPort, endPort) {
+  return new Promise((resolve, reject) => {
+    const tryPort = (p) => {
+      if (p > endPort) {
+        return reject(new Error(`All ports from ${startPort} to ${endPort} are in use.`));
+      }
+      const testServer = http.createServer();
+      testServer.once('error', () => {
+        console.log(`   Port ${p} is busy, trying ${p + 1}...`);
+        tryPort(p + 1);
+      });
+      testServer.once('listening', () => {
+        testServer.close(() => resolve(p));
+      });
+      testServer.listen(p, '0.0.0.0');
+    };
+    tryPort(startPort);
+  });
+}
+
 // ── Create Standalone HTTP Server ──────────────────────────────────────────
 function createRunnerServer(options = {}) {
   const port = options.port || 9300;
@@ -398,7 +419,7 @@ function runnerMiddleware(options = {}) {
 // ── Auto-start if executed directly from terminal or via global CLI ──
 if (require.main === module) {
   const args = process.argv.slice(2);
-  let cliPort = 9300;
+  let cliPort = null; // null = auto-detect from 9300-9305
   let cliHost = '0.0.0.0'; // allows access from other devices/people on network
   let cliRoot = process.cwd();
 
@@ -409,7 +430,22 @@ if (require.main === module) {
     if (arg.startsWith('--root=')) cliRoot = path.resolve(process.cwd(), arg.split('=')[1]);
   });
 
-  createRunnerServer({ port: cliPort, host: cliHost, projectRoot: cliRoot });
+  if (cliPort !== null) {
+    // Explicit port provided — use it directly
+    createRunnerServer({ port: cliPort, host: cliHost, projectRoot: cliRoot });
+  } else {
+    // Auto-detect: try ports 9300 to 9305
+    findAvailablePort(9300, 9305)
+      .then(availablePort => {
+        console.log(`\n🔍 Auto-selected port: ${availablePort}`);
+        createRunnerServer({ port: availablePort, host: cliHost, projectRoot: cliRoot });
+      })
+      .catch(err => {
+        console.error(`\n❌ ${err.message}`);
+        console.error('   Please free up a port in the range 9300–9305 and try again.');
+        process.exit(1);
+      });
+  }
 }
 
 module.exports = {
