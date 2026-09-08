@@ -1,0 +1,8 @@
+node_modules/
+.pw-runner-history.json
+allure-results/
+allure-report/
+playwright-report/
+test-results/
+.DS_Store
+*.log

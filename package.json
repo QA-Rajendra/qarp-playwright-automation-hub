@@ -37,5 +37,10 @@
     "allure"
   ],
   "author": "QARP",
-  "license": "QARP"
+  "license": "QARP",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QA-Rajendra/qarp-playwright-automation-hub.git"
+  },
+  "homepage": "https://github.com/QA-Rajendra/qarp-playwright-automation-hub#readme"
 }
