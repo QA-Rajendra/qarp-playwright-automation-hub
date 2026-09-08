@@ -14,13 +14,29 @@ class TestTree {
     if (!this.container) return;
     this.container.innerHTML = '<div class="p-4 text-xs text-slate-500 animate-pulse text-center">Loading test tree…</div>';
     this.structure = await api.getStructure();
+
+    // Update project badge in header & sidebar if available
+    if (this.structure && this.structure.projectName) {
+      const projBadge = document.getElementById('projectBadge');
+      if (projBadge) {
+        projBadge.textContent = `📁 ${this.structure.projectName}`;
+        projBadge.classList.remove('hidden');
+        projBadge.title = `Project directory: ${this.structure.projectRoot || this.structure.projectName}`;
+      }
+      const treeProj = document.getElementById('treeProjectName');
+      if (treeProj) {
+        treeProj.textContent = `· ${this.structure.projectName}`;
+        treeProj.title = this.structure.projectRoot || this.structure.projectName;
+      }
+    }
+
     this.render();
     this.setupSearch();
   }
 
   render() {
     if (!this.structure || !this.structure.tree || this.structure.tree.length === 0) {
-      this.container.innerHTML = '<div class="p-4 text-xs text-slate-500 text-center">No test folders found in tests/ or e2e/</div>';
+      this.container.innerHTML = '<div class="p-4 text-xs text-slate-500 text-center">No test folders found in tests/, e2e/, or test/</div>';
       return;
     }
 

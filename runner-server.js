@@ -115,10 +115,29 @@ function getStructure(projectRoot) {
     }
   }
 
+  // Detect test directories:
+  // 1. Check playwright.config (testDir property)
+  const candidateDirs = new Set(['tests', 'test', 'e2e', 'specs', 'spec']);
+  const configFiles = ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs', 'playwright.config.cjs'];
+  for (const cfg of configFiles) {
+    const p = path.resolve(projectRoot, cfg);
+    if (fs.existsSync(p)) {
+      try {
+        const content = fs.readFileSync(p, 'utf8');
+        const m = content.match(/testDir\s*:\s*['"`]([^'"`]+)['"`]/);
+        if (m && m[1]) {
+          const cleanDir = m[1].replace(/^\.[\\\/]/, '').replace(/[\\\/]$/, '');
+          if (cleanDir && cleanDir !== '.') candidateDirs.add(cleanDir);
+        }
+      } catch (_) {}
+      break;
+    }
+  }
+
   const rootNodes = [];
   const foldersList = [];
 
-  ['tests', 'e2e'].forEach(dirName => {
+  candidateDirs.forEach(dirName => {
     const targetDir = path.resolve(projectRoot, dirName);
     if (fs.existsSync(targetDir)) {
       const node = scanDir(targetDir, dirName, `${dirName} (root)`);
@@ -129,7 +148,12 @@ function getStructure(projectRoot) {
     }
   });
 
-  return { tree: rootNodes, folders: foldersList };
+  return { 
+    tree: rootNodes, 
+    folders: foldersList,
+    projectName: path.basename(projectRoot),
+    projectRoot: projectRoot
+  };
 }
 
 // ── Project Parser from playwright.config ──────────────────────────────────

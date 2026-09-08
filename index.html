@@ -137,7 +137,10 @@
                  class="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500 font-mono transition-colors">
         </div>
         <div class="flex items-center justify-between mt-2 px-1 text-[9px]">
-          <span class="text-slate-500 uppercase tracking-widest font-bold">Explorer</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-slate-500 uppercase tracking-widest font-bold">Explorer</span>
+            <span id="treeProjectName" class="text-purple-400 font-mono text-[10px] truncate max-w-[110px]" title=""></span>
+          </div>
           <div class="flex gap-1.5">
             <button type="button" class="text-slate-400 hover:text-purple-300 transition-colors" onclick="testTree.expandAll()" title="Expand all">⊞ Expand</button>
             <span class="text-slate-700">·</span>
@@ -175,7 +178,8 @@
                   id="btnToggleLeft" onclick="UI.toggleLeftSidebar()" title="Toggle Sidebar (Ctrl+B)">
             ◀ Sidebar
           </button>
-          <div class="text-xs text-slate-400 truncate">
+          <div class="text-xs text-slate-400 truncate flex items-center gap-1.5">
+            <span id="projectBadge" class="hidden px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-800/60 text-purple-300 font-mono text-[10px]"></span>
             Runner &nbsp;›&nbsp; <span class="text-purple-400 font-semibold" id="breadPath">Select a test file</span>
           </div>
         </div>
@@ -387,9 +391,14 @@
       // Check API connection
       const isOnline = await api.checkHealth();
       const portEl = document.getElementById('activeApiPort');
+      const activePort = (window.location && window.location.port) ? window.location.port : '9300';
       if (portEl) {
-        portEl.textContent = isOnline ? '9300 (online)' : 'Demo Mode';
+        portEl.textContent = isOnline ? `${activePort} (online)` : 'Demo Mode';
         portEl.className = isOnline ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold';
+      }
+      const settingInput = document.getElementById('settingApiUrl');
+      if (settingInput) {
+        settingInput.value = api.baseUrl;
       }
     });
 

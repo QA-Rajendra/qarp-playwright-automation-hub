@@ -1,11 +1,29 @@
 /**
  * Configuration & Constants for Playwright Test Runner
  */
+// Dynamically resolve API URL to match the current browser origin (port & host)
+function resolveApiBaseUrl() {
+  if (typeof window !== 'undefined' && window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.origin !== 'null') {
+    const saved = localStorage.getItem('pw_api_url');
+    // If the user manually saved a custom URL on a different host, honor it, otherwise use current origin
+    if (saved && saved !== 'http://127.0.0.1:9300' && saved !== 'http://localhost:9300') {
+      return saved;
+    }
+    return window.location.origin;
+  }
+  return localStorage.getItem('pw_api_url') || 'http://127.0.0.1:9300';
+}
+
+const currentRunnerPort = (typeof window !== 'undefined' && window.location && window.location.port)
+  ? parseInt(window.location.port, 10)
+  : 9300;
+
 const APP_CONFIG = {
-  // Default runner API base URL (can be customized via settings)
-  apiBaseUrl: localStorage.getItem('pw_api_url') || 'http://127.0.0.1:9300',
-  reportPort: 9320,
-  allurePort: 9335,
+  // Always default to current origin so when runner is opened on port 9300, 9301, etc. in any project,
+  // it communicates directly with that specific project's server.
+  apiBaseUrl: resolveApiBaseUrl(),
+  reportPort: currentRunnerPort + 20,
+  allurePort: currentRunnerPort + 35,
 
   // Theme Metadata
   themes: {
