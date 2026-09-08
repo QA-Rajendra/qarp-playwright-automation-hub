@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="pwGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#pwGrad)"/>
+  <path d="M18 20 C18 16, 46 16, 46 20 C46 38, 38 48, 32 50 C26 48, 18 38, 18 20 Z" fill="#ffffff" fill-opacity="0.95"/>
+  <circle cx="26" cy="27" r="4" fill="#1e1b4b"/>
+  <circle cx="38" cy="27" r="4" fill="#1e1b4b"/>
+  <path d="M27 38 Q32 42 37 38" stroke="#1e1b4b" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

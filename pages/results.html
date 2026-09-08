@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Execution Results — Playwright Hub</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['class', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Custom Theme & Animations -->
+  <link rel="stylesheet" href="../assets/css/custom.css">
+</head>
+<body class="w-full min-h-screen text-slate-100 font-mono select-none antialiased flex flex-col">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+    <div class="flex items-center gap-3">
+      <a href="../index.html" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-sm transition-all" title="Back to Runner">
+        ←
+      </a>
+      <div class="text-xs text-slate-400">
+        Runner &nbsp;›&nbsp; Results &nbsp;›&nbsp; <span class="text-purple-400 font-semibold" id="breadPath">Tests</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div id="exitBadge" class="text-xs px-3 py-1 rounded font-mono">exit --</div>
+      <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-300 text-[10px]"
+              id="themeBtn" onclick="theme.toggleThemeMenu(event)">
+        <span id="themeIco">🌙</span>
+        <span id="themeLbl">CYBER</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Results Canvas -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-6 flex flex-col gap-6">
+
+    <!-- Status Banner -->
+    <div id="resultBanner" class="p-6 rounded-2xl border border-slate-800 flex items-center gap-5 backdrop-blur-md">
+      <div id="bannerIcon" class="text-3xl flex-shrink-0">⏳</div>
+      <div class="flex-1">
+        <h1 id="bannerTitle" class="text-lg font-bold">Evaluating test execution…</h1>
+        <p id="bannerSub" class="text-xs text-slate-400 mt-1">Calculating counts</p>
+      </div>
+    </div>
+
+    <!-- 4 Stats Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="p-4 rounded-xl border border-emerald-900/50 bg-emerald-950/20 text-center">
+        <div class="text-3xl font-bold text-emerald-400 font-mono tracking-tight" id="statPassed">0</div>
+        <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-semibold">Passed</div>
+      </div>
+      <div class="p-4 rounded-xl border border-rose-900/50 bg-rose-950/20 text-center">
+        <div class="text-3xl font-bold text-rose-400 font-mono tracking-tight" id="statFailed">0</div>
+        <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-semibold">Failed</div>
+      </div>
+      <div class="p-4 rounded-xl border border-amber-900/50 bg-amber-950/20 text-center">
+        <div class="text-3xl font-bold text-amber-400 font-mono tracking-tight" id="statSkipped">0</div>
+        <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-semibold">Skipped</div>
+      </div>
+      <div class="p-4 rounded-xl border border-purple-900/50 bg-purple-950/20 text-center">
+        <div class="text-3xl font-bold text-purple-400 font-mono tracking-tight" id="statTotal">0</div>
+        <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-semibold">Total</div>
+      </div>
+    </div>
+
+    <!-- Overall Pass Rate Section -->
+    <div class="p-6 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Overall Pass Rate</span>
+        <div class="text-2xl font-bold text-slate-100" id="progPct">0%</div>
+      </div>
+
+      <!-- Main Progress Bar -->
+      <div class="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700/60 p-0.5">
+        <div id="mainFill" class="h-full rounded-full transition-all duration-1000 w-0"></div>
+      </div>
+
+      <!-- Segmental distribution -->
+      <div class="flex h-1.5 rounded-full overflow-hidden gap-1 mt-1">
+        <div id="segP" class="bg-emerald-500 rounded-full transition-all duration-700" style="flex: 0"></div>
+        <div id="segF" class="bg-rose-500 rounded-full transition-all duration-700" style="flex: 0"></div>
+        <div id="segS" class="bg-amber-500 rounded-full transition-all duration-700" style="flex: 0"></div>
+      </div>
+    </div>
+
+    <!-- Command Run Box -->
+    <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Command Run</span>
+        <button type="button" class="text-xs px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 transition-all font-mono"
+                id="copyBtn" onclick="resultsCtrl.copyCommand()">
+          copy
+        </button>
+      </div>
+      <div class="p-3 rounded-lg bg-slate-950 border border-slate-800/80 font-mono text-xs leading-relaxed break-all" id="cmdText"></div>
+    </div>
+
+    <!-- Trace Alert Banner (if trace recorded) -->
+    <div id="traceAlert" class="hidden p-4 rounded-xl border border-violet-800/80 bg-violet-950/30 text-xs text-purple-300 font-mono leading-relaxed">
+      🔍 Full execution trace was captured. Open the HTML report below to view DOM snapshots, timeline actions, and network traffic for each test.
+    </div>
+
+    <!-- Failed Tests Section -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Execution Failures</h2>
+        <span id="failCountBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-400 border border-rose-800 font-mono font-bold">0</span>
+      </div>
+      <div id="failList"></div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+      <button type="button" class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-violet-900/30"
+              id="btnReport" onclick="resultsCtrl.openReport()">
+        📊 Open HTML Report
+      </button>
+      <button type="button" class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-cyan-900/30"
+              id="btnAllure" onclick="resultsCtrl.openAllureReport()">
+        ✨ Open Allure Report
+      </button>
+      <button type="button" class="py-3 px-5 rounded-xl border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 font-bold text-xs transition-all"
+              onclick="resultsCtrl.runAgain()">
+        🔁 Run Again
+      </button>
+      <button type="button" class="py-3 px-5 rounded-xl border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-400 text-xs transition-all"
+              onclick="resultsCtrl.goBack()">
+        ← Run Another
+      </button>
+    </div>
+
+    <!-- Auto countdown notice -->
+    <div class="text-center text-[10px] text-slate-500 pb-8 flex items-center justify-center gap-2" id="autoNote">
+      <span>HTML report opens automatically in <span class="text-purple-400 font-bold text-xs" id="cdTimer">5</span>s</span>
+      <span>·</span>
+      <button type="button" class="text-slate-400 hover:text-slate-200 underline" id="pauseCountdownBtn">Pause</button>
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/results.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      resultsCtrl.init();
+    });
+  </script>
+</body>
+</html>

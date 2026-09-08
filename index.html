@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playwright Automation Hub — Test Runner</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['class', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              purple: '#7c3aed',
+              cyan: '#06b6d4',
+              pink: '#ec4899',
+              green: '#3fb950',
+              red: '#f85149',
+              amber: '#d29922'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Custom Theme, Variables & Animations -->
+  <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body class="w-full h-screen overflow-hidden text-slate-100 font-mono select-none antialiased">
+
+  <!-- Application Split-Pane Shell -->
+  <div class="flex h-screen w-full relative z-10" id="appShell">
+
+    <!-- ── Left Sidebar (Test Explorer) ── -->
+    <aside class="flex flex-col h-full bg-slate-900/90 border-r border-slate-800 backdrop-blur-md flex-shrink-0 transition-colors z-20"
+           id="leftSidebar" style="width: var(--sidebar-w, 280px); min-width: 240px; max-width: 650px;">
+      
+      <!-- Explorer Header & Branding -->
+      <div class="p-4 border-b border-slate-800/80 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-lg shadow-lg shadow-violet-900/40 flex-shrink-0">
+            🎭
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-xs font-bold bg-gradient-to-r from-slate-100 to-purple-300 bg-clip-text text-transparent truncate tracking-tight">
+              Playwright Runner
+            </h1>
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">Automation Hub</p>
+          </div>
+        </div>
+
+        <!-- Theme & Actions Toolbar -->
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/60">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Theme</span>
+          <div class="relative">
+            <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 text-[10px] transition-all"
+                    id="themeBtn" onclick="theme.toggleThemeMenu(event)">
+              <span id="themeIco" class="text-xs">🌙</span>
+              <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+              <span id="themeLbl" class="tracking-wider">CYBER</span>
+            </button>
+
+            <!-- Theme Picker Dropdown -->
+            <div class="hidden absolute top-full right-0 mt-2 w-56 p-2 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1 text-[11px]"
+                 id="themeMenu">
+              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1">Animated Themes</div>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="dark" onclick="theme.applyTheme('dark')">
+                <span>🌙</span> <span>Midnight Cyber</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="light" onclick="theme.applyTheme('light')">
+                <span>☀️</span> <span>Daylight Neo</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="cyberpunk" onclick="theme.applyTheme('cyberpunk')">
+                <span>⚡</span> <span>Cyberpunk 2077</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="synthwave" onclick="theme.applyTheme('synthwave')">
+                <span>👾</span> <span>Synthwave 80s</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="aurora" onclick="theme.applyTheme('aurora')">
+                <span>🌠</span> <span>Cosmic Aurora</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="matrix" onclick="theme.applyTheme('matrix')">
+                <span>🌲</span> <span>Matrix Code</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="crimson" onclick="theme.applyTheme('crimson')">
+                <span>🩸</span> <span>Crimson Red</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="sunset" onclick="theme.applyTheme('sunset')">
+                <span>🌅</span> <span>Sunset Glow</span>
+              </button>
+              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="pastel" onclick="theme.applyTheme('pastel')">
+                <span>🍧</span> <span>Pastel Vapor</span>
+              </button>
+
+              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-2 mt-1 border-t border-slate-800">Typography</div>
+              <div class="flex gap-1 px-1">
+                <button type="button" class="flex-1 py-1 rounded bg-slate-800 border border-slate-700 hover:border-violet-500 text-slate-300 text-xs font-bold" id="boldBtn" onclick="theme.toggleBold(event)">B Bold</button>
+                <button type="button" class="flex-1 py-1 rounded bg-slate-800 border border-slate-700 hover:border-violet-500 text-slate-300 text-xs italic" id="italicBtn" onclick="theme.toggleItalic(event)">I Italic</button>
+              </div>
+
+              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-2 mt-1 border-t border-slate-800">Accents</div>
+              <div class="flex items-center justify-between px-2 py-1 text-[10px] text-slate-400">
+                <span>Folder Color</span>
+                <input type="color" id="folderColorPicker" value="#38bdf8" oninput="theme.setFolderColor(this.value)" class="w-5 h-5 rounded-full cursor-pointer bg-transparent border-0">
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 text-[10px] text-slate-400">
+                <span>Spec Color</span>
+                <input type="color" id="fileColorPicker" value="#34d399" oninput="theme.setFileColor(this.value)" class="w-5 h-5 rounded-full cursor-pointer bg-transparent border-0">
+              </div>
+              <button type="button" class="w-full mt-1 py-1 text-[9px] text-slate-400 hover:text-slate-200 text-center" onclick="theme.resetColors()">↺ Reset Colors</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex gap-2 mt-2">
+          <a href="pages/history.html" class="flex-1 text-center py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:border-slate-500 text-slate-300 text-[10px] transition-all flex items-center justify-center gap-1">
+            <span>📜</span> History
+          </a>
+          <button type="button" class="flex-1 py-1.5 rounded-lg border border-violet-800 bg-violet-950/40 hover:bg-violet-900/60 text-purple-300 text-[10px] transition-all flex items-center justify-center gap-1"
+                  onclick="api.openAllureReport()">
+            <span>✨</span> Allure
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Tree Toolbar -->
+      <div class="p-3 border-b border-slate-800/60 flex-shrink-0">
+        <div class="relative">
+          <input type="text" id="searchBox" placeholder="🔍 Search tests… (press /)"
+                 class="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500 font-mono transition-colors">
+        </div>
+        <div class="flex items-center justify-between mt-2 px-1 text-[9px]">
+          <span class="text-slate-500 uppercase tracking-widest font-bold">Explorer</span>
+          <div class="flex gap-1.5">
+            <button type="button" class="text-slate-400 hover:text-purple-300 transition-colors" onclick="testTree.expandAll()" title="Expand all">⊞ Expand</button>
+            <span class="text-slate-700">·</span>
+            <button type="button" class="text-slate-400 hover:text-purple-300 transition-colors" onclick="testTree.collapseAll()" title="Collapse all">⊟ Collapse</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Tree File Hierarchy -->
+      <div class="flex-1 overflow-y-auto p-2" id="tree"></div>
+
+      <!-- Selected Spec Footer -->
+      <div class="p-3 border-t border-slate-800/80 bg-slate-950/40 flex-shrink-0">
+        <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">Active Target</div>
+        <div class="flex items-center gap-2 p-2 rounded-lg bg-violet-950/30 border border-violet-800/60 text-xs text-purple-300 opacity-60 transition-all" id="selBadge">
+          <span class="text-sm">📄</span>
+          <span class="truncate flex-1 font-mono text-[11px]" id="selText">None selected</span>
+          <button type="button" class="text-slate-500 hover:text-rose-400 transition-colors" onclick="testTree.clearSelection()" title="Clear selection">✕</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Left Resizer Splitter ── -->
+    <div class="resizer" id="resizerLeft" title="Drag to resize sidebar (Double-click to reset width)">
+      <div class="resizer-grip"></div>
+    </div>
+
+    <!-- ── Center Main Execution Panel ── -->
+    <main class="flex-1 flex flex-col h-full overflow-y-auto min-w-0 bg-slate-950/60 z-10">
+
+      <!-- Main Navigation Header -->
+      <header class="flex items-center justify-between px-6 py-3.5 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30">
+        <div class="flex items-center gap-3 min-w-0">
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center gap-1.5"
+                  id="btnToggleLeft" onclick="UI.toggleLeftSidebar()" title="Toggle Sidebar (Ctrl+B)">
+            ◀ Sidebar
+          </button>
+          <div class="text-xs text-slate-400 truncate">
+            Runner &nbsp;›&nbsp; <span class="text-purple-400 font-semibold" id="breadPath">Select a test file</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <button type="button" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-slate-200"
+                  onclick="UI.openModal('settingsModal')" title="API Server Settings">
+            ⚙ API: <span id="activeApiPort">9300</span>
+          </button>
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center gap-1.5"
+                  id="btnToggleRight" onclick="UI.toggleRightConsole()" title="Toggle Live Console (Ctrl+J)">
+            Live Console ▶
+          </button>
+        </div>
+      </header>
+
+      <!-- Configuration Canvas -->
+      <div class="p-6 flex flex-col gap-5 max-w-5xl w-full mx-auto" id="configPanel">
+
+        <!-- Panel: Project Filter -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <span>🧩</span> Configured Projects
+            </h2>
+            <span class="text-[9px] text-slate-500">Select target browser project</span>
+          </div>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2" id="projectList">
+              <span class="text-xs text-slate-500 animate-pulse">Loading projects…</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel: Tag & Grep Filter -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <span>🏷️</span> Tag & Grep Filter
+            </h2>
+            <span class="text-[9px] text-slate-500">Filter test cases by title, tag, or regex</span>
+          </div>
+          <div class="p-4 flex flex-col gap-3">
+            <!-- Quick Tag Presets -->
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Quick Tag Presets</span>
+              <div class="flex flex-wrap gap-2" id="tagPresetsList"></div>
+            </div>
+
+            <!-- Custom Grep Input & Invert -->
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-800/60">
+              <span class="text-xs text-slate-400 font-mono">--grep</span>
+              <input type="text" id="grepInput" placeholder="e.g. @sanity, @regression, TC-001, or /(auth|cart)/"
+                     class="flex-1 bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 font-mono">
+              <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-400 text-xs font-mono transition-all"
+                      id="grepInvertBtn" onclick="testRunner.toggleGrepInvert()" title="Invert grep condition (--grep-invert)">
+                invert
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel: Execution Flags & Timeout -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <span>⚑</span> Execution Flags & Timeout
+            </h2>
+            <span class="text-[9px] text-slate-500">CLI runner parameters</span>
+          </div>
+          <div class="p-4 flex flex-col gap-4">
+            <div class="flex flex-wrap gap-2" id="flagsList"></div>
+
+            <!-- Timeout Slider -->
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-xs text-slate-400 whitespace-nowrap">⏱ Timeout</span>
+              <input type="range" id="timeoutSlider" min="5000" max="120000" step="5000" value="30000"
+                     class="flex-1 accent-violet-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+              <span class="text-xs px-2.5 py-1 rounded bg-violet-950/60 border border-violet-600 text-purple-300 font-mono min-w-[75px] text-center" id="timeoutVal">
+                30,000 ms
+              </span>
+              <button type="button" class="text-xs px-2.5 py-1 rounded border border-slate-700 hover:border-slate-500 text-slate-400 font-mono transition-all"
+                      id="timeoutToggle" onclick="testRunner.toggleTimeout()">
+                disabled
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel: Live Command Preview -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <span>⌨</span> Generated Command Preview
+            </h2>
+            <span class="text-[9px] text-slate-500">Real-time CLI command</span>
+          </div>
+          <div class="p-4">
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs leading-relaxed break-all" id="cmdPreview">
+              <span class="text-slate-500">— select a test file from the sidebar —</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Actions Bar -->
+        <div class="flex gap-3 pt-2">
+          <button type="button" class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-sm tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-violet-900/30 btn-glow disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+                  id="btnRun" disabled onclick="testRunner.run()">
+            ▶ Run Tests + Show Report
+          </button>
+          <button type="button" class="py-3.5 px-5 rounded-xl border border-violet-700 bg-violet-950/40 hover:bg-violet-900/50 text-purple-300 font-bold text-xs transition-all"
+                  onclick="api.openAllureReport()">
+            ✨ Allure Report
+          </button>
+          <button type="button" class="py-3.5 px-5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-400 text-xs transition-all"
+                  onclick="testTree.clearSelection()">
+            ✕ Clear
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Live Running Execution State -->
+      <div class="hidden flex-1 flex flex-col items-center justify-center p-12 gap-5" id="runningState">
+        <div class="w-12 h-12 rounded-full border-4 border-slate-700 border-t-violet-500 animate-spin"></div>
+        <div class="text-sm font-semibold text-slate-200 animate-pulse tracking-wide" id="runLabel">
+          Running tests… please wait
+        </div>
+        <div class="text-xs text-purple-300 font-mono text-center max-w-xl break-all bg-slate-900/70 p-3 rounded-xl border border-slate-800" id="runCmd"></div>
+        <div class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-900/80 rounded-lg p-3 max-w-xl text-center" id="runError"></div>
+        <button type="button" class="px-5 py-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-300 text-xs font-mono transition-all mt-2"
+                id="btnCancelRun" onclick="testRunner.cancelRun()">
+          ✕ Cancel run
+        </button>
+      </div>
+
+    </main>
+
+    <!-- ── Right Resizer Splitter ── -->
+    <div class="resizer" id="resizerRight" title="Drag to resize console (Double-click to reset width)">
+      <div class="resizer-grip"></div>
+    </div>
+
+    <!-- ── Right Rail (Live Console) ── -->
+    <aside class="flex flex-col h-full bg-slate-900/90 border-l border-slate-800 backdrop-blur-md flex-shrink-0 transition-colors z-20"
+           id="rightConsole" style="width: var(--console-w, 360px); min-width: 260px; max-width: 850px;">
+      
+      <div class="p-3.5 border-b border-slate-800/80 flex items-center justify-between flex-shrink-0 bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-xs">▶</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Console</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[9px] px-2 py-0.5 rounded-full border border-slate-700 bg-slate-800 text-slate-400 font-mono" id="crStatus">idle</span>
+          <button type="button" class="text-slate-500 hover:text-slate-300 text-xs p-1" onclick="UI.toggleRightConsole()" title="Close console">✕</button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-3 text-[11px] font-mono leading-relaxed space-y-0.5 text-slate-300 bg-slate-950/80" id="crBody">
+        <div class="text-slate-500 text-xs p-2">Output will stream here once you run tests.</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Settings Modal (API Server Configuration) -->
+  <div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm" id="settingsModal">
+    <div class="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl font-mono text-xs text-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
+          <span>⚙</span> API Server Settings
+        </h3>
+        <button type="button" class="text-slate-400 hover:text-slate-200" onclick="UI.closeModal('settingsModal')">✕</button>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="block text-slate-400 mb-1">Playwright Runner API URL</label>
+          <input type="text" id="settingApiUrl" value="http://127.0.0.1:9300"
+                 class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:border-violet-500 focus:outline-none">
+          <span class="text-[10px] text-slate-500 mt-1 block">Default port is 9300 (or 9301-9303 for multi-port runs)</span>
+        </div>
+        <div class="p-3 rounded-lg bg-violet-950/30 border border-violet-800/50 text-[11px] text-purple-300">
+          💡 If the runner API is offline, this frontend automatically simulates realistic test execution logs and results.
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-slate-800">
+        <button type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" onclick="UI.closeModal('settingsModal')">Cancel</button>
+        <button type="button" class="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold" onclick="saveSettings()">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/tree.js"></script>
+  <script src="js/runner.js"></script>
+
+  <script>
+    // Initialize Dashboard Application
+    window.addEventListener('DOMContentLoaded', async () => {
+      UI.initResizablePanels();
+      UI.initShortcuts();
+      await testTree.init();
+      await testRunner.init();
+
+      // Check API connection
+      const isOnline = await api.checkHealth();
+      const portEl = document.getElementById('activeApiPort');
+      if (portEl) {
+        portEl.textContent = isOnline ? '9300 (online)' : 'Demo Mode';
+        portEl.className = isOnline ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold';
+      }
+    });
+
+    function saveSettings() {
+      const input = document.getElementById('settingApiUrl');
+      if (input && input.value.trim()) {
+        api.setBaseUrl(input.value.trim());
+        UI.toast('API URL updated', 'success');
+        UI.closeModal('settingsModal');
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

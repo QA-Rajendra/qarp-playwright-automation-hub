@@ -1,0 +1,41 @@
+{
+  "name": "qarp-playwright-automation-hub",
+  "version": "1.0.0",
+  "description": "Modern Playwright Test Runner Dashboard & Automation Hub (Frontend + Node.js Runner Module)",
+  "main": "runner-server.js",
+  "bin": {
+    "playwright-hub": "./runner-server.js"
+  },
+  "module": "js/index.js",
+  "exports": {
+    ".": {
+      "require": "./runner-server.js",
+      "import": "./js/index.js"
+    },
+    "./server": "./runner-server.js",
+    "./middleware": "./runner-server.js"
+  },
+  "scripts": {
+    "start": "node runner-server.js",
+    "test:ui": "node runner-server.js"
+  },
+  "files": [
+    "runner-server.js",
+    "index.html",
+    "pages",
+    "js",
+    "assets",
+    "README.md"
+  ],
+  "keywords": [
+    "playwright",
+    "test-runner",
+    "dashboard",
+    "e2e",
+    "testing",
+    "automation",
+    "allure"
+  ],
+  "author": "QARP",
+  "license": "QARP"
+}
