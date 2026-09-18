@@ -52,9 +52,10 @@ const UI = {
   /**
    * Copy text to clipboard
    */
-  async copyToClipboard(text, btnElement = null) {
+  async copyToClipboard(text, btnElement = null, isEncoded = false) {
     try {
-      await navigator.clipboard.writeText(text);
+      const rawText = isEncoded ? decodeURIComponent(text) : text;
+      await navigator.clipboard.writeText(rawText);
       if (btnElement) {
         const origText = btnElement.textContent;
         btnElement.textContent = 'copied!';
@@ -64,7 +65,7 @@ const UI = {
           btnElement.classList.remove('text-emerald-400', 'border-emerald-500');
         }, 2000);
       }
-      this.toast('Command copied to clipboard', 'success', 2000);
+      this.toast('Copied to clipboard', 'success', 2000);
     } catch (_) {
       this.toast('Failed to copy to clipboard', 'error');
     }

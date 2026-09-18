@@ -1,8 +1,11 @@
 node_modules/
 .pw-runner-history.json
+.pw-api-traffic.json
+scratch/
 allure-results/
 allure-report/
 playwright-report/
 test-results/
 .DS_Store
 *.log
+

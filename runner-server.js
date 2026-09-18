@@ -70,6 +70,181 @@ function clearHistory(projectRoot) {
   }
 }
 
+// ── API Traffic Extractor (Captures HTTP Requests & Responses from Tests) ──
+const API_TRAFFIC_FILE = '.pw-api-traffic.json';
+
+function loadApiTraffic(projectRoot) {
+  const filePath = path.resolve(projectRoot, API_TRAFFIC_FILE);
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (_) {}
+
+  const resPath = path.resolve(projectRoot, 'test-results', 'api-traffic.json');
+  try {
+    if (fs.existsSync(resPath)) {
+      const data = JSON.parse(fs.readFileSync(resPath, 'utf8'));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (_) {}
+  return [];
+}
+
+function clearApiTraffic(projectRoot) {
+  try {
+    const f1 = path.resolve(projectRoot, API_TRAFFIC_FILE);
+    const f2 = path.resolve(projectRoot, 'test-results', 'api-traffic.json');
+    if (fs.existsSync(f1)) fs.writeFileSync(f1, JSON.stringify([]), 'utf8');
+    if (fs.existsSync(f2)) fs.writeFileSync(f2, JSON.stringify([]), 'utf8');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function extractApiTraffic(projectRoot) {
+  const testResultsDir = path.resolve(projectRoot, 'test-results');
+  if (!fs.existsSync(testResultsDir)) return [];
+
+  const tempExtractDir = path.resolve(testResultsDir, '.tmp_trace_extract');
+  const allTraffic = [];
+
+  function findTraces(dir) {
+    let list = [];
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory() && e.name !== '.tmp_trace_extract') {
+          list = list.concat(findTraces(full));
+        } else if (e.isFile() && e.name === 'trace.zip') {
+          list.push(full);
+        }
+      }
+    } catch (_) {}
+    return list;
+  }
+
+  const traces = findTraces(testResultsDir);
+
+  for (let idx = 0; idx < traces.length; idx++) {
+    const tracePath = traces[idx];
+    const testFolder = path.basename(path.dirname(tracePath));
+    const destDir = path.join(tempExtractDir, `trace_${idx}`);
+
+    try {
+      if (fs.existsSync(destDir)) fs.rmSync(destDir, { recursive: true, force: true });
+      fs.mkdirSync(destDir, { recursive: true });
+
+      if (process.platform === 'win32') {
+        execSync(`powershell -Command "Expand-Archive -LiteralPath '${tracePath}' -DestinationPath '${destDir}' -Force"`, { stdio: 'ignore' });
+      } else {
+        execSync(`unzip -o -q "${tracePath}" -d "${destDir}"`, { stdio: 'ignore' });
+      }
+
+      const files = fs.readdirSync(destDir);
+      const networkFiles = files.filter(f => f.endsWith('.network'));
+
+      for (const nFile of networkFiles) {
+        const nContent = fs.readFileSync(path.join(destDir, nFile), 'utf8');
+        const lines = nContent.split('\n');
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const entry = JSON.parse(line);
+            if (entry.type === 'resource-snapshot' && entry.snapshot) {
+              const snap = entry.snapshot;
+              const req = snap.request || {};
+              const res = snap.response || {};
+
+              const reqHeaders = {};
+              if (Array.isArray(req.headers)) {
+                req.headers.forEach(h => { reqHeaders[h.name] = h.value; });
+              }
+
+              const resHeaders = {};
+              if (Array.isArray(res.headers)) {
+                res.headers.forEach(h => { resHeaders[h.name] = h.value; });
+              }
+
+              let requestBody = null;
+              if (req.postData) {
+                if (req.postData.text) {
+                  try { requestBody = JSON.parse(req.postData.text); } catch (_) { requestBody = req.postData.text; }
+                } else if (req.postData._file) {
+                  const pFile = path.join(destDir, req.postData._file);
+                  if (fs.existsSync(pFile)) {
+                    try {
+                      const raw = fs.readFileSync(pFile, 'utf8');
+                      try { requestBody = JSON.parse(raw); } catch (_) { requestBody = raw; }
+                    } catch (_) {}
+                  }
+                }
+              }
+
+              let responseBody = null;
+              if (res.content) {
+                if (res.content.text) {
+                  try { responseBody = JSON.parse(res.content.text); } catch (_) { responseBody = res.content.text; }
+                } else if (res.content._file) {
+                  const resFilePath = path.join(destDir, res.content._file);
+                  if (fs.existsSync(resFilePath)) {
+                    try {
+                      const raw = fs.readFileSync(resFilePath, 'utf8');
+                      try { responseBody = JSON.parse(raw); } catch (_) { responseBody = raw; }
+                    } catch (_) {}
+                  }
+                }
+              }
+
+              allTraffic.push({
+                id: 'req_' + (allTraffic.length + 1),
+                testSuite: testFolder,
+                startedAt: snap.startedDateTime || new Date().toISOString(),
+                durationMs: Math.round(snap.time || 0),
+                method: req.method || 'GET',
+                url: req.url || '',
+                status: res.status || 0,
+                statusText: res.statusText || '',
+                resourceType: snap._resourceType || 'api',
+                request: {
+                  method: req.method || 'GET',
+                  url: req.url || '',
+                  headers: reqHeaders,
+                  body: requestBody
+                },
+                response: {
+                  status: res.status || 0,
+                  statusText: res.statusText || '',
+                  headers: resHeaders,
+                  body: responseBody
+                }
+              });
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
+  try {
+    if (fs.existsSync(tempExtractDir)) {
+      fs.rmSync(tempExtractDir, { recursive: true, force: true });
+    }
+  } catch (_) {}
+
+  try {
+    const jsonPath = path.resolve(testResultsDir, 'api-traffic.json');
+    fs.writeFileSync(jsonPath, JSON.stringify(allTraffic, null, 2), 'utf8');
+    fs.writeFileSync(path.resolve(projectRoot, API_TRAFFIC_FILE), JSON.stringify(allTraffic, null, 2), 'utf8');
+  } catch (_) {}
+
+  return allTraffic;
+}
+
 // ── Test Explorer Scanner ──────────────────────────────────────────────────
 function getStructure(projectRoot) {
   const IGNORED = new Set([
@@ -330,6 +505,19 @@ const MCP_CAPABILITIES = { tools: { listChanged: false } };
 
 const MCP_TOOLS = [
   {
+    name: 'get_api_traffic',
+    description: 'Retrieve captured API requests and responses (methods, URLs, status, headers, and request/response bodies) from the test execution.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max number of requests to return (default: 50)' },
+        method: { type: 'string', description: 'Filter by HTTP method (GET, POST, etc.)' }
+      },
+      required: []
+    }
+  },
+
+  {
     name: 'list_test_files',
     description: 'Scan the project and return all Playwright test files and folders in a tree structure.',
     inputSchema: { type: 'object', properties: {}, required: [] }
@@ -466,6 +654,12 @@ function handleMCP(req, res, projectRoot) {
           proc.on('close', code => {
             job.result = parseTestOutput(job.output, code);
             job.done = true;
+            try {
+              job.apiTraffic = extractApiTraffic(projectRoot);
+              console.log(`\n🌐 [MCP] Captured ${job.apiTraffic.length} API requests & responses from tests.`);
+            } catch (err) {
+              console.warn('⚠️ [MCP] Could not extract API traffic:', err.message);
+            }
             if (!job.cancelled) {
               appendHistory(projectRoot, { timestamp: new Date().toISOString(), command, passed: job.result.passed, failed: job.result.failed, skipped: job.result.skipped, total: job.result.total, code: job.result.code });
             }
@@ -490,6 +684,14 @@ function handleMCP(req, res, projectRoot) {
             try { process.kill(-job.proc.pid, 'SIGTERM'); } catch (_) { try { job.proc.kill('SIGTERM'); } catch (__) {} }
           }
           result = { content: [{ type: 'text', text: JSON.stringify({ ok: true, jobId }) }] };
+
+        } else if (toolName === 'get_api_traffic') {
+          let traffic = loadApiTraffic(projectRoot);
+          if (args.method) {
+            traffic = traffic.filter(t => t.method && t.method.toUpperCase() === args.method.toUpperCase());
+          }
+          traffic = traffic.slice(0, args.limit || 50);
+          result = { content: [{ type: 'text', text: JSON.stringify({ count: traffic.length, traffic }, null, 2) }] };
 
         } else if (toolName === 'get_history') {
           const history = loadHistory(projectRoot).slice(0, args.limit || 20);
@@ -581,6 +783,12 @@ function createRunnerServer(options = {}) {
           proc.on('close', code => {
             job.result = parseTestOutput(job.output, code);
             job.done = true;
+            try {
+              job.apiTraffic = extractApiTraffic(projectRoot);
+              console.log(`\n🌐 [Playwright Hub] Captured ${job.apiTraffic.length} API requests & responses from tests.`);
+            } catch (err) {
+              console.warn('⚠️ [Playwright Hub] Could not extract API traffic:', err.message);
+            }
             if (!job.cancelled) {
               appendHistory(projectRoot, {
                 timestamp: new Date().toISOString(),
@@ -671,6 +879,21 @@ function createRunnerServer(options = {}) {
       clearHistory(projectRoot);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
+    // ── Captured API Requests & Responses Endpoints ──
+    if (req.method === 'GET' && cleanUrl === '/api-traffic') {
+      const traffic = loadApiTraffic(projectRoot);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ count: traffic.length, traffic }));
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/api-traffic/clear') {
+      clearApiTraffic(projectRoot);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, count: 0 }));
       return;
     }
 
@@ -828,5 +1051,8 @@ module.exports = {
   getProjects,
   killProcessOnPort,
   closeOldBrowsers,
-  openBrowser
+  openBrowser,
+  extractApiTraffic,
+  loadApiTraffic,
+  clearApiTraffic
 };

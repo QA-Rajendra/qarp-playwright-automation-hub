@@ -136,6 +136,14 @@
           <span class="font-semibold tracking-wide">MCP Inspector</span>
           <span class="text-[8px] text-indigo-500 ml-0.5 font-mono">↗</span>
         </a>
+        <!-- API Traffic Inspector Button -->
+        <a href="pages/results.html#apiTrafficSection"
+           class="mt-1.5 w-full py-1.5 rounded-lg border border-cyan-800/60 bg-cyan-950/30 hover:bg-cyan-900/50 hover:border-cyan-500 text-cyan-300 text-[10px] transition-all flex items-center justify-center gap-1.5 group"
+           title="View captured API requests, responses, status codes and payloads">
+          <span>🌐</span>
+          <span class="font-semibold tracking-wide">API Traffic & Responses</span>
+          <span class="text-[8px] text-cyan-500 ml-0.5 font-mono">↗</span>
+        </a>
 
       </div>
 
@@ -339,14 +347,19 @@
       <div class="resizer-grip"></div>
     </div>
 
-    <!-- ── Right Rail (Live Console) ── -->
+    <!-- ── Right Rail (Live Console & API Traffic) ── -->
     <aside class="flex flex-col h-full bg-slate-900/90 border-l border-slate-800 backdrop-blur-md flex-shrink-0 transition-colors z-20"
-           id="rightConsole" style="width: var(--console-w, 360px); min-width: 260px; max-width: 850px;">
+           id="rightConsole" style="width: var(--console-w, 380px); min-width: 260px; max-width: 850px;">
       
-      <div class="p-3.5 border-b border-slate-800/80 flex items-center justify-between flex-shrink-0 bg-slate-900/60">
-        <div class="flex items-center gap-2">
-          <span class="text-xs">▶</span>
-          <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Console</span>
+      <div class="p-2.5 border-b border-slate-800/80 flex items-center justify-between flex-shrink-0 bg-slate-900/60">
+        <div class="flex items-center gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
+          <button type="button" id="tabConsoleOutput" class="text-[10px] font-bold px-2.5 py-1 rounded-md bg-slate-800 text-cyan-300 font-mono transition-all" onclick="testRunner.switchConsoleTab('output')">
+            ▶ Console
+          </button>
+          <button type="button" id="tabConsoleApi" class="text-[10px] font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 font-mono transition-all flex items-center gap-1" onclick="testRunner.switchConsoleTab('api')">
+            <span>🌐 APIs</span>
+            <span id="crApiBadge" class="text-[9px] px-1.5 py-0.2 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">0</span>
+          </button>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-[9px] px-2 py-0.5 rounded-full border border-slate-700 bg-slate-800 text-slate-400 font-mono" id="crStatus">idle</span>
@@ -354,8 +367,14 @@
         </div>
       </div>
 
+      <!-- View 1: Terminal Output -->
       <div class="flex-1 overflow-y-auto p-3 text-[11px] font-mono leading-relaxed space-y-0.5 text-slate-300 bg-slate-950/80" id="crBody">
         <div class="text-slate-500 text-xs p-2">Output will stream here once you run tests.</div>
+      </div>
+
+      <!-- View 2: API Traffic Stream -->
+      <div class="hidden flex-1 overflow-y-auto p-3 space-y-2 text-xs font-mono bg-slate-950/80" id="crApiBody">
+        <div class="text-slate-500 text-xs p-2">API requests & responses will appear here as tests execute.</div>
       </div>
     </aside>
 

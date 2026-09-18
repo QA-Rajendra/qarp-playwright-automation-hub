@@ -123,6 +123,65 @@
       <div id="failList"></div>
     </div>
 
+    <!-- ── 🌐 Captured API Requests & Responses Section ── -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md p-6 flex flex-col gap-4 shadow-xl" id="apiTrafficSection">
+      <!-- Section Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🌐</span>
+          <div>
+            <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+              Captured API Requests & Responses
+              <span id="apiTotalBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 font-mono font-bold">0 calls</span>
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">Every HTTP network call and API test payload recorded during execution</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" class="text-xs px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-slate-500 hover:text-slate-100 text-slate-300 font-mono transition-all flex items-center gap-1.5"
+                  id="btnExportApi" onclick="resultsCtrl.exportApiTraffic()" title="Download captured requests & responses as JSON">
+            <span>💾</span> Export JSON
+          </button>
+          <button type="button" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-rose-700 hover:text-rose-400 text-slate-400 font-mono transition-all"
+                  onclick="resultsCtrl.clearApiTraffic()" title="Clear captured API traffic">
+            ✕ Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between text-xs">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">🔍</span>
+          <input type="text" id="apiSearchInput" placeholder="Filter by endpoint, URL, or status..."
+                 class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 placeholder-slate-500 text-xs font-mono focus:border-cyan-500 focus:outline-none transition-all"
+                 oninput="resultsCtrl.filterApiTraffic()">
+        </div>
+
+        <!-- Method & Status Filter Pills -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mr-1">Method:</span>
+          <button type="button" class="api-filter-btn px-2.5 py-1 rounded-lg border border-cyan-500/50 bg-cyan-950/50 text-cyan-300 text-[10px] font-bold font-mono transition-all" data-method="ALL" onclick="resultsCtrl.setMethodFilter('ALL', this)">ALL</button>
+          <button type="button" class="api-filter-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 text-[10px] font-bold font-mono transition-all" data-method="GET" onclick="resultsCtrl.setMethodFilter('GET', this)">GET</button>
+          <button type="button" class="api-filter-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 text-[10px] font-bold font-mono transition-all" data-method="POST" onclick="resultsCtrl.setMethodFilter('POST', this)">POST</button>
+          <button type="button" class="api-filter-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 text-[10px] font-bold font-mono transition-all" data-method="PUT" onclick="resultsCtrl.setMethodFilter('PUT', this)">PUT</button>
+          <button type="button" class="api-filter-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 text-[10px] font-bold font-mono transition-all" data-method="DELETE" onclick="resultsCtrl.setMethodFilter('DELETE', this)">DELETE</button>
+        </div>
+      </div>
+
+      <!-- API Traffic List Container -->
+      <div id="apiListContainer" class="flex flex-col gap-2.5 max-h-[650px] overflow-y-auto pr-1">
+        <!-- Injected dynamically by results.js -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="apiEmptyState" class="hidden text-center py-8 text-slate-500 text-xs font-mono">
+        No API network requests were captured for this test execution.
+      </div>
+    </div>
+
     <!-- Actions Bar -->
     <div class="flex flex-col sm:flex-row gap-3 pt-2">
       <button type="button" class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-xs tracking-wide transition-all shadow-lg shadow-violet-900/30"

@@ -208,6 +208,38 @@ class PlaywrightAPI {
     }
   }
 
+  /**
+   * Fetch captured API network traffic (requests and responses)
+   */
+  async getApiTraffic() {
+    try {
+      const res = await fetch(`${this.baseUrl}/api-traffic`, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(3000)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.traffic || [];
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /**
+   * Clear captured API network traffic
+   */
+  async clearApiTraffic() {
+    try {
+      const res = await fetch(`${this.baseUrl}/api-traffic/clear`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(2000)
+      });
+      return res.ok;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /* ────────────────── Mock Simulator for Standalone Preview ────────────────── */
   _startMockJob(command) {
     const id = 'mock-' + Date.now().toString(36);

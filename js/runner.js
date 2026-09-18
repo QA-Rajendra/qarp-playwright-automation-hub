@@ -300,6 +300,10 @@ class RunnerController {
         }
 
         failCount = 0;
+        if (data.apiTrafficCount !== undefined) {
+          const b = document.getElementById('crApiBadge');
+          if (b) b.textContent = data.apiTrafficCount;
+        }
         if (data.newOutput) {
           this.appendConsole(data.newOutput);
         }
