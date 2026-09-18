@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MCP Inspector - Playwright Automation Hub</title>
+<meta name="description" content="Interactive MCP (Model Context Protocol) Inspector for Playwright Automation Hub"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0b0f;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252a38;--border2:#2e3548;--accent:#7c6af7;--accent2:#5b4ef0;--accent-glow:rgba(124,106,247,0.18);--green:#34d399;--green-dim:rgba(52,211,153,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:12px;--radius-sm:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;overflow:hidden}
+.app{display:grid;grid-template-rows:60px 1fr;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
+.header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;z-index:10}
+.header-logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px var(--accent-glow)}
+.header-logo h1{font-size:16px;font-weight:700;background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-tag{background:var(--accent-glow);border:1px solid var(--accent);color:var(--accent);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.header-spacer{flex:1}
+.status-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;transition:all .3s}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:all .3s}
+.status-pill.connected .status-dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-pill.connected{border-color:rgba(52,211,153,.3);color:var(--green)}
+.status-pill.error .status-dot{background:var(--red);box-shadow:0 0 8px var(--red)}
+.status-pill.error{border-color:rgba(248,113,113,.3);color:var(--red)}
+.header-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:6px}
+.header-btn:hover{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
+.sidebar-title{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.server-info{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--text2)}
+.endpoint{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:11px;word-break:break-all;margin-top:4px}
+.copy-btn{margin-top:8px;background:var(--accent-glow);border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;width:100%}
+.copy-btn:hover{background:rgba(124,106,247,.3)}
+.section-strip{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;flex-shrink:0}
+.tools-list{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.tool-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px}
+.tool-item:hover{background:var(--surface2);border-color:var(--border)}
+.tool-item.active{background:var(--accent-glow);border-color:var(--accent)}
+.tool-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tool-item.active .tool-name{color:var(--accent)}
+.tool-desc{font-size:11px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.main{display:grid;grid-template-rows:1fr 1fr;overflow:hidden}
+.tool-panel{display:flex;flex-direction:column;overflow:hidden;border-bottom:1px solid var(--border)}
+.panel-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.panel-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.panel-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)}
+.tool-body{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);text-align:center;gap:12px}
+.ph-icon{font-size:40px;opacity:.4}
+.placeholder h3{font-size:16px;font-weight:600;color:var(--text2)}
+.placeholder p{font-size:13px;max-width:280px;line-height:1.5}
+.tool-hdr{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.t-icon{width:44px;height:44px;background:var(--accent-glow);border:1px solid var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.t-meta h2{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.t-meta p{font-size:13px;color:var(--text2);line-height:1.5}
+.slabel{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:20px}
+.args{display:flex;flex-direction:column;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:12px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:6px}
+.tbadge{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;color:var(--text3)}
+.rbadge{font-size:10px;background:var(--red-dim);border:1px solid rgba(248,113,113,.3);border-radius:4px;padding:1px 6px;color:var(--red)}
+.fd{font-size:11px;color:var(--text3)}
+input[type=text],input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color .2s,box-shadow .2s}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.cbrow{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px}
+.cbrow label{cursor:pointer;font-size:13px;color:var(--text2)}
+.noargs{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:12px;color:var(--text3);font-style:italic}
+.btn-run{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:10px 24px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-top:20px;box-shadow:0 4px 16px rgba(124,106,247,.3)}
+.btn-run:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,106,247,.4)}
+.btn-run:active{transform:translateY(0)}
+.btn-run:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+.btn-run.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent)}50%{opacity:.5;box-shadow:0 0 3px var(--accent)}}
+.fi{animation:fadeIn .25s ease}
+.resp-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.rtabs{display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{padding:7px 16px 9px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-radius:8px 8px 0 0;transition:all .15s;border:1px solid transparent;border-bottom:none;position:relative;top:1px}
+.tab:hover{color:var(--text2);background:var(--surface2)}
+.tab.active{color:var(--text);background:var(--surface);border-color:var(--border);border-bottom-color:var(--surface)}
+.tc{background:var(--accent-glow);color:var(--accent);border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px}
+.rcontent{flex:1;overflow:hidden}
+.pane{display:none;height:100%;overflow-y:auto;padding:16px 20px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.pane.active{display:block}
+.jv{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;position:relative}
+.ci{position:absolute;top:10px;right:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;transition:all .2s}
+.ci:hover{color:var(--text);border-color:var(--border2)}
+.jk{color:#93c5fd}.js{color:#86efac}.jn{color:#fde68a}.jb{color:#f9a8d4}.jl{color:var(--text3)}
+.rc{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.rch{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.rcb{padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);background:var(--bg);max-height:300px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.tok{background:var(--green-dim);border:1px solid rgba(52,211,153,.3);color:var(--green);border-radius:6px;padding:2px 8px;font-size:11px}
+.terr{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px}
+.es{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:10px;text-align:center}
+.es .ei{font-size:32px;opacity:.3}
+.es p{font-size:12px}
+.he{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s}
+.he:hover{border-color:var(--border2)}
+.hd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hd.pass{background:var(--green)}.hd.fail{background:var(--red)}
+.hc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs,.ht{font-size:11px;color:var(--text3);flex-shrink:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">&#129302;</div>
+    <h1>MCP Inspector</h1>
+    <span class="logo-tag">2025-03-26</span>
+  </div>
+  <div class="header-spacer"></div>
+  <div id="sp" class="status-pill"><div class="status-dot"></div><span id="st">Connecting&hellip;</span></div>
+  <a href="/" class="header-btn">&#8592; Dashboard</a>
+</header>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">MCP Server</div>
+    <div class="server-info">
+      <div style="color:var(--text3);margin-bottom:2px;">Endpoint</div>
+      <div class="endpoint" id="epUrl">http://localhost:9300/mcp</div>
+      <button class="copy-btn" id="cpBtn" onclick="copyEP()">&#128203; Copy Endpoint URL</button>
+    </div>
+  </div>
+  <div class="section-strip">Tools (<span id="tc">0</span>)</div>
+  <div class="tools-list" id="tl"></div>
+</aside>
+<main class="main">
+  <div class="tool-panel">
+    <div class="panel-header">
+      <span class="panel-title">Tool Call</span>
+      <span class="panel-badge" id="stn">&mdash;</span>
+    </div>
+    <div class="tool-body" id="tb">
+      <div class="placeholder"><div class="ph-icon">&#128295;</div><h3>Select a Tool</h3><p>Pick a tool from the sidebar to see its schema and call it interactively.</p></div>
+    </div>
+  </div>
+  <div class="resp-panel">
+    <div class="rtabs">
+      <div class="tab active" onclick="sw('result')" id="tab-result">Result</div>
+      <div class="tab" onclick="sw('request')" id="tab-request">Request <span class="tc" id="rc">&mdash;</span></div>
+      <div class="tab" onclick="sw('response')" id="tab-response">Response <span class="tc" id="rsc">&mdash;</span></div>
+      <div class="tab" onclick="sw('history')" id="tab-history">History <span class="tc" id="hc">0</span></div>
+    </div>
+    <div class="rcontent">
+      <div class="pane active" id="pane-result"><div class="es"><div class="ei">&#128397;</div><p>Call a tool to see its result here.</p></div></div>
+      <div class="pane" id="pane-request"><div class="es"><div class="ei">&#128228;</div><p>The JSON-RPC request will appear here.</p></div></div>
+      <div class="pane" id="pane-response"><div class="es"><div class="ei">&#128229;</div><p>The raw JSON-RPC response will appear here.</p></div></div>
+      <div class="pane" id="pane-history"><div class="es"><div class="ei">&#128220;</div><p>Calls made in this session will appear here.</p></div></div>
+    </div>
+  </div>
+</main>
+</div><script>
+const BASE=window.location.origin,MCP=BASE+'/mcp';
+let tools=[],active=null,hist=[],cid=1;
+const ICONS={list_test_files:'📂',list_projects:'🌐',run_tests:'▶️',poll_job:'📊',cancel_job:'❌',get_history:'📜',clear_history:'🗑️'};
+document.getElementById('epUrl').textContent=MCP;
+
+async function init(){
+  try{
+    const r=await rpc('initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}});
+    if(r.result&&r.result.serverInfo)setSt('connected','🟢 '+r.result.serverInfo.name);
+    else setSt('connected','🟢 Connected');
+    await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:cid++,method:'notifications/initialized',params:{}})});
+    const tr=await rpc('tools/list',{});
+    if(tr.result&&tr.result.tools){tools=tr.result.tools;renderTools();}
+  }catch(e){setSt('error','🔴 Offline');}
+}
+
+async function rpc(method,params){
+  const id=cid++;
+  const r=await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id,method,params})});
+  if(r.status===204)return{};
+  const t=await r.text();
+  return t?JSON.parse(t):{};
+}
+
+function setSt(type,text){
+  document.getElementById('sp').className='status-pill '+type;
+  document.getElementById('st').textContent=text;
+}
+
+function renderTools(){
+  const el=document.getElementById('tl');
+  document.getElementById('tc').textContent=tools.length;
+  el.innerHTML='';
+  tools.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='tool-item';d.id='ti-'+t.name;
+    d.innerHTML='<div class="tool-name">'+(ICONS[t.name]||'🔧')+' '+t.name+'</div><div class="tool-desc">'+t.description+'</div>';
+    d.addEventListener('click',()=>selectTool(t));
+    el.appendChild(d);
+  });
+}
+
+function selectTool(tool){
+  active=tool;
+  document.querySelectorAll('.tool-item').forEach(e=>e.classList.remove('active'));
+  const it=document.getElementById('ti-'+tool.name);if(it)it.classList.add('active');
+  document.getElementById('stn').textContent=tool.name;
+  const props=(tool.inputSchema&&tool.inputSchema.properties)||{};
+  const req=(tool.inputSchema&&tool.inputSchema.required)||[];
+  const keys=Object.keys(props);
+  let h='<div class="fi"><div class="tool-hdr"><div class="t-icon">'+(ICONS[tool.name]||'🔧')+'</div><div class="t-meta"><h2>'+tool.name+'</h2><p>'+tool.description+'</p></div></div><div class="slabel">Arguments</div>';
+  if(!keys.length){h+='<div class="noargs">This tool takes no arguments.</div>';}
+  else{
+    h+='<div class="args">';
+    keys.forEach(k=>{
+      const p=props[k],isR=req.includes(k),fid='a-'+k;
+      h+='<div class="fg"><div class="fl">'+k+' <span class="tbadge">'+p.type+'</span>'+(isR?' <span class="rbadge">required</span>':'')+'</div><div class="fd">'+(p.description||'')+'</div>';
+      if(p.type==='boolean')h+='<div class="cbrow"><input type="checkbox" id="'+fid+'"/><label for="'+fid+'">'+(p.description||k)+'</label></div>';
+      else if(p.type==='number')h+='<input type="number" id="'+fid+'" placeholder="'+(p.description||'')+'" />';
+      else h+='<input type="text" id="'+fid+'" placeholder="'+(p.description||'')+'" />';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  h+='<button class="btn-run" id="rb" onclick="run()"><div class="spin"></div><span>&#9654; Call Tool</span></button></div>';
+  document.getElementById('tb').innerHTML=h;
+}
+
+async function run(){
+  if(!active)return;
+  const btn=document.getElementById('rb');
+  btn.classList.add('loading');btn.disabled=true;
+  const props=(active.inputSchema&&active.inputSchema.properties)||{};
+  const args={};
+  Object.keys(props).forEach(k=>{
+    const el=document.getElementById('a-'+k);if(!el)return;
+    if(props[k].type==='boolean')args[k]=el.checked;
+    else if(props[k].type==='number'){if(el.value!=='')args[k]=Number(el.value);}
+    else{if(el.value.trim()!=='')args[k]=el.value.trim();}
+  });
+  const req={jsonrpc:'2.0',id:cid,method:'tools/call',params:{name:active.name,arguments:args}};
+  showReq(req);
+  try{
+    const t0=Date.now();
+    const res=await rpc('tools/call',{name:active.name,arguments:args});
+    const ms=Date.now()-t0;
+    showRes(res);showResult(res,active.name,ms);addHist(active.name,args,res,ms);sw('result');
+  }catch(e){showResult({error:{message:e.message}},active.name,0);sw('result');}
+  btn.classList.remove('loading');btn.disabled=false;
+}
+
+function showReq(body){
+  const p=document.getElementById('pane-request');
+  const json=sh(JSON.stringify(body,null,2));
+  p.innerHTML='<div class="jv fi"><button class="ci" onclick="cp(this.getAttribute(\'data-v\'))" data-v="">Copy</button>'+json+'</div>';
+  p.querySelector('.ci').setAttribute('data-v',JSON.stringify(body,null,2));
+  document.getElementById('rc').textContent=JSON.stringify(body).length+' B';
+}
+
+function showRes(resp){
+  const p=document.getElementById('pane-response');
+  const json=sh(JSON.stringify(resp,null,2));
+  p.innerHTML='<div class="jv fi"><button class="ci" onclick="cp(this.getAttribute(\'data-v\'))" data-v="">Copy</button>'+json+'</div>';
+  p.querySelector('.ci').setAttribute('data-v',JSON.stringify(resp,null,2));
+  document.getElementById('rsc').textContent=JSON.stringify(resp).length+' B';
+}
+
+function showResult(resp,name,ms){
+  const p=document.getElementById('pane-result');
+  if(resp.error){
+    p.innerHTML='<div class="rc fi"><div class="rch"><span class="terr">Error</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">'+name+'</span></div><div class="rcb" style="color:var(--red)">'+esc(resp.error.message||JSON.stringify(resp.error))+'</div></div>';
+    return;
+  }
+  if(!resp.result){p.innerHTML='<div class="es"><div class="ei">📭</div><p>Empty response.</p></div>';return;}
+  const content=resp.result.content||[];
+  let h='<div class="rc fi"><div class="rch"><span class="tok">&#10003; Success</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">'+name+'</span><span style="font-size:11px;color:var(--text3);margin-left:auto">'+ms+'ms</span></div>';
+  if(!content.length)h+='<div class="rcb">No content returned.</div>';
+  else content.forEach(i=>{
+    if(i.type==='text'){
+      let d=i.text;
+      try{d=sh(JSON.stringify(JSON.parse(i.text),null,2));}catch(_){d=esc(i.text);}
+      h+='<div class="rcb">'+d+'</div>';
+    }
+  });
+  h+='</div>';
+  p.innerHTML=h;
+}
+
+function addHist(name,args,res,ms){
+  hist.unshift({name,args,res,ms,t:new Date()});
+  renderHist();
+}
+
+function renderHist(){
+  const p=document.getElementById('pane-history');
+  document.getElementById('hc').textContent=hist.length;
+  if(!hist.length){p.innerHTML='<div class="es"><div class="ei">📜</div><p>No calls yet.</p></div>';return;}
+  p.innerHTML=hist.map((e,i)=>{
+    const err=!!(e.res&&e.res.error);
+    return '<div class="he" onclick="replay('+i+')"><div class="hd '+(err?'fail':'pass')+'"></div><div class="hc">'+(ICONS[e.name]||'🔧')+' '+e.name+'('+(Object.keys(e.args).length?'&hellip;':'')+')</div><div class="hs">'+e.ms+'ms</div><div class="ht">'+e.t.toLocaleTimeString()+'</div></div>';
+  }).join('');
+}
+
+function replay(i){
+  const e=hist[i];if(!e)return;
+  showReq({jsonrpc:'2.0',id:'(replay)',method:'tools/call',params:{name:e.name,arguments:e.args}});
+  showRes(e.res);showResult(e.res,e.name,e.ms);sw('result');
+}
+
+function sw(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+function copyEP(){
+  navigator.clipboard.writeText(MCP);
+  const b=document.getElementById('cpBtn');
+  b.textContent='✅ Copied!';
+  setTimeout(()=>{b.textContent='📋 Copy Endpoint URL';},2000);
+}
+
+function cp(text){navigator.clipboard.writeText(text);}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function sh(json){
+  json=esc(json);
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+    let c='jn';
+    if(/^"/.test(m))c=/:$/.test(m)?'jk':'js';
+    else if(/true|false/.test(m))c='jb';
+    else if(/null/.test(m))c='jl';
+    return '<span class="'+c+'">'+m+'</span>';
+  });
+}
+
+// ── Auto-Monitor: BroadcastChannel + URL param ─────────────────────────────
+let autoMonitorTimer = null;
+let autoMonitorOffset = 0;
+let autoMonitorJobId = null;
+
+function startAutoMonitor(jobId, command) {
+  if (autoMonitorTimer) clearInterval(autoMonitorTimer);
+  autoMonitorJobId = jobId;
+  autoMonitorOffset = 0;
+
+  // Show live monitor banner
+  showMonitorBanner(jobId, command, 'running');
+  sw('result');
+
+  // Show initial result pane message
+  const pane = document.getElementById('pane-result');
+  pane.innerHTML = '<div class="rc fi"><div class="rch"><span style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.4);color:#a78bfa;border-radius:6px;padding:2px 8px;font-size:11px;">&#128225; Live</span><span style="font-family:monospace;font-size:12px;color:var(--text2);margin-left:6px;">poll_job</span><span id="monLiveMs" style="font-size:11px;color:var(--text3);margin-left:auto">0ms</span></div><div class="rcb" id="monLiveOutput" style="color:var(--green);min-height:60px;">Waiting for output&#8230;</div></div>';
+
+  const t0 = Date.now();
+  autoMonitorTimer = setInterval(async () => {
+    try {
+      const res = await rpc('tools/call', { name: 'poll_job', arguments: { jobId, offset: autoMonitorOffset } });
+      const msEl = document.getElementById('monLiveMs');
+      if (msEl) msEl.textContent = (Date.now() - t0) + 'ms';
+
+      if (!res.result || !res.result.content) return;
+      const text = res.result.content[0]?.text || '{}';
+      let data = {};
+      try { data = JSON.parse(text); } catch(_) {}
+
+      if (data.gone) {
+        clearInterval(autoMonitorTimer);
+        updateMonitorBanner('gone');
+        return;
+      }
+
+      const outEl = document.getElementById('monLiveOutput');
+      if (outEl && data.newOutput) {
+        outEl.textContent = (outEl.textContent === 'Waiting for output\u2026' ? '' : outEl.textContent) + data.newOutput;
+        outEl.scrollTop = outEl.scrollHeight;
+      }
+      autoMonitorOffset = data.offset || autoMonitorOffset;
+      addToHistory('poll_job', { jobId, offset: autoMonitorOffset }, res, Date.now() - t0);
+
+      if (data.done) {
+        clearInterval(autoMonitorTimer);
+        const r = data.result || {};
+        updateMonitorBanner(r.code === 0 ? 'passed' : 'failed', r);
+        showResult({ result: { content: [{ type: 'text', text: text }] } }, 'poll_job (auto)', Date.now() - t0);
+      }
+    } catch (e) { /* network hiccup, keep polling */ }
+  }, 1200);
+}
+
+function showMonitorBanner(jobId, command, status) {
+  let banner = document.getElementById('monitorBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'monitorBanner';
+    banner.style.cssText = 'padding:10px 20px;border-bottom:1px solid var(--border);background:rgba(124,106,247,0.08);display:flex;align-items:center;gap:12px;font-size:12px;flex-shrink:0;';
+    const rc = document.querySelector('.rcontent');
+    if (rc) rc.parentNode.insertBefore(banner, rc);
+  }
+  banner.innerHTML = `
+    <span id="monStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1s ease infinite;flex-shrink:0;display:inline-block;"></span>
+    <span style="color:var(--accent);font-weight:600;">&#128225; Auto-Monitoring</span>
+    <span style="color:var(--text3);">Job:</span>
+    <span style="font-family:'JetBrains Mono',monospace;color:var(--text2);font-size:11px;">${jobId}</span>
+    ${command ? `<span style="color:var(--text3);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;font-family:monospace;font-size:11px;">${esc(command)}</span>` : ''}
+    <button onclick="stopAutoMonitor()" style="margin-left:auto;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;">&#10005; Stop</button>
+  `;
+  banner.style.display = 'flex';
+}
+
+function updateMonitorBanner(status, result) {
+  const dot = document.getElementById('monStatusDot');
+  const banner = document.getElementById('monitorBanner');
+  if (!dot || !banner) return;
+  dot.style.animation = 'none';
+  if (status === 'passed') {
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow = '0 0 8px var(--green)';
+    banner.style.background = 'rgba(52,211,153,0.06)';
+    banner.style.borderBottomColor = 'rgba(52,211,153,0.2)';
+    UI.toast && UI.toast(`\u2713 Tests passed (${result.passed || 0} passed)`, 'success', 4000);
+  } else if (status === 'failed') {
+    dot.style.background = 'var(--red)';
+    dot.style.boxShadow = '0 0 8px var(--red)';
+    banner.style.background = 'rgba(248,113,113,0.06)';
+    banner.style.borderBottomColor = 'rgba(248,113,113,0.2)';
+  } else {
+    dot.style.background = 'var(--text3)';
+    dot.style.boxShadow = 'none';
+  }
+}
+
+function stopAutoMonitor() {
+  if (autoMonitorTimer) clearInterval(autoMonitorTimer);
+  const banner = document.getElementById('monitorBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// 1. Check URL ?jobId= param (opened via "Run + MCP" button)
+(function checkUrlParam() {
+  const params = new URLSearchParams(window.location.search);
+  const jobId = params.get('jobId');
+  const auto = params.get('automonitor');
+  if (jobId && auto) {
+    // Wait for MCP init to complete, then start monitoring
+    window._pendingMonitorJobId = jobId;
+  }
+})();
+
+// 2. BroadcastChannel listener (dashboard broadcasts when job starts)
+try {
+  const mcpHubChannel = new BroadcastChannel('mcp-hub');
+  mcpHubChannel.onmessage = (e) => {
+    if (e.data && e.data.type === 'job_started') {
+      startAutoMonitor(e.data.jobId, e.data.command);
+    }
+  };
+} catch (_) {}
+
+// Boot
+init().then(() => {
+  // After init, check if we have a pending jobId from URL
+  if (window._pendingMonitorJobId) {
+    startAutoMonitor(window._pendingMonitorJobId, '');
+    window._pendingMonitorJobId = null;
+  }
+});
+
+</script>
+</body>
+</html>

@@ -42,5 +42,9 @@
     "type": "git",
     "url": "git+https://github.com/QA-Rajendra/qarp-playwright-automation-hub.git"
   },
-  "homepage": "https://github.com/QA-Rajendra/qarp-playwright-automation-hub#readme"
+  "homepage": "https://github.com/QA-Rajendra/qarp-playwright-automation-hub#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "playwright": "^1.63.0"
+  }
 }

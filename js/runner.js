@@ -199,6 +199,8 @@ class RunnerController {
     if (!cmd) {
       if (previewEl) previewEl.innerHTML = '<span class="text-slate-500">— select a test file or folder from the sidebar —</span>';
       if (runBtn) runBtn.disabled = true;
+      const mcpBtn = document.getElementById('btnRunMcp');
+      if (mcpBtn) mcpBtn.disabled = true;
       return;
     }
 
@@ -220,6 +222,8 @@ class RunnerController {
     }
 
     if (runBtn) runBtn.disabled = false;
+    const mcpBtn = document.getElementById('btnRunMcp');
+    if (mcpBtn) mcpBtn.disabled = false;
     this.lastCommand = cmd;
   }
 
@@ -230,7 +234,7 @@ class RunnerController {
     this.launchRun(cmd);
   }
 
-  async launchRun(cmd) {
+  async launchRun(cmd, broadcastToMcp = false) {
     const configPanel = document.getElementById('configPanel');
     const runningState = document.getElementById('runningState');
     const runCmd = document.getElementById('runCmd');
@@ -243,7 +247,7 @@ class RunnerController {
     if (runError) runError.classList.add('hidden');
     if (btnCancel) {
       btnCancel.disabled = false;
-      btnCancel.textContent = '✕ Cancel run';
+      btnCancel.textContent = '\u2715 Cancel run';
     }
 
     this.resetConsole();
@@ -252,10 +256,33 @@ class RunnerController {
     try {
       const { id } = await api.startRun(cmd);
       this.currentJobId = id;
+
+      // ── Broadcast jobId to MCP Inspector via BroadcastChannel ──
+      try {
+        const ch = new BroadcastChannel('mcp-hub');
+        ch.postMessage({ type: 'job_started', jobId: id, command: cmd, timestamp: Date.now() });
+        ch.close();
+      } catch (_) {}
+
+      // If opened from "Run + MCP" button, open inspector tab
+      if (broadcastToMcp) {
+        window.open(`/pages/mcp-inspector.html?jobId=${id}&automonitor=1`, 'mcp-inspector');
+      }
+
       this.pollJob(id, cmd);
     } catch (err) {
       this.showRunError(`Execution failed to start: ${err.message}`);
     }
+  }
+
+  // Run test AND open MCP Inspector simultaneously
+  async runViaMCP() {
+    const cmd = this.buildCommand();
+    if (!cmd) {
+      UI.toast('Select a test file first', 'warn', 2000);
+      return;
+    }
+    this.launchRun(cmd, true);
   }
 
   pollJob(id, cmd) {

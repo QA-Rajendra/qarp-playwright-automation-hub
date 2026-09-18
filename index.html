@@ -128,6 +128,15 @@
             <span>✨</span> Allure
           </button>
         </div>
+        <!-- MCP Inspector Button -->
+        <a href="pages/mcp-inspector.html" target="_blank"
+           class="mt-2 w-full py-1.5 rounded-lg border border-indigo-700/60 bg-indigo-950/30 hover:bg-indigo-900/50 hover:border-indigo-500 text-indigo-300 text-[10px] transition-all flex items-center justify-center gap-1.5 group"
+           title="Open MCP Inspector — connect AI agents to run Playwright tests">
+          <span class="group-hover:animate-spin" style="display:inline-block;animation-duration:2s;">🤖</span>
+          <span class="font-semibold tracking-wide">MCP Inspector</span>
+          <span class="text-[8px] text-indigo-500 ml-0.5 font-mono">↗</span>
+        </a>
+
       </div>
 
       <!-- Search & Tree Toolbar -->
@@ -290,6 +299,12 @@
                   id="btnRun" disabled onclick="testRunner.run()">
             ▶ Run Tests + Show Report
           </button>
+          <!-- Run + MCP Inspector simultaneously -->
+          <button type="button" class="py-3.5 px-4 rounded-xl border border-indigo-700 bg-indigo-950/40 hover:bg-indigo-900/60 hover:border-indigo-500 text-indigo-300 font-bold text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  id="btnRunMcp" disabled onclick="testRunner.runViaMCP()"
+                  title="Run tests AND monitor live output in MCP Inspector simultaneously">
+            🤖 Run + MCP
+          </button>
           <button type="button" class="py-3.5 px-5 rounded-xl border border-violet-700 bg-violet-950/40 hover:bg-violet-900/50 text-purple-300 font-bold text-xs transition-all"
                   onclick="api.openAllureReport()">
             ✨ Allure Report
@@ -299,6 +314,7 @@
             ✕ Clear
           </button>
         </div>
+
 
       </div>
 

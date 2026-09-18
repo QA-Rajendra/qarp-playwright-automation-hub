@@ -46,8 +46,14 @@ Once installed in their project, they have **3 ways** to launch the Playwright A
 **1. From Terminal (via npx):**
 
 ```bash
-npx playwright-hub
+npx qarp-uiPlaywrightTool
 ```
+> ⚡ **Auto-Cleanup & Launch Features:**
+> - **Auto-closes old port:** Automatically terminates any lingering process occupying port 9300 (or report/allure ports).
+> - **Auto-closes old browsers:** Closes lingering previous browser windows/test browser instances.
+> - **Auto-opens new browser:** Automatically launches a fresh browser window directly at `http://localhost:9300`.
+> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--no-kill-port`.
+
 
 **2. Via npm script:**
 

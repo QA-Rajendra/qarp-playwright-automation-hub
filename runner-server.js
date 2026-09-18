@@ -15,7 +15,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 
 const STATIC_ROOT = __dirname; // Current directory containing index.html, js/, assets/, pages/
 
@@ -225,6 +225,303 @@ function findAvailablePort(startPort, endPort) {
   });
 }
 
+// ── Port Cleaner & Process Killer ──────────────────────────────────────────
+function killProcessOnPort(port) {
+  if (!port) return;
+  try {
+    if (process.platform === 'win32') {
+      let netstatOut = '';
+      try {
+        netstatOut = execSync('netstat -ano -p tcp', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+      } catch (_) {}
+
+      const pids = new Set();
+      const lines = netstatOut.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('TCP')) continue;
+        const parts = trimmed.split(/\s+/);
+        if (parts.length >= 5) {
+          const localAddr = parts[1];
+          const state = parts[3];
+          const pid = parseInt(parts[4], 10);
+          if (localAddr.endsWith(`:${port}`) && state === 'LISTENING' && pid && pid !== process.pid) {
+            pids.add(pid);
+          }
+        }
+      }
+
+      for (const pid of pids) {
+        try {
+          console.log(`   🔌 Freeing port ${port}: terminating old process (PID ${pid})...`);
+          execSync(`taskkill /F /T /PID ${pid}`, { stdio: 'ignore' });
+        } catch (_) {}
+      }
+    } else {
+      try {
+        const pids = execSync(`lsof -ti :${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+        if (pids) {
+          for (const pidStr of pids.split('\n')) {
+            const pid = parseInt(pidStr.trim(), 10);
+            if (pid && pid !== process.pid) {
+              console.log(`   🔌 Freeing port ${port}: terminating old process (PID ${pid})...`);
+              try { process.kill(pid, 'SIGKILL'); } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }
+  } catch (err) {
+    // Non-critical port cleanup
+  }
+}
+
+// ── Close Old Browser Instances ────────────────────────────────────────────
+function closeOldBrowsers() {
+  console.log(`   🌐 Closing old browser instances...`);
+  if (process.platform === 'win32') {
+    const targets = ['msedge.exe', 'chrome.exe', 'chromium.exe', 'headless_shell.exe'];
+    for (const target of targets) {
+      try {
+        execSync(`taskkill /F /IM ${target} /T`, { stdio: 'ignore' });
+      } catch (_) {}
+    }
+  } else if (process.platform === 'darwin') {
+    const targets = ['Google Chrome', 'Microsoft Edge', 'Chromium'];
+    for (const target of targets) {
+      try {
+        execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
+      } catch (_) {}
+    }
+  } else {
+    const targets = ['chrome', 'chromium', 'msedge'];
+    for (const target of targets) {
+      try {
+        execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
+      } catch (_) {}
+    }
+  }
+}
+
+// ── Open Fresh Browser Window ──────────────────────────────────────────────
+function openBrowser(url) {
+  console.log(`   🚀 Opening fresh browser: ${url}`);
+  try {
+    if (process.platform === 'win32') {
+      spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+    } else if (process.platform === 'darwin') {
+      spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+    } else {
+      spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref();
+    }
+  } catch (err) {
+    console.warn(`   ⚠️ Could not auto-open browser: ${err.message}`);
+  }
+}
+
+// ── MCP (Model Context Protocol) Server ───────────────────────────────────
+const MCP_SERVER_INFO = {
+  name: 'playwright-automation-hub',
+  version: '1.0.0',
+  description: 'Playwright Automation Hub MCP Server — run & manage Playwright tests via AI agents'
+};
+
+const MCP_CAPABILITIES = { tools: { listChanged: false } };
+
+const MCP_TOOLS = [
+  {
+    name: 'list_test_files',
+    description: 'Scan the project and return all Playwright test files and folders in a tree structure.',
+    inputSchema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'list_projects',
+    description: 'List available Playwright browser projects (e.g. chromium, firefox, webkit) from playwright.config.',
+    inputSchema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'run_tests',
+    description: 'Start a Playwright test run. Returns a jobId to use with poll_job and cancel_job.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file:    { type: 'string',  description: 'Relative path to a test file or folder, e.g. "tests/login.spec.ts"' },
+        project: { type: 'string',  description: 'Playwright project name, e.g. "chromium"' },
+        headed:  { type: 'boolean', description: 'Run tests in headed mode. Default: false' },
+        grep:    { type: 'string',  description: 'Filter tests by name/tag, e.g. "@smoke"' },
+        workers: { type: 'number',  description: 'Number of parallel workers. Default: 1' },
+        command: { type: 'string',  description: 'Override: full custom npx playwright test command' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'poll_job',
+    description: 'Poll live output and status of a running test job. Call repeatedly until done=true.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        jobId:  { type: 'string', description: 'Job ID returned by run_tests' },
+        offset: { type: 'number', description: 'Byte offset for incremental output. Start at 0.' }
+      },
+      required: ['jobId']
+    }
+  },
+  {
+    name: 'cancel_job',
+    description: 'Cancel a currently running test job by its job ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        jobId: { type: 'string', description: 'Job ID returned by run_tests' }
+      },
+      required: ['jobId']
+    }
+  },
+  {
+    name: 'get_history',
+    description: 'Retrieve the most recent test run history entries.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max number of history entries to return. Default: 20' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'clear_history',
+    description: 'Clear all test run history entries.',
+    inputSchema: { type: 'object', properties: {}, required: [] }
+  }
+];
+
+function mcpOk(id, result)  { return { jsonrpc: '2.0', id, result }; }
+function mcpErr(id, code, message, data) {
+  return { jsonrpc: '2.0', id, error: { code, message, ...(data ? { data } : {}) } };
+}
+
+function buildCmd(args) {
+  if (args.command) return args.command;
+  let cmd = 'npx playwright test';
+  if (args.file)    cmd += ` "${args.file}"`;
+  if (args.project) cmd += ` --project=${args.project}`;
+  if (args.headed)  cmd += ' --headed';
+  if (args.grep)    cmd += ` --grep="${args.grep}"`;
+  if (args.workers) cmd += ` --workers=${args.workers}`;
+  return cmd;
+}
+
+function handleMCP(req, res, projectRoot) {
+  let body = '';
+  req.on('data', d => body += d);
+  req.on('end', () => {
+    let rpc;
+    try { rpc = JSON.parse(body); } catch (_) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(mcpErr(null, -32700, 'Parse error')));
+      return;
+    }
+
+    const { jsonrpc, id, method, params = {} } = rpc;
+    if (jsonrpc !== '2.0') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(mcpErr(id, -32600, 'Invalid Request')));
+      return;
+    }
+
+    let response;
+
+    if (method === 'initialize') {
+      response = mcpOk(id, { protocolVersion: '2025-03-26', capabilities: MCP_CAPABILITIES, serverInfo: MCP_SERVER_INFO });
+
+    } else if (method === 'notifications/initialized') {
+      res.writeHead(204); res.end(); return;
+
+    } else if (method === 'tools/list') {
+      response = mcpOk(id, { tools: MCP_TOOLS });
+
+    } else if (method === 'tools/call') {
+      const toolName = params.name;
+      const args = params.arguments || {};
+      try {
+        let result;
+
+        if (toolName === 'list_test_files') {
+          result = { content: [{ type: 'text', text: JSON.stringify(getStructure(projectRoot), null, 2) }] };
+
+        } else if (toolName === 'list_projects') {
+          result = { content: [{ type: 'text', text: JSON.stringify({ projects: getProjects(projectRoot) }, null, 2) }] };
+
+        } else if (toolName === 'run_tests') {
+          const command = buildCmd(args);
+          const jid = 'job_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          const job = { output: '', done: false, result: null, proc: null, cancelled: false };
+          runningJobs.set(jid, job);
+          console.log(`\n▶ [MCP] Executing: ${command}`);
+          const proc = spawn(command, { cwd: projectRoot, shell: true, detached: process.platform !== 'win32' });
+          job.proc = proc;
+          proc.stdout.on('data', d => { const s = d.toString(); process.stdout.write(s); job.output += s; });
+          proc.stderr.on('data', d => { const s = d.toString(); process.stderr.write(s); job.output += s; });
+          proc.on('close', code => {
+            job.result = parseTestOutput(job.output, code);
+            job.done = true;
+            if (!job.cancelled) {
+              appendHistory(projectRoot, { timestamp: new Date().toISOString(), command, passed: job.result.passed, failed: job.result.failed, skipped: job.result.skipped, total: job.result.total, code: job.result.code });
+            }
+            setTimeout(() => runningJobs.delete(jid), 60000);
+          });
+          result = { content: [{ type: 'text', text: JSON.stringify({ jobId: jid, command, status: 'started' }, null, 2) }] };
+
+        } else if (toolName === 'poll_job') {
+          const { jobId, offset = 0 } = args;
+          const job = runningJobs.get(jobId);
+          if (!job) {
+            result = { content: [{ type: 'text', text: JSON.stringify({ gone: true, error: 'Job not found' }) }], isError: true };
+          } else {
+            result = { content: [{ type: 'text', text: JSON.stringify({ newOutput: job.output.slice(offset), offset: job.output.length, done: job.done, result: job.done ? job.result : null }, null, 2) }] };
+          }
+
+        } else if (toolName === 'cancel_job') {
+          const { jobId } = args;
+          const job = runningJobs.get(jobId);
+          if (job && job.proc && !job.done) {
+            job.cancelled = true;
+            try { process.kill(-job.proc.pid, 'SIGTERM'); } catch (_) { try { job.proc.kill('SIGTERM'); } catch (__) {} }
+          }
+          result = { content: [{ type: 'text', text: JSON.stringify({ ok: true, jobId }) }] };
+
+        } else if (toolName === 'get_history') {
+          const history = loadHistory(projectRoot).slice(0, args.limit || 20);
+          result = { content: [{ type: 'text', text: JSON.stringify({ history, count: history.length }, null, 2) }] };
+
+        } else if (toolName === 'clear_history') {
+          clearHistory(projectRoot);
+          result = { content: [{ type: 'text', text: JSON.stringify({ ok: true, message: 'History cleared' }) }] };
+
+        } else {
+          response = mcpErr(id, -32601, `Tool not found: ${toolName}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(response));
+          return;
+        }
+        response = mcpOk(id, result);
+      } catch (err) {
+        response = mcpErr(id, -32603, 'Tool execution error', err.message);
+      }
+
+    } else if (method === 'ping') {
+      response = mcpOk(id, {});
+
+    } else {
+      response = mcpErr(id, -32601, `Method not found: ${method}`);
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(response));
+  });
+}
+
 // ── Create Standalone HTTP Server ──────────────────────────────────────────
 function createRunnerServer(options = {}) {
   const port = options.port || 9300;
@@ -232,6 +529,7 @@ function createRunnerServer(options = {}) {
   const projectRoot = options.projectRoot || process.cwd();
   const reportPort = port + 20;
   const allurePort = port + 35;
+  const openBrowserOnStart = options.openBrowserOnStart !== undefined ? options.openBrowserOnStart : false;
 
   let reportProc = null;
   let allureProc = null;
@@ -376,6 +674,23 @@ function createRunnerServer(options = {}) {
       return;
     }
 
+    // ── MCP Endpoint ──
+    if (req.method === 'POST' && cleanUrl === '/mcp') {
+      return handleMCP(req, res, projectRoot);
+    }
+
+    if (req.method === 'GET' && cleanUrl === '/mcp') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        mcp: true, server: MCP_SERVER_INFO,
+        endpoint: `http://localhost:${port}/mcp`,
+        transport: 'http', protocol: '2025-03-26',
+        toolCount: MCP_TOOLS.length,
+        tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
+      }));
+      return;
+    }
+
     // ── Static Frontend File Serving ──
     let relativeFilePath = cleanUrl === '/' ? '/index.html' : cleanUrl;
     const safePath = path.normalize(path.join(STATIC_ROOT, relativeFilePath));
@@ -422,7 +737,24 @@ function createRunnerServer(options = {}) {
         console.log(`   Network Access: http://${ip}:${port}  (Share this with teammates on your Wi-Fi/LAN)`);
       });
     }
-    console.log(`   Watching tests in: ${projectRoot}\n`);
+    console.log(`   Watching tests in: ${projectRoot}`);
+    console.log(`   🤖 MCP Endpoint:   http://localhost:${port}/mcp`);
+    console.log(`   🔍 MCP Inspector:  http://localhost:${port}/pages/mcp-inspector.html\n`);
+
+    if (openBrowserOnStart) {
+      setTimeout(() => {
+        openBrowser(`http://localhost:${port}`);
+      }, 500);
+    }
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ Port ${port} is currently busy.`);
+      console.error(`   Tip: Pass --kill-port to force release, or use --port=<port> to select an alternate port.\n`);
+    } else {
+      console.error(`\n❌ Server error:`, err.message);
+    }
   });
 
   return server;
@@ -442,39 +774,59 @@ function runnerMiddleware(options = {}) {
 
 // ── Auto-start if executed directly from terminal or via global CLI ──
 if (require.main === module) {
-  const args = process.argv.slice(2);
-  let cliPort = null; // null = auto-detect from 9300-9305
-  let cliHost = '0.0.0.0'; // allows access from other devices/people on network
-  let cliRoot = process.cwd();
+  (async () => {
+    const args = process.argv.slice(2);
+    let cliPort = 9300; // default to 9300
+    let cliHost = '0.0.0.0'; // allows access from other devices/people on network
+    let cliRoot = process.cwd();
+    let shouldOpenBrowser = true;
+    let shouldCloseOldBrowsers = true;
+    let shouldKillOldPort = true;
 
-  args.forEach(arg => {
-    if (arg.startsWith('--port=')) cliPort = parseInt(arg.split('=')[1]);
-    if (arg.startsWith('-p=')) cliPort = parseInt(arg.split('=')[1]);
-    if (arg.startsWith('--host=')) cliHost = arg.split('=')[1];
-    if (arg.startsWith('--root=')) cliRoot = path.resolve(process.cwd(), arg.split('=')[1]);
-  });
+    args.forEach(arg => {
+      if (arg.startsWith('--port=')) cliPort = parseInt(arg.split('=')[1]);
+      if (arg.startsWith('-p=')) cliPort = parseInt(arg.split('=')[1]);
+      if (arg.startsWith('--host=')) cliHost = arg.split('=')[1];
+      if (arg.startsWith('--root=')) cliRoot = require('path').resolve(process.cwd(), arg.split('=')[1]);
+      if (arg === '--no-open') shouldOpenBrowser = false;
+      if (arg === '--no-browser-close') shouldCloseOldBrowsers = false;
+      if (arg === '--no-kill-port') shouldKillOldPort = false;
+    });
 
-  if (cliPort !== null) {
-    // Explicit port provided — use it directly
-    createRunnerServer({ port: cliPort, host: cliHost, projectRoot: cliRoot });
-  } else {
-    // Auto-detect: try ports 9300 to 9305
-    findAvailablePort(9300, 9305)
-      .then(availablePort => {
-        console.log(`\n🔍 Auto-selected port: ${availablePort}`);
-        createRunnerServer({ port: availablePort, host: cliHost, projectRoot: cliRoot });
-      })
-      .catch(err => {
-        console.error(`\n❌ ${err.message}`);
-        console.error('   Please free up a port in the range 9300–9305 and try again.');
-        process.exit(1);
-      });
-  }
+    console.log('\n=============================================================');
+    console.log('  🎭 QARP Playwright Automation Hub Launcher');
+    console.log('=============================================================');
+
+    // 1. Auto-close old port process if port is occupied
+    if (shouldKillOldPort) {
+      killProcessOnPort(cliPort);
+      killProcessOnPort(cliPort + 20); // reportPort
+      killProcessOnPort(cliPort + 35); // allurePort
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    // 2. Auto-close old browser instances
+    if (shouldCloseOldBrowsers) {
+      closeOldBrowsers();
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    // 3. Launch server & auto-open fresh browser
+    createRunnerServer({
+      port: cliPort,
+      host: cliHost,
+      projectRoot: cliRoot,
+      openBrowserOnStart: shouldOpenBrowser
+    });
+  })();
 }
 
 module.exports = {
   createRunnerServer,
   runnerMiddleware,
   getStructure,
-  getProjects
+  getProjects,
+  killProcessOnPort,
+  closeOldBrowsers,
+  openBrowser
 };
