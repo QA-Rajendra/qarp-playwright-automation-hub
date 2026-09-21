@@ -1,5 +1,5 @@
 /**
- * QARP-Runner Theme Controller
+ * QARP-Tool Theme Controller
  * Supports Theme 1 (Default / Midnight Cyber) and Theme 2 (Blue).
  */
 

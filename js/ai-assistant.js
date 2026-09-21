@@ -1,5 +1,5 @@
 /**
- * QARP-Runner AI Assistant & Context-Aware Suggestion Box Controller
+ * QARP-Tool AI Assistant & Context-Aware Suggestion Box Controller
  * Integrates dynamic suggestions, categorized quick actions, predictive smart input,
  * and Playwright JavaScript code action bars.
  */

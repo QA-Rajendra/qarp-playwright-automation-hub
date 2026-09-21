@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QARP-Runner — Automation Hub</title>
+  <title>QARP-Tool — Automation Hub</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -49,7 +49,7 @@
           </div>
           <div class="min-w-0">
             <h1 class="text-xs font-bold bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-transparent truncate tracking-tight">
-              QARP-Runner
+              QARP-Tool
             </h1>
             <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">QARP</p>
           </div>
@@ -188,11 +188,11 @@
             ◀
           </button>
 
-          <!-- QARP Runner Brand Logo -->
+          <!-- QARP Tool Brand Logo -->
           <div class="flex items-center gap-1.5 flex-shrink-0 cursor-pointer" onclick="dashboard.switchView('dashboard')">
             <span class="text-sm">🎭</span>
             <span class="font-bold text-xs tracking-tight bg-gradient-to-r from-violet-300 via-purple-200 to-cyan-300 bg-clip-text text-transparent">
-              QARP Runner
+              QARP Tool
             </span>
           </div>
 
@@ -278,6 +278,14 @@
           <button type="button" class="p-1 px-2 rounded-lg border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-500 text-xs transition-colors"
                   onclick="UI.openModal('settingsModal')" title="Server Settings (⚙)">
             ⚙
+          </button>
+
+          <!-- 📖 Help Guide Button -->
+          <button type="button" id="btnHelpGuide" onclick="HelpGuide.open()"
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-sky-600/70 bg-sky-950/50 hover:bg-sky-900/70 hover:border-sky-400 text-sky-300 text-[10px] font-bold font-mono transition-all shadow-sm group hover:scale-[1.02]"
+                  title="How to use QARP Tool — Step-by-Step Guide">
+            <span class="text-sm group-hover:rotate-12 transition-transform duration-300">📖</span>
+            <span class="hidden sm:inline">Guide</span>
           </button>
 
           <!-- User Profile -->
@@ -1239,6 +1247,428 @@
         window.location.reload();
       }
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       📖 HELP GUIDE MODAL — Step-by-Step How to Use QARP Tool
+       ═══════════════════════════════════════════════════════════════ -->
+  <div id="helpGuideModal"
+       class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+       onclick="if(event.target===this)HelpGuide.close()">
+    <div class="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-sky-700/50 shadow-2xl shadow-sky-900/30 overflow-hidden"
+         style="background:linear-gradient(135deg,#020a1a 0%,#050f24 60%,#01101f 100%);">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-sky-800/50 flex-shrink-0"
+           style="background:linear-gradient(90deg,#030e22 0%,#041628 100%);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-2xl shadow-lg"
+               style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">📖</div>
+          <div>
+            <h2 class="text-base font-bold text-sky-200 tracking-tight">QARP Tool — How to Use</h2>
+            <p class="text-[10px] text-sky-500 font-mono mt-0.5">Complete step-by-step guide for all features</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-[10px] text-sky-600 font-mono hidden sm:block" id="helpStepCounter">Step 1 of 9</span>
+          <button onclick="HelpGuide.close()" class="w-7 h-7 rounded-lg border border-sky-800 bg-sky-950/60 text-sky-400 hover:text-white hover:border-sky-500 flex items-center justify-center text-sm transition-all" title="Close">✕</button>
+        </div>
+      </div>
+
+      <!-- Step Indicator Bar -->
+      <div class="flex items-center gap-1.5 px-6 py-3 border-b border-sky-900/50 flex-shrink-0 overflow-x-auto"
+           style="background:#020c1c;" id="helpStepBar">
+      </div>
+
+      <!-- Content Area (scrollable) -->
+      <div class="flex-1 overflow-y-auto px-6 py-5" id="helpContent"></div>
+
+      <!-- Modal Footer Navigation -->
+      <div class="flex items-center justify-between px-6 py-4 border-t border-sky-800/50 flex-shrink-0"
+           style="background:#020c1c;">
+        <button id="helpPrevBtn" onclick="HelpGuide.prev()"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-sky-800 bg-sky-950/60 text-sky-300 text-xs font-bold font-mono hover:border-sky-500 hover:bg-sky-900/60 transition-all disabled:opacity-30"
+                disabled>
+          ← Previous
+        </button>
+        <div class="flex items-center gap-1" id="helpDots"></div>
+        <button id="helpNextBtn" onclick="HelpGuide.next()"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-mono transition-all"
+                style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;">
+          Next →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────
+       HelpGuide Controller Script
+       ───────────────────────────────────────────── -->
+  <script>
+  const HelpGuide = (() => {
+    let current = 0;
+
+    const steps = [
+      {
+        icon: '🚀', title: 'Step 1 — Getting Started',
+        color: '#0ea5e9', tag: 'Start Here',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">QARP Tool is a zero-dependency <strong>Playwright Test Automation Hub</strong> that runs entirely in your browser — no frameworks, no build step.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div class="rounded-xl p-4 border border-emerald-700/50 bg-emerald-950/30">
+              <div class="text-emerald-400 font-bold text-sm mb-2">✅ Prerequisites</div>
+              <ul class="text-emerald-300 text-xs space-y-1.5 font-mono">
+                <li>• Node.js v18+ installed</li>
+                <li>• Playwright installed in your project</li>
+                <li>• <code>playwright.config.js</code> at project root</li>
+              </ul>
+            </div>
+            <div class="rounded-xl p-4 border border-sky-700/50 bg-sky-950/30">
+              <div class="text-sky-400 font-bold text-sm mb-2">🚀 Start the Server</div>
+              <div class="rounded-lg bg-black/60 border border-sky-900 p-3 font-mono text-xs text-sky-300">node runner-server.js<br><span class="text-slate-500"># Then open browser:</span><br>http://localhost:9300</div>
+            </div>
+          </div>
+          <div class="rounded-xl p-4 border border-violet-700/50 bg-violet-950/20">
+            <div class="text-violet-300 text-xs leading-relaxed">💡 <strong>Pro Tip:</strong> The server auto-detects your project root, scans all <code>.spec.js</code> and <code>.test.js</code> files, reads your <code>playwright.config.js</code>, and displays them in the sidebar tree — automatically on load.</div>
+          </div>
+        `
+      },
+      {
+        icon: '📊', title: 'Step 2 — Dashboard Home',
+        color: '#8b5cf6', tag: 'Overview',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">The <strong>Dashboard</strong> is your command center. Switch to it using the <span class="bg-violet-900/60 border border-violet-600/60 rounded px-1.5 py-0.5 text-violet-300 font-mono text-xs">📊 Dashboard</span> tab in the top header.</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            ${[['Total Tests','📁','Counts all discovered spec files','sky'],['Passed','✅','Tests that passed last run','emerald'],['Failed','❌','Tests that failed or errored','red'],['Pass Rate','📈','% of passing tests','amber']].map(([t,i,d,c])=>`
+            <div class="rounded-xl p-3 border border-${c}-700/40 bg-${c}-950/30 text-center">
+              <div class="text-xl mb-1">${i}</div>
+              <div class="text-${c}-300 font-bold text-xs mb-1">${t}</div>
+              <div class="text-slate-500 text-[10px]">${d}</div>
+            </div>`).join('')}
+          </div>
+          <div class="rounded-xl p-4 border border-slate-700/50 bg-slate-900/50 mb-3">
+            <div class="text-slate-300 font-bold text-xs mb-2">📈 Trend Chart</div>
+            <p class="text-slate-400 text-xs">A bar chart shows <span class="text-emerald-400">Passed</span>, <span class="text-red-400">Failed</span>, and <span class="text-amber-400">Skipped</span> counts from recent runs in chronological order.</p>
+          </div>
+          <div class="rounded-xl p-4 border border-slate-700/50 bg-slate-900/50">
+            <div class="text-slate-300 font-bold text-xs mb-2">🕐 Recent Runs Table</div>
+            <p class="text-slate-400 text-xs">Shows Run ID, timestamp, environment, total tests, pass rate, and duration. Click any row to jump to its <strong>Results</strong> detail view.</p>
+          </div>
+        `
+      },
+      {
+        icon: '🧪', title: 'Step 3 — Running Tests',
+        color: '#10b981', tag: 'Core Feature',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">Switch to the <span class="bg-emerald-900/60 border border-emerald-600/60 rounded px-1.5 py-0.5 text-emerald-300 font-mono text-xs">🧪 Runner</span> view. The left sidebar shows your full test tree.</p>
+          <div class="space-y-3 mb-4">
+            ${[
+              ['🌳 Test Tree Explorer','Browse all test files and folders. Click a file/folder to select it as the run target.',['Click a <code>folder</code> → runs all tests inside','Click a <code>file.spec.js</code> → run that file only','Badge shows file count per folder'],'sky'],
+              ['▶ Run Buttons','Each folder/file has its own <strong>Run all</strong> button, and there is a global run button in the bottom bar.',['Bottom-left shows the active target','Click <strong>Run all</strong> on any node to execute','Combine with flags for power runs'],'violet'],
+              ['⚙ CLI Flags','Check boxes in the Runner right panel to add Playwright CLI flags.',['<code>--workers=4</code> — parallel execution','<code>--headed</code> — show browser window','<code>--reporter=html</code> — generate HTML report'],'amber'],
+            ].map(([t,d,tips,c])=>`
+            <div class="rounded-xl p-4 border border-${c}-700/40 bg-${c}-950/20">
+              <div class="text-${c}-300 font-bold text-sm mb-1">${t}</div>
+              <p class="text-slate-400 text-xs mb-2">${d}</p>
+              <ul class="space-y-1">${tips.map(tip=>`<li class="text-xs text-slate-500 flex items-start gap-2"><span class="text-${c}-500 mt-0.5">›</span><span>${tip}</span></li>`).join('')}</ul>
+            </div>`).join('')}
+          </div>
+        `
+      },
+      {
+        icon: '🖥️', title: 'Step 4 — Live Console',
+        color: '#06b6d4', tag: 'Real-Time Output',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">The <strong>Live Console</strong> panel (right side) streams real-time output directly from the Playwright process — just like a terminal.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            ${[
+              ['📺 Console Tab','Live test output, pass/fail per test, timing','cyan'],
+              ['🌐 APIs Tab','All captured HTTP API calls from your tests with method, URL, status, and response body','blue'],
+              ['🤖 AI Tab','Intelligent AI Assistant with context-aware suggestions and 1-click actions','violet'],
+            ].map(([t,d,c])=>`<div class="rounded-xl p-4 border border-${c}-700/40 bg-${c}-950/30">
+              <div class="text-${c}-300 font-bold text-sm mb-2">${t}</div>
+              <p class="text-slate-400 text-xs">${d}</p>
+            </div>`).join('')}
+          </div>
+          <div class="rounded-xl p-4 border border-slate-700/50 bg-slate-900/50">
+            <div class="text-slate-300 font-bold text-xs mb-2">⌨️ Console Keyboard Shortcuts</div>
+            <div class="grid grid-cols-2 gap-2 font-mono">
+              ${[['Ctrl+J','Toggle console panel'],['Ctrl+K / Ctrl+L','Clear terminal output'],['Esc','Cancel running test job']].map(([k,v])=>`<div class="flex items-center gap-2"><span class="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-cyan-300 text-[10px]">${k}</span><span class="text-slate-400 text-[10px]">${v}</span></div>`).join('')}
+            </div>
+          </div>
+        `
+      },
+      {
+        icon: '🤖', title: 'Step 5 — AI Assistant',
+        color: '#8b5cf6', tag: 'AI-Powered',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">Click <span class="bg-violet-900/60 border border-violet-600 rounded px-1.5 py-0.5 text-purple-300 font-mono text-xs">💡 AI Assistant</span> in the header to open the intelligent AI panel inside the Live Console.</p>
+          <div class="space-y-3 mb-4">
+            <div class="rounded-xl p-4 border border-violet-700/40 bg-violet-950/20">
+              <div class="text-violet-300 font-bold text-sm mb-3">🧠 Context-Aware Suggestion Box</div>
+              <p class="text-slate-400 text-xs mb-3">The AI reads your current project state and offers smart quick-action suggestions:</p>
+              <div class="grid grid-cols-2 gap-2">
+                ${[['🔍 Run Self-Test','1-click health audit of all 9 subsystems'],['🩺 Diagnose Failure','AI analyses your last test failure'],['📋 Snippet Helper','Find Playwright code snippets'],['📊 Summary Report','AI summary of your last run']].map(([a,d])=>`<div class="rounded-lg p-3 border border-violet-800/50 bg-violet-950/30"><div class="text-violet-200 font-bold text-xs mb-1">${a}</div><div class="text-slate-500 text-[10px]">${d}</div></div>`).join('')}
+              </div>
+            </div>
+            <div class="rounded-xl p-4 border border-cyan-700/40 bg-cyan-950/20">
+              <div class="text-cyan-300 font-bold text-sm mb-2">💬 Custom AI Queries</div>
+              <p class="text-slate-400 text-xs">Type any question in the chat box — ask for test strategy, debugging tips, code generation, or explanations of Playwright concepts. The AI always has access to your project context.</p>
+            </div>
+          </div>
+        `
+      },
+      {
+        icon: '🛡️', title: 'Step 6 — Self-Test Audit',
+        color: '#10b981', tag: 'Diagnostics',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">Click <span class="bg-purple-900/60 border border-purple-600 rounded px-1.5 py-0.5 text-purple-200 font-mono text-xs">🤖 Self-Test</span> in the header to run a <strong>comprehensive 9-point health audit</strong> of your entire runner setup.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            ${[
+              ['Node.js Server','Checks server uptime, heap memory, port status','emerald'],
+              ['Project Root','Verifies directory exists and is writable','emerald'],
+              ['Playwright Config','Detects <code>playwright.config.js</code>','emerald'],
+              ['Test Scanner','Counts all discovered spec files in tree','emerald'],
+              ['Playwright CLI','Confirms version of installed Playwright','emerald'],
+              ['History Store','Checks <code>.pw-runner-history.json</code> health','emerald'],
+              ['API Sniffer','Verifies API traffic capture file','sky'],
+              ['MCP Inspector','Tests the <code>/mcp</code> endpoint','sky'],
+              ['Git Integration','Reads current branch from git','sky'],
+            ].map(([t,d,c])=>`<div class="rounded-lg p-3 border border-${c}-700/40 bg-${c}-950/20">
+              <div class="text-${c}-400 font-bold text-xs mb-1">✅ ${t}</div>
+              <div class="text-slate-500 text-[10px]">${d}</div>
+            </div>`).join('')}
+          </div>
+          <div class="rounded-xl p-3 border border-amber-700/40 bg-amber-950/20">
+            <p class="text-amber-300 text-xs">💡 The audit returns a <strong>Health Score (0–100%)</strong> and marks each check as PASS or WARN. Use it any time things feel broken.</p>
+          </div>
+        `
+      },
+      {
+        icon: '🔭', title: 'Step 7 — MCP Inspector',
+        color: '#6366f1', tag: 'Advanced',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">The <strong>MCP Inspector</strong> exposes your runner's built-in <em>Model Context Protocol</em> (MCP) server — letting you call every backend tool interactively from a visual UI.</p>
+          <div class="space-y-3 mb-4">
+            <div class="rounded-xl p-4 border border-indigo-700/40 bg-indigo-950/20">
+              <div class="text-indigo-300 font-bold text-sm mb-2">🚀 How to Open</div>
+              <p class="text-slate-400 text-xs">Click <strong>MCP Inspector ↗</strong> in the left sidebar (opens in new tab). The inspector connects to <code class="bg-black/40 rounded px-1">http://localhost:9300/mcp</code>.</p>
+            </div>
+            <div class="rounded-xl p-4 border border-indigo-700/40 bg-indigo-950/20">
+              <div class="text-indigo-300 font-bold text-sm mb-3">🔧 Available MCP Tools</div>
+              <div class="grid grid-cols-2 gap-2 font-mono">
+                ${[['list_test_files','Scan project and return test tree'],['list_projects','List Playwright browser projects'],['run_tests','Start a test job (returns jobId)'],['poll_job','Stream live output for running job'],['cancel_job','Cancel a running job by ID'],['get_history','Fetch recent run history'],['get_api_traffic','Get captured API calls'],['run_self_test','Run 9-point health audit'],['diagnose_failure','AI failure analysis']].map(([n,d])=>`<div class="rounded-lg p-2.5 border border-indigo-900/60 bg-indigo-950/30"><div class="text-indigo-300 text-[10px] font-bold">${n}</div><div class="text-slate-500 text-[10px] mt-0.5">${d}</div></div>`).join('')}
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        icon: '🎨', title: 'Step 8 — Themes & Settings',
+        color: '#f59e0b', tag: 'Customization',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">QARP Tool supports multiple <strong>visual themes</strong> and is fully configurable through the Settings modal.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div class="rounded-xl p-4 border border-violet-700/40 bg-violet-950/20">
+              <div class="text-violet-300 font-bold text-sm mb-3">🌙 Default — Midnight Cyber</div>
+              <div class="flex gap-2 mb-3">
+                ${['#090d13','#131722','#7c6af7','#34d399','#f87171'].map(c=>`<div class="w-6 h-6 rounded-full border border-white/10" style="background:${c}"></div>`).join('')}
+              </div>
+              <p class="text-slate-400 text-xs">Dark mode, violet/purple accents, neon cyber aesthetic. Best for night-time coding sessions.</p>
+            </div>
+            <div class="rounded-xl p-4 border border-blue-700/40 bg-blue-950/20">
+              <div class="text-blue-300 font-bold text-sm mb-3">🔷 Blue — Enterprise</div>
+              <div class="flex gap-2 mb-3">
+                ${['#F5F9FF','#FFFFFF','#1976D2','#16A34A','#DC2626'].map(c=>`<div class="w-6 h-6 rounded-full border border-blue-200/20" style="background:${c}"></div>`).join('')}
+              </div>
+              <p class="text-slate-400 text-xs">Light mode, professional blue palette. Ideal for workplace / corporate environments and presentations.</p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="rounded-xl p-4 border border-amber-700/40 bg-amber-950/20">
+              <div class="text-amber-300 font-bold text-sm mb-2">⚙ Settings Modal</div>
+              <ul class="text-slate-400 text-xs space-y-1.5">
+                <li class="flex items-start gap-2"><span class="text-amber-500">›</span> <span><strong>API URL</strong> — change the backend server address (e.g., for remote runners)</span></li>
+                <li class="flex items-start gap-2"><span class="text-amber-500">›</span> <span><strong>Project Switch</strong> — type an absolute path to open a different project without restarting</span></li>
+                <li class="flex items-start gap-2"><span class="text-amber-500">›</span> <span><strong>Theme Picker</strong> — dropdown in sidebar to switch themes; persisted to <code>localStorage</code></span></li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+      {
+        icon: '📦', title: 'Step 9 — Using as npm Dependency (GitHub Package)',
+        color: '#f97316', tag: 'npm / GitHub',
+        content: `
+          <p class="text-sky-200 text-sm leading-relaxed mb-4">Once pushed to GitHub, any developer or teammate anywhere in the world can install <strong class="text-orange-300 font-mono">qarp-playwright-automation-hub</strong> in their own project in one step.</p>
+          
+          <div class="rounded-xl p-4 border border-orange-700/40 bg-orange-950/20 mb-4">
+            <div class="text-orange-300 font-bold text-sm mb-3">📦 Step 1: Install the Package</div>
+            
+            <div class="mb-3">
+              <div class="text-slate-300 font-bold text-xs mb-1">Option A — One-line install command</div>
+              <p class="text-slate-400 text-xs mb-1.5">In their terminal:</p>
+              <div class="rounded-lg bg-black/60 border border-orange-900/60 p-2.5 font-mono text-xs text-orange-300 select-all">npm install github:QA-Rajendra/qarp-playwright-automation-hub</div>
+            </div>
+
+            <div>
+              <div class="text-slate-300 font-bold text-xs mb-1">Option B — Add to <code class="text-orange-200">package.json</code> directly</div>
+              <p class="text-slate-400 text-xs mb-1.5">Add the following to their project's <code class="text-orange-200">dependencies</code> or <code class="text-orange-200">devDependencies</code>:</p>
+              <pre class="rounded-lg bg-black/60 border border-orange-900/60 p-3 font-mono text-xs text-orange-300 overflow-x-auto mb-2"><code>{
+  "name": "any-other-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "qarp-playwright-automation-hub": "github:QA-Rajendra/qarp-playwright-automation-hub"
+  },
+  "scripts": {
+    "test:ui": "playwright-hub"
+  }
+}</code></pre>
+              <p class="text-slate-400 text-xs mb-1.5">Then run:</p>
+              <div class="rounded-lg bg-black/60 border border-orange-900/60 p-2 font-mono text-xs text-orange-300 select-all">npm install</div>
+            </div>
+          </div>
+
+          <div class="rounded-xl p-4 border border-sky-700/40 bg-sky-950/20 mb-4">
+            <div class="text-sky-300 font-bold text-sm mb-3">🚀 Step 2: Run It Once Installed (3 Ways)</div>
+            
+            <div class="space-y-3">
+              <div>
+                <div class="text-sky-200 font-bold text-xs mb-1">1. From Terminal (via npx):</div>
+                <div class="rounded-lg bg-black/60 border border-sky-900/60 p-2.5 font-mono text-xs text-sky-300 mb-2 select-all">npx qarp-uiPlaywrightTool</div>
+                
+                <div class="rounded-lg p-3 border border-emerald-800/40 bg-emerald-950/30">
+                  <div class="text-emerald-300 font-bold text-xs mb-1.5 flex items-center gap-1.5">
+                    <span>⚡</span><span>Auto-Cleanup & Launch Features:</span>
+                  </div>
+                  <ul class="text-slate-300 text-xs space-y-1.5 pl-1">
+                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">›</span><span><strong>Auto-closes old port:</strong> Automatically terminates any lingering process occupying port 9300 (or report/allure ports).</span></li>
+                    <li class="flex items-start gap-2"><span class="text-emerald-400">›</span><span><strong>Auto-closes old port browsers:</strong> Closes lingering browser instances/processes specifically associated with the local run port (leaves all your personal browser windows untouched).</span></li>
+                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">›</span><span><strong>Auto-opens new browser:</strong> Automatically launches a fresh browser window directly at <code class="text-emerald-300 bg-black/40 px-1 py-0.5 rounded">http://localhost:9300</code>.</span></li>
+                    <li class="flex items-start gap-1.5"><span class="text-emerald-400">›</span><span><strong>Optional Flags:</strong> <code class="text-emerald-300 text-[11px]">--port=&lt;port&gt;</code>, <code class="text-emerald-300 text-[11px]">--no-open</code>, <code class="text-emerald-300 text-[11px]">--no-browser-close</code>, <code class="text-emerald-300 text-[11px]">--close-all-browsers</code>, <code class="text-emerald-300 text-[11px]">--no-kill-port</code>.</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-sky-200 font-bold text-xs mb-1">2. Via npm script:</div>
+                <div class="rounded-lg bg-black/60 border border-sky-900/60 p-2 font-mono text-xs text-sky-300 select-all">npm run test:ui</div>
+              </div>
+
+              <div>
+                <div class="text-sky-200 font-bold text-xs mb-1">3. Programmatically in Node.js / Express:</div>
+                <pre class="rounded-lg bg-black/60 border border-sky-900/60 p-2.5 font-mono text-xs text-sky-300 overflow-x-auto mb-2"><code>const {createRunnerServer} = require("qarp-playwright-automation-hub");
+
+// Starts the UI server and points to their local tests
+createRunnerServer({
+  port: 9300,
+  projectRoot: __dirname,
+});</code></pre>
+                <p class="text-slate-400 text-xs">The server will start at <code class="text-sky-300 bg-black/40 px-1 py-0.5 rounded">http://localhost:9300</code> and automatically scan for test files in the <code class="text-sky-300 font-mono">tests/</code> and <code class="text-sky-300 font-mono">e2e/</code> directories of the consuming project.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+    ];
+
+    function renderStepBar() {
+      const bar = document.getElementById('helpStepBar');
+      if (!bar) return;
+      bar.innerHTML = steps.map((s, i) => `
+        <button onclick="HelpGuide.goTo(${i})" title="${s.title}"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold font-mono whitespace-nowrap transition-all flex-shrink-0 ${i === current ? 'border-sky-500 bg-sky-900/60 text-sky-200' : 'border-slate-700/60 bg-transparent text-slate-500 hover:border-slate-500 hover:text-slate-300'}">
+          <span>${s.icon}</span>
+          <span class="hidden sm:inline">${s.tag}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderDots() {
+      const dots = document.getElementById('helpDots');
+      if (!dots) return;
+      dots.innerHTML = steps.map((_, i) =>
+        `<div class="w-1.5 h-1.5 rounded-full transition-all ${i === current ? 'bg-sky-400 w-3' : 'bg-slate-700'}" style="cursor:pointer" onclick="HelpGuide.goTo(${i})"></div>`
+      ).join('');
+    }
+
+    function renderContent() {
+      const s = steps[current];
+      const contentEl = document.getElementById('helpContent');
+      const counter = document.getElementById('helpStepCounter');
+      const prevBtn = document.getElementById('helpPrevBtn');
+      const nextBtn = document.getElementById('helpNextBtn');
+      if (!contentEl) return;
+
+      contentEl.innerHTML = `
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg"
+               style="background:linear-gradient(135deg,${s.color}33,${s.color}22);border:1px solid ${s.color}55">
+            ${s.icon}
+          </div>
+          <div>
+            <div class="text-[10px] font-mono font-bold uppercase tracking-widest mb-1" style="color:${s.color}">${s.tag}</div>
+            <h3 class="text-lg font-bold text-white">${s.title}</h3>
+          </div>
+        </div>
+        <div class="help-step-body text-sm">${s.content}</div>
+      `;
+
+      if (counter) counter.textContent = `Step ${current + 1} of ${steps.length}`;
+      if (prevBtn) prevBtn.disabled = current === 0;
+      if (nextBtn) {
+        if (current === steps.length - 1) {
+          nextBtn.textContent = '🎉 Close Guide';
+          nextBtn.onclick = HelpGuide.close;
+          nextBtn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+        } else {
+          nextBtn.textContent = 'Next →';
+          nextBtn.onclick = HelpGuide.next;
+          nextBtn.style.background = 'linear-gradient(135deg,#0ea5e9,#0284c7)';
+        }
+      }
+      renderStepBar();
+      renderDots();
+    }
+
+    return {
+      open() {
+        current = 0;
+        const modal = document.getElementById('helpGuideModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          setTimeout(() => renderContent(), 30);
+        }
+      },
+      close() {
+        const modal = document.getElementById('helpGuideModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      },
+      next() {
+        if (current < steps.length - 1) { current++; renderContent(); }
+      },
+      prev() {
+        if (current > 0) { current--; renderContent(); }
+      },
+      goTo(i) {
+        current = i;
+        renderContent();
+      }
+    };
+  })();
+
+  // Keyboard: Esc = close, arrow keys = navigate
+  document.addEventListener('keydown', e => {
+    const modal = document.getElementById('helpGuideModal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    if (e.key === 'Escape') HelpGuide.close();
+    if (e.key === 'ArrowRight') HelpGuide.next();
+    if (e.key === 'ArrowLeft') HelpGuide.prev();
+  });
   </script>
 </body>
 </html>
