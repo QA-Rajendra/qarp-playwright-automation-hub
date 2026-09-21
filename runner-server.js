@@ -417,10 +417,10 @@ function killProcessOnPort(port) {
         if (!trimmed.startsWith('TCP')) continue;
         const parts = trimmed.split(/\s+/);
         if (parts.length >= 5) {
-          const localAddr = parts[1];
-          const state = parts[3];
+          const localAddr = parts[1] || '';
+          const foreignAddr = parts[2] || '';
           const pid = parseInt(parts[4], 10);
-          if (localAddr.endsWith(`:${port}`) && state === 'LISTENING' && pid && pid !== process.pid) {
+          if ((localAddr.endsWith(`:${port}`) || foreignAddr.endsWith(`:${port}`)) && pid && pid !== process.pid) {
             pids.add(pid);
           }
         }
@@ -452,29 +452,39 @@ function killProcessOnPort(port) {
 }
 
 // ── Close Old Browser Instances ────────────────────────────────────────────
-function closeOldBrowsers() {
-  console.log(`   🌐 Closing old browser instances...`);
-  if (process.platform === 'win32') {
-    const targets = ['msedge.exe', 'chrome.exe', 'chromium.exe', 'headless_shell.exe'];
-    for (const target of targets) {
-      try {
-        execSync(`taskkill /F /IM ${target} /T`, { stdio: 'ignore' });
-      } catch (_) {}
+function closeOldBrowsers(port, forceAll = false) {
+  if (forceAll) {
+    console.log(`   🌐 Closing all old browser instances...`);
+    if (process.platform === 'win32') {
+      const targets = ['msedge.exe', 'chrome.exe', 'chromium.exe', 'headless_shell.exe'];
+      for (const target of targets) {
+        try {
+          execSync(`taskkill /F /IM ${target} /T`, { stdio: 'ignore' });
+        } catch (_) {}
+      }
+    } else if (process.platform === 'darwin') {
+      const targets = ['Google Chrome', 'Microsoft Edge', 'Chromium'];
+      for (const target of targets) {
+        try {
+          execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
+        } catch (_) {}
+      }
+    } else {
+      const targets = ['chrome', 'chromium', 'msedge'];
+      for (const target of targets) {
+        try {
+          execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
+        } catch (_) {}
+      }
     }
-  } else if (process.platform === 'darwin') {
-    const targets = ['Google Chrome', 'Microsoft Edge', 'Chromium'];
-    for (const target of targets) {
-      try {
-        execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
-      } catch (_) {}
-    }
-  } else {
-    const targets = ['chrome', 'chromium', 'msedge'];
-    for (const target of targets) {
-      try {
-        execSync(`pkill -f "${target}"`, { stdio: 'ignore' });
-      } catch (_) {}
-    }
+    return;
+  }
+
+  // Safe mode: Close ONLY browser instances and processes associated with the local run port
+  const targetPorts = Array.isArray(port) ? port : (port ? [port] : [9300]);
+  console.log(`   🌐 Closing old browser instances on local run port (${targetPorts.join(', ')})...`);
+  for (const p of targetPorts) {
+    killProcessOnPort(p);
   }
 }
 
@@ -1004,6 +1014,7 @@ if (require.main === module) {
     let cliRoot = process.cwd();
     let shouldOpenBrowser = true;
     let shouldCloseOldBrowsers = true;
+    let closeAllBrowsers = false;
     let shouldKillOldPort = true;
 
     args.forEach(arg => {
@@ -1013,6 +1024,7 @@ if (require.main === module) {
       if (arg.startsWith('--root=')) cliRoot = require('path').resolve(process.cwd(), arg.split('=')[1]);
       if (arg === '--no-open') shouldOpenBrowser = false;
       if (arg === '--no-browser-close') shouldCloseOldBrowsers = false;
+      if (arg === '--close-all-browsers') closeAllBrowsers = true;
       if (arg === '--no-kill-port') shouldKillOldPort = false;
     });
 
@@ -1028,9 +1040,9 @@ if (require.main === module) {
       await new Promise(r => setTimeout(r, 400));
     }
 
-    // 2. Auto-close old browser instances
+    // 2. Auto-close old browser instances (only local run port by default)
     if (shouldCloseOldBrowsers) {
-      closeOldBrowsers();
+      closeOldBrowsers([cliPort, cliPort + 20, cliPort + 35], closeAllBrowsers);
       await new Promise(r => setTimeout(r, 400));
     }
 

@@ -50,9 +50,9 @@ npx qarp-uiPlaywrightTool
 ```
 > ⚡ **Auto-Cleanup & Launch Features:**
 > - **Auto-closes old port:** Automatically terminates any lingering process occupying port 9300 (or report/allure ports).
-> - **Auto-closes old browsers:** Closes lingering previous browser windows/test browser instances.
+> - **Auto-closes old port browsers:** Closes lingering browser instances/processes specifically associated with the local run port (leaves all your personal browser windows untouched).
 > - **Auto-opens new browser:** Automatically launches a fresh browser window directly at `http://localhost:9300`.
-> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--no-kill-port`.
+> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--close-all-browsers`, `--no-kill-port`.
 
 
 **2. Via npm script:**

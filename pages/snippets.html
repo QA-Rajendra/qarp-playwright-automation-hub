@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Snippets - QARP Playwright Hub</title>
+  <meta name="description" content="Ready-to-use Playwright JavaScript test snippets: login, API, POM, hooks, assertions and more.">
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0a0b10;--card:#13161f;--code:#0d1117;--bdr:#1e2330;--muted:#64748b;--pur:#7c3aed;--cyn:#06b6d4;--grn:#3fb950;--red:#f85149;--amb:#f59e0b}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:#e2e8f0;font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(6,182,212,.08) 0%,transparent 55%);pointer-events:none;z-index:0}
+    .wrap{position:relative;z-index:1}
+    .topbar{background:rgba(13,14,20,.92);border-bottom:1px solid var(--bdr);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
+    .catbar{border-bottom:1px solid rgba(30,35,48,.6);background:rgba(15,17,27,.4);backdrop-filter:blur(8px);position:sticky;top:53px;z-index:50}
+    .srch{background:rgba(15,17,27,.9);border:1px solid var(--bdr);color:#e2e8f0;font-family:inherit;border-radius:.5rem;padding:.5rem 1rem .5rem 2.25rem;font-size:.75rem;width:280px;outline:none;transition:border-color .2s,box-shadow .2s}
+    .srch:focus{border-color:var(--pur);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+    .srch::placeholder{color:var(--muted)}
+    .tabs{display:flex;gap:.375rem;flex-wrap:wrap}
+    .tab{padding:.35rem .875rem;border-radius:9999px;font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--bdr);background:transparent;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit}
+    .tab:hover{border-color:#334155;color:#e2e8f0}
+    .tab.on{background:linear-gradient(135deg,var(--pur),var(--cyn));border-color:transparent;color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.35)}
+    .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:1.25rem}
+    @media(max-width:640px){.sgrid{grid-template-columns:1fr}.srch{width:100%}}
+    .scard{background:var(--card);border:1px solid var(--bdr);border-radius:.875rem;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column}
+    .scard:hover{border-color:#2a3050;transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 1px rgba(124,58,237,.12)}
+    .sch{padding:.875rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:rgba(15,17,27,.7)}
+    .stitle{font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+    .sbadge{font-size:.55rem;padding:.15rem .5rem;border-radius:9999px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    .cpbtn{display:flex;align-items:center;gap:.35rem;padding:.3rem .75rem;border-radius:.375rem;font-size:.62rem;font-weight:700;border:1px solid #2a3040;background:rgba(30,35,50,.8);color:var(--muted);cursor:pointer;transition:all .18s;font-family:inherit}
+    .cpbtn:hover{border-color:var(--cyn);color:var(--cyn)}
+    .cpbtn.done{border-color:var(--grn);color:var(--grn)}
+    .scb{background:var(--code);padding:1rem 1.125rem;font-size:.7rem;line-height:1.8;overflow-x:auto;flex:1;max-height:340px;overflow-y:auto}
+    .scb::-webkit-scrollbar{width:5px;height:5px}
+    .scb::-webkit-scrollbar-thumb{background:#1e2330;border-radius:9999px}
+    pre code{color:#cdd6f4;white-space:pre;display:block}
+    .kw{color:#cba6f7}.fn{color:#89b4fa}.st{color:#a6e3a1}.cm{color:#585b70;font-style:italic}.nm{color:#fab387}
+    .scf{padding:.5rem 1rem;border-top:1px solid var(--bdr);background:rgba(10,11,16,.6);display:flex;align-items:center;gap:.75rem;font-size:.6rem;color:var(--muted);flex-wrap:wrap}
+    .stag{padding:.1rem .45rem;border-radius:9999px;background:rgba(30,35,50,.9);border:1px solid var(--bdr);color:#64748b}
+    .empty-s{text-align:center;padding:5rem 2rem;color:var(--muted)}
+    .hl{background:rgba(124,58,237,.3);border-radius:2px;color:#c4b5fd}
+    .grad{background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .chip{font-size:.6rem;padding:.2rem .6rem;border-radius:9999px;border:1px solid var(--bdr);color:var(--muted)}
+    .lnum{display:inline-block;user-select:none;color:#2a3050;margin-right:.75rem;min-width:1.5rem;text-align:right}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-4">
+        <a href="../index.html" class="text-slate-400 hover:text-purple-300 transition-colors text-xs">&#8592; Hub</a>
+        <div class="w-px h-5 bg-slate-800"></div>
+        <h1 class="text-sm font-bold grad tracking-tight">&#127921; Playwright JS Snippets</h1>
+        <span class="text-[9px] text-slate-500 uppercase tracking-widest hidden sm:block">Ready-to-use code</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="chip" class="chip">Loading&#8230;</span>
+        <div class="relative">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">&#128269;</span>
+          <input type="text" id="si" class="srch" placeholder="Search snippets&#8230; (press /)" oninput="flt()">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="catbar">
+    <div class="max-w-7xl mx-auto px-5 py-2.5">
+      <div class="tabs" id="tabs"></div>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-5 py-6">
+    <div class="sgrid" id="grid"></div>
+    <div class="empty-s hidden" id="empty">
+      <p class="text-sm font-bold text-slate-500 mt-2">No snippets found</p>
+      <p class="text-xs text-slate-600 mt-1">Try a different search or category</p>
+    </div>
+  </div>
+</div>
+<script>
+var S=[
+{id:'s1',cat:'Setup',icon:'&#9881;',title:'Project Setup & Install',badge:'terminal',bc:'#3b82f6',tags:['npm','install','init'],
+code:'# Bootstrap new project\nmkdir myproject\ncd myproject\nnpm init -y\nnpm install -D @playwright/test\nnpx playwright install\nnpx playwright init'},
+{id:'s2',cat:'Setup',icon:'&#9881;',title:'playwright.config.js',badge:'config',bc:'#7c3aed',tags:['config','browsers','projects'],
+code:"// playwright.config.js\nconst { defineConfig, devices } = require('@playwright/test');\nmodule.exports = defineConfig({\n  testDir: './tests',\n  timeout: 30000,\n  retries: 1,\n  workers: 4,\n  reporter: [['html'], ['list']],\n  use: {\n    baseURL: 'https://www.saucedemo.com',\n    headless: true,\n    screenshot: 'only-on-failure',\n    video: 'retain-on-failure',\n    trace: 'on-first-retry',\n  },\n  projects: [\n    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },\n    { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },\n    { name: 'webkit',   use: { ...devices['Desktop Safari'] } },\n    { name: 'mobile',   use: { ...devices['iPhone 13'] } },\n  ],\n});"},
+{id:'b1',cat:'Basics',icon:'&#128640;',title:'First Test - Navigate & Assert',badge:'beginner',bc:'#3fb950',tags:['navigate','expect','title'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('homepage title', async ({ page }) => {\n  await page.goto('https://playwright.dev');\n  await expect(page).toHaveTitle(/Playwright/);\n  await expect(page).toHaveURL('https://playwright.dev/');\n});"},
+{id:'b2',cat:'Basics',icon:'&#128640;',title:'Click, Fill & Submit Form',badge:'beginner',bc:'#3fb950',tags:['click','fill','locator'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('login form', async ({ page }) => {\n  await page.goto('/login');\n  await page.fill('#username', 'standard_user');\n  await page.fill('#password', 'secret_sauce');\n  // Preferred: use locators\n  await page.locator('[data-test=\"login-button\"]').click();\n  await expect(page).toHaveURL('/inventory.html');\n  await expect(page.locator('.title')).toHaveText('Products');\n});"},
+{id:'b3',cat:'Basics',icon:'&#128640;',title:'Locator Strategies',badge:'beginner',bc:'#3fb950',tags:['getByRole','getByText','css','xpath'],
+code:"const { test } = require('@playwright/test');\n\ntest('locators', async ({ page }) => {\n  // By role (most accessible - preferred)\n  await page.getByRole('button', { name: 'Sign in' }).click();\n  await page.getByRole('textbox', { name: 'Email' }).fill('a@b.com');\n  // By label\n  await page.getByLabel('Password').fill('secret');\n  // By placeholder\n  await page.getByPlaceholder('Search...').fill('query');\n  // By text\n  await page.getByText('Welcome back').isVisible();\n  // By testId (data-testid)\n  await page.getByTestId('submit').click();\n  // CSS\n  await page.locator('button.submit').click();\n  // XPath\n  await page.locator('//button[text()=\"Submit\"]').click();\n});"},
+{id:'a1',cat:'Assertions',icon:'&#9989;',title:'Web-First Assertions',badge:'core',bc:'#06b6d4',tags:['expect','toHaveText','toBeVisible','toHaveCount'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('assertions', async ({ page }) => {\n  await page.goto('/inventory.html');\n  // Visibility\n  await expect(page.locator('.title')).toBeVisible();\n  await expect(page.locator('.hidden')).toBeHidden();\n  // Text\n  await expect(page.locator('h1')).toHaveText('Products');\n  await expect(page.locator('h1')).toContainText('Prod');\n  // Input value\n  await expect(page.locator('#qty')).toHaveValue('1');\n  // Attribute\n  await expect(page.locator('img')).toHaveAttribute('alt', 'logo');\n  // CSS class\n  await expect(page.locator('.btn')).toHaveClass(/active/);\n  // Count\n  await expect(page.locator('.item')).toHaveCount(6);\n  // URL and title\n  await expect(page).toHaveURL(/inventory/);\n  await expect(page).toHaveTitle(/Swag Labs/);\n  // State\n  await expect(page.locator('#submit')).toBeEnabled();\n  await expect(page.locator('#agree')).toBeChecked();\n});"},
+{id:'a2',cat:'Assertions',icon:'&#9989;',title:'Soft Assertions',badge:'advanced',bc:'#f59e0b',tags:['expect.soft','non-blocking'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('soft assertions', async ({ page }) => {\n  await page.goto('/checkout');\n  // Soft: collect failures without stopping test\n  await expect.soft(page.locator('h1')).toHaveText('Checkout');\n  await expect.soft(page.locator('.total')).toContainText('$');\n  await expect.soft(page.locator('#finish')).toBeEnabled();\n  // Hard: stops test immediately on failure\n  await expect(page.locator('.order-id')).toBeVisible();\n  // All soft failures are reported at the end\n});"},
+{id:'p1',cat:'POM',icon:'&#127959;',title:'Page Object - Login Page',badge:'pattern',bc:'#ec4899',tags:['POM','class','reusable'],
+code:"// pages/LoginPage.js\nclass LoginPage {\n  constructor(page) {\n    this.page = page;\n    this.usernameInput = page.locator('#user-name');\n    this.passwordInput = page.locator('#password');\n    this.loginButton   = page.locator('#login-button');\n    this.errorMessage  = page.locator('[data-test=\"error\"]');\n  }\n\n  async navigate() {\n    await this.page.goto('/');\n  }\n\n  async login(username, password) {\n    await this.usernameInput.fill(username);\n    await this.passwordInput.fill(password);\n    await this.loginButton.click();\n  }\n\n  async getErrorMessage() {\n    return await this.errorMessage.textContent();\n  }\n}\n\nmodule.exports = { LoginPage };"},
+{id:'p2',cat:'POM',icon:'&#127959;',title:'POM - Usage in Spec',badge:'pattern',bc:'#ec4899',tags:['import','describe','beforeEach'],
+code:"const { test, expect } = require('@playwright/test');\nconst { LoginPage }    = require('../pages/LoginPage');\n\ntest.describe('Login Tests', () => {\n  let loginPage;\n\n  test.beforeEach(async ({ page }) => {\n    loginPage = new LoginPage(page);\n    await loginPage.navigate();\n  });\n\n  test('valid login redirects', async ({ page }) => {\n    await loginPage.login('standard_user', 'secret_sauce');\n    await expect(page).toHaveURL('/inventory.html');\n  });\n\n  test('invalid login shows error', async () => {\n    await loginPage.login('bad_user', 'bad_pass');\n    const err = await loginPage.getErrorMessage();\n    expect(err).toContain('Username and password do not match');\n  });\n});"},
+{id:'p3',cat:'POM',icon:'&#127959;',title:'BasePage + Inheritance',badge:'advanced',bc:'#f59e0b',tags:['base','extends','inherit'],
+code:"// pages/BasePage.js\nclass BasePage {\n  constructor(page) { this.page = page; }\n  async navigate(path) { await this.page.goto(path || '/'); }\n  async waitForLoad()  { await this.page.waitForLoadState('networkidle'); }\n  async getTitle()     { return await this.page.title(); }\n}\n\n// pages/ProductsPage.js\nconst { BasePage } = require('./BasePage');\n\nclass ProductsPage extends BasePage {\n  constructor(page) {\n    super(page);\n    this.addBtn    = page.locator('[data-test^=\"add-to-cart\"]');\n    this.cartBadge = page.locator('.shopping_cart_badge');\n  }\n  async addFirstItem()  { await this.addBtn.first().click(); }\n  async getCartCount()  { return await this.cartBadge.textContent(); }\n}\nmodule.exports = { ProductsPage };"},
+{id:'h1',cat:'Hooks',icon:'&#128279;',title:'beforeEach / afterEach',badge:'lifecycle',bc:'#06b6d4',tags:['beforeAll','afterAll','setup','teardown'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest.describe('Shopping Cart', () => {\n  test.beforeAll(async () => {\n    console.log('Suite starting...');\n  });\n\n  test.afterAll(async () => {\n    console.log('Suite done.');\n  });\n\n  test.beforeEach(async ({ page }) => {\n    await page.goto('/');\n    await page.fill('#user-name', 'standard_user');\n    await page.fill('#password', 'secret_sauce');\n    await page.click('#login-button');\n    await page.waitForURL('/inventory.html');\n  });\n\n  test.afterEach(async ({ page }, testInfo) => {\n    if (testInfo.status !== 'passed') {\n      await page.screenshot({ path: 'fail-' + testInfo.title + '.png' });\n    }\n  });\n\n  test('add item to cart', async ({ page }) => {\n    await page.click('[data-test=\"add-to-cart-sauce-labs-backpack\"]');\n    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');\n  });\n});"},
+{id:'h2',cat:'Hooks',icon:'&#128279;',title:'Custom Fixtures',badge:'advanced',bc:'#f59e0b',tags:['fixture','test.extend'],
+code:"// fixtures/baseFixture.js\nconst { test: base } = require('@playwright/test');\nconst { LoginPage }  = require('../pages/LoginPage');\n\nconst test = base.extend({\n  loggedInPage: async ({ page }, use) => {\n    const login = new LoginPage(page);\n    await login.navigate();\n    await login.login('standard_user', 'secret_sauce');\n    await page.waitForURL('/inventory.html');\n    await use(page);   // hands page to the test\n    // teardown can go here\n  },\n});\n\nmodule.exports = { test };\n\n// Usage:\n// const { test } = require('../fixtures/baseFixture');\n// test('works', async ({ loggedInPage }) => { ... });"},
+{id:'api1',cat:'API Testing',icon:'&#127760;',title:'GET & POST Requests',badge:'api',bc:'#06b6d4',tags:['request','GET','POST','JSON'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('GET /users', async ({ request }) => {\n  const res = await request.get('https://reqres.in/api/users?page=1');\n  expect(res.status()).toBe(200);\n  const body = await res.json();\n  expect(body.data[0]).toHaveProperty('email');\n});\n\ntest('POST /users', async ({ request }) => {\n  const res = await request.post('https://reqres.in/api/users', {\n    data: { name: 'John Doe', job: 'QA Engineer' }\n  });\n  expect(res.status()).toBe(201);\n  const body = await res.json();\n  expect(body.name).toBe('John Doe');\n});\n\ntest('DELETE /users/2', async ({ request }) => {\n  const res = await request.delete('https://reqres.in/api/users/2');\n  expect(res.status()).toBe(204);\n});"},
+{id:'api2',cat:'API Testing',icon:'&#127760;',title:'Auth Token + API Context',badge:'api',bc:'#06b6d4',tags:['bearer','token','headers'],
+code:"const { test, expect, request } = require('@playwright/test');\n\ntest.describe('Authenticated API', () => {\n  let apiContext, authToken;\n\n  test.beforeAll(async () => {\n    apiContext = await request.newContext({ baseURL: 'https://api.myapp.com' });\n    const loginRes = await apiContext.post('/auth/login', {\n      data: { username: 'user@test.com', password: 'pass123' }\n    });\n    expect(loginRes.status()).toBe(200);\n    authToken = (await loginRes.json()).token;\n  });\n\n  test.afterAll(async () => { await apiContext.dispose(); });\n\n  test('GET /profile requires auth', async () => {\n    const res = await apiContext.get('/profile', {\n      headers: { Authorization: 'Bearer ' + authToken }\n    });\n    expect(res.status()).toBe(200);\n    const data = await res.json();\n    expect(data.email).toBe('user@test.com');\n  });\n});"},
+{id:'api3',cat:'API Testing',icon:'&#127760;',title:'Mock & Intercept Network',badge:'api',bc:'#06b6d4',tags:['route','mock','fulfill','abort'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('mock API response', async ({ page }) => {\n  await page.route('**/api/products', async route => {\n    await route.fulfill({\n      status: 200,\n      contentType: 'application/json',\n      body: JSON.stringify([{ id: 1, name: 'Mocked Item', price: 9.99 }])\n    });\n  });\n  await page.goto('/products');\n  await expect(page.locator('.product-name')).toContainText('Mocked Item');\n});\n\ntest('block tracking scripts', async ({ page }) => {\n  await page.route('**/(analytics|tracking)/**', r => r.abort());\n  await page.goto('/');\n});\n\ntest('log all API calls', async ({ page }) => {\n  page.on('request',  r => console.log('->', r.method(), r.url()));\n  page.on('response', r => console.log('<-', r.status(), r.url()));\n  await page.goto('/dashboard');\n});"},
+{id:'w1',cat:'Waits',icon:'&#8987;',title:'Smart Waits - No sleep()!',badge:'best practice',bc:'#3fb950',tags:['waitForURL','networkidle','waitForSelector'],
+code:"const { test } = require('@playwright/test');\n\ntest('smart waits', async ({ page }) => {\n  await page.goto('/app');\n\n  // Wait for navigation to finish\n  await page.waitForURL('/dashboard');\n  await page.waitForLoadState('networkidle');\n\n  // Wait for elements\n  await page.waitForSelector('.table', { state: 'visible' });\n  await page.locator('.spinner').waitFor({ state: 'hidden' });\n\n  // Combine response wait + action\n  const [response] = await Promise.all([\n    page.waitForResponse('**/api/data'),\n    page.click('#load')\n  ]);\n  const data = await response.json();\n\n  // Custom JS condition\n  await page.waitForFunction(() =>\n    document.querySelectorAll('.item').length > 5\n  );\n\n  // NEVER do this — it is flaky:\n  // await page.waitForTimeout(3000);\n});"},
+{id:'sc1',cat:'Screenshots',icon:'&#128248;',title:'Screenshots & Visual Testing',badge:'visual',bc:'#7c3aed',tags:['screenshot','snapshot','fullPage'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('screenshots', async ({ page }) => {\n  await page.goto('/products');\n\n  // Full page\n  await page.screenshot({ path: 'full.png', fullPage: true });\n\n  // Single element\n  await page.locator('.card').first().screenshot({ path: 'card.png' });\n\n  // Clipped region\n  await page.screenshot({\n    path: 'header.png',\n    clip: { x: 0, y: 0, width: 1280, height: 80 }\n  });\n\n  // Visual regression (creates baseline on first run,\n  // compares on subsequent runs)\n  await expect(page).toMatchSnapshot('products.png', {\n    threshold: 0.1,\n    maxDiffPixels: 100,\n  });\n});"},
+{id:'mt1',cat:'Multi-Tab',icon:'&#128193;',title:'Popups, New Tabs & iFrames',badge:'advanced',bc:'#f59e0b',tags:['popup','newPage','frameLocator'],
+code:"const { test, expect } = require('@playwright/test');\n\ntest('handle popup tab', async ({ page, context }) => {\n  await page.goto('/');\n  const [popup] = await Promise.all([\n    context.waitForEvent('page'),\n    page.click('a[target=\"_blank\"]')\n  ]);\n  await popup.waitForLoadState('domcontentloaded');\n  await expect(popup).toHaveTitle(/Expected Title/);\n  await popup.close();\n});\n\ntest('iframe interaction', async ({ page }) => {\n  await page.goto('/with-iframe');\n  const frame = page.frameLocator('#myFrame');\n  await frame.locator('input#name').fill('Playwright');\n  await frame.locator('button[type=\"submit\"]').click();\n});"},
+{id:'dd1',cat:'Data-Driven',icon:'&#128202;',title:'Parameterized Tests',badge:'pattern',bc:'#ec4899',tags:['forEach','loop','data'],
+code:"const { test, expect } = require('@playwright/test');\n\nconst users = [\n  { user: 'standard_user',   pass: 'secret_sauce', url: '/inventory.html' },\n  { user: 'locked_out_user', pass: 'secret_sauce', url: null, error: 'locked out' },\n  { user: 'problem_user',    pass: 'secret_sauce', url: '/inventory.html' },\n];\n\nfor (const { user, pass, url, error } of users) {\n  test('login: ' + user, async ({ page }) => {\n    await page.goto('/');\n    await page.fill('#user-name', user);\n    await page.fill('#password', pass);\n    await page.click('#login-button');\n    if (url) {\n      await expect(page).toHaveURL(url);\n    } else {\n      await expect(page.locator('[data-test=\"error\"]')).toContainText(error);\n    }\n  });\n}"},
+{id:'db1',cat:'Debugging',icon:'&#128027;',title:'Debug Mode & Pause',badge:'debug',bc:'#f85149',tags:['pause','PWDEBUG','test.only'],
+code:"// Run in debug mode:\n// PWDEBUG=1 npx playwright test\n// npx playwright test login.spec.js --debug\n\nconst { test } = require('@playwright/test');\n\ntest('debug example', async ({ page }) => {\n  await page.goto('/');\n  // Opens Playwright Inspector here\n  await page.pause();\n  await page.fill('#user-name', 'standard_user');\n  await page.pause(); // Second breakpoint\n  await page.click('#login-button');\n});\n\n// Focus only this test:\ntest.only('focused', async ({ page }) => {\n  await page.goto('/');\n});"},
+{id:'db2',cat:'Debugging',icon:'&#128027;',title:'Playwright Codegen',badge:'debug',bc:'#f85149',tags:['codegen','record','generate'],
+code:'# Record actions and auto-generate test code\nnpx playwright codegen https://www.saucedemo.com\n\n# Save to file\nnpx playwright codegen --output=tests/recorded.spec.js https://www.saucedemo.com\n\n# Record on mobile device\nnpx playwright codegen --device="iPhone 13" https://myapp.com\n\n# Record with saved auth session\nnpx playwright codegen --save-storage=auth.json https://myapp.com'},
+{id:'au1',cat:'Auth & State',icon:'&#128272;',title:'Save & Reuse Auth State',badge:'performance',bc:'#3fb950',tags:['storageState','cookies','setup'],
+code:"// auth.setup.js\nconst { test: setup } = require('@playwright/test');\n\nsetup('authenticate', async ({ page }) => {\n  await page.goto('/login');\n  await page.fill('#user-name', 'standard_user');\n  await page.fill('#password', 'secret_sauce');\n  await page.click('#login-button');\n  await page.waitForURL('/inventory.html');\n  // Saves cookies and localStorage\n  await page.context().storageState({ path: '.auth/user.json' });\n});\n\n// playwright.config.js\n// projects: [\n//   { name: 'setup', testMatch: /auth.setup.js/ },\n//   {\n//     name: 'chromium',\n//     use: { storageState: '.auth/user.json' },\n//     dependencies: ['setup'],\n//   },\n// ]\n// All tests in chromium start already logged in!"},
+{id:'rp1',cat:'Reports',icon:'&#128203;',title:'Reporter Configuration',badge:'reporting',bc:'#7c3aed',tags:['html','allure','junit'],
+code:"// playwright.config.js\nconst { defineConfig } = require('@playwright/test');\n\nmodule.exports = defineConfig({\n  reporter: [\n    // Built-in HTML (npx playwright show-report)\n    ['html', { outputFolder: 'playwright-report', open: 'on-failure' }],\n    // JUnit for CI\n    ['junit', { outputFile: 'results/junit.xml' }],\n    // JSON\n    ['json',  { outputFile: 'results/results.json' }],\n    // Allure (npm install -D allure-playwright)\n    ['allure-playwright', { outputFolder: 'allure-results' }],\n    // Console\n    ['line'],\n  ],\n});\n// npx allure generate allure-results --clean -o allure-report\n// npx allure open allure-report"},
+];
+
+var CATS=['All'];
+S.forEach(function(s){ if(CATS.indexOf(s.cat)===-1) CATS.push(s.cat); });
+var activeCat='All', q='';
+
+function buildTabs(){
+  document.getElementById('tabs').innerHTML=CATS.map(function(c){
+    return '<button class="tab'+(c==='All'?' on':'')+'" onclick="selCat(\''+c+'\')" data-c="'+c+'">'+c+'</button>';
+  }).join('');
+}
+function selCat(c){
+  activeCat=c;
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('on',b.dataset.c===c); });
+  render();
+}
+function flt(){ q=document.getElementById('si').value.toLowerCase().trim(); render(); }
+function matches(s){
+  var cm=activeCat==='All'||s.cat===activeCat;
+  if(!q) return cm;
+  var h=[s.title,s.cat].concat(s.tags).concat([s.code]).join(' ').toLowerCase();
+  return cm&&h.indexOf(q)!==-1;
+}
+function escH(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function hlText(t){
+  if(!q) return escH(t);
+  var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return escH(t).replace(re,'<span class="hl">$1</span>');
+}
+function synHL(code){
+  var isBash=/^(#|npx|npm|mkdir)/.test(code.trim());
+  if(isBash){
+    return escH(code)
+      .replace(/(#[^\n]*)/g,'<span class="cm">$1</span>')
+      .replace(/\b(npx|npm|mkdir|cd|node|export)\b/g,'<span class="kw">$1</span>');
+  }
+  var h=escH(code);
+  h=h.replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>');
+  h=h.replace(/(&apos;[^&]*&apos;|'[^'\n]*')/g,'<span class="st">$1</span>');
+  h=h.replace(/(&quot;[^&]*&quot;)/g,'<span class="st">$1</span>');
+  var kws=['const','let','var','function','class','return','async','await','import','export','require','module','new','this','if','else','for','of','in','true','false','null','undefined','from'];
+  h=h.replace(new RegExp('\\b('+kws.join('|')+')\\b','g'),'<span class="kw">$1</span>');
+  h=h.replace(/\b(test|expect|describe|beforeEach|afterEach|beforeAll|afterAll|page|request|context|route)\b/g,'<span class="fn">$1</span>');
+  h=h.replace(/\b(\d+)\b/g,'<span class="nm">$1</span>');
+  return h;
+}
+function withLN(code){
+  return code.split('\n').map(function(l,i){
+    return '<span class="lnum">'+(i+1)+'</span>'+l;
+  }).join('\n');
+}
+function render(){
+  var vis=S.filter(matches);
+  document.getElementById('chip').textContent=vis.length+' of '+S.length+' snippets';
+  var empty=document.getElementById('empty'),grid=document.getElementById('grid');
+  if(!vis.length){ grid.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  grid.innerHTML=vis.map(function(s){
+    return '<div class="scard">'+
+      '<div class="sch">'+
+        '<div class="stitle">'+
+          '<span>'+s.icon+'</span>'+
+          '<span>'+hlText(s.title)+'</span>'+
+          '<span class="sbadge" style="background:'+s.bc+'22;color:'+s.bc+';border:1px solid '+s.bc+'44">'+s.badge+'</span>'+
+        '</div>'+
+        '<button class="cpbtn" onclick="cp(\''+s.id+'\')" id="cb-'+s.id+'">&#8998; Copy</button>'+
+      '</div>'+
+      '<div class="scb"><pre><code>'+withLN(synHL(s.code))+'</code></pre></div>'+
+      '<div class="scf">'+
+        '<span>&#128194; '+s.cat+'</span><span>&#183;</span>'+
+        '<span>'+s.code.split('\n').length+' lines</span><span>&#183;</span>'+
+        s.tags.map(function(t){ return '<span class="stag">'+t+'</span>'; }).join('')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function cp(id){
+  var s=S.filter(function(x){ return x.id===id; })[0];
+  if(!s) return;
+  var btn=document.getElementById('cb-'+id);
+  try{
+    navigator.clipboard.writeText(s.code).then(function(){
+      btn.textContent='\u2713 Copied!'; btn.classList.add('done');
+      setTimeout(function(){ btn.innerHTML='&#8998; Copy'; btn.classList.remove('done'); },1800);
+    });
+  }catch(_){
+    var ta=document.createElement('textarea');
+    ta.value=s.code; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent='\u2713 Copied!'; btn.classList.add('done');
+    setTimeout(function(){ btn.innerHTML='&#8998; Copy'; btn.classList.remove('done'); },1800);
+  }
+}
+window.addEventListener('DOMContentLoaded',function(){
+  buildTabs(); render();
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){ e.preventDefault(); document.getElementById('si').focus(); }
+    if(e.key==='Escape'){ document.getElementById('si').value=''; q=''; render(); }
+  });
+});
+</script>
+</body>
+</html>
