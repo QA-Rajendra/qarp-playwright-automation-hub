@@ -7,8 +7,227 @@
 <meta name="description" content="Interactive MCP (Model Context Protocol) Inspector for Playwright Automation Hub"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/css/custom.css"/>
 <style>
-:root{--bg:#0a0b0f;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252a38;--border2:#2e3548;--accent:#7c6af7;--accent2:#5b4ef0;--accent-glow:rgba(124,106,247,0.18);--green:#34d399;--green-dim:rgba(52,211,153,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:12px;--radius-sm:8px}
+:root{--bg:#0a0b0f;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252a38;--border2:#2e3548;--accent:#7c6af7;--accent2:#5b4ef0;--accent-glow:rgba(124,106,247,0.18);--green:#34d399;--green-dim:rgba(52,211,153,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;--radius:12px;--radius-sm:8px}
+
+[data-theme="blue"],
+[data-theme="blue-erp"] {
+  --bg: #F5F9FF;
+  --surface: #FFFFFF;
+  --surface2: #EDF4FC;
+  --surface3: #E1ECF9;
+  --border: #D9E5F2;
+  --border2: #B8D2EB;
+  --accent: #1976D2;
+  --accent2: #1565C0;
+  --accent-glow: rgba(25, 118, 210, 0.15);
+  --green: #16A34A;
+  --green-dim: rgba(22, 163, 74, 0.12);
+  --red: #DC2626;
+  --red-dim: rgba(220, 38, 38, 0.12);
+  --text: #172B4D;
+  --text2: #334155;
+  --text3: #64748B;
+}
+
+[data-theme="blue"] .header,
+[data-theme="blue-erp"] .header {
+  background: #00264B !important;
+  border-bottom: 1px solid #0B2D4D !important;
+}
+
+[data-theme="blue"] .header-logo h1,
+[data-theme="blue-erp"] .header-logo h1 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .header-btn,
+[data-theme="blue-erp"] .header-btn {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #FFFFFF !important;
+}
+[data-theme="blue"] .header-btn:hover,
+[data-theme="blue-erp"] .header-btn:hover {
+  background: rgba(255,255,255,0.22) !important;
+}
+
+[data-theme="blue"] .status-pill,
+[data-theme="blue-erp"] .status-pill {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] .sidebar,
+[data-theme="blue-erp"] .sidebar {
+  background: #0B2D4D !important;
+  border-right: 1px solid #16426C !important;
+}
+
+[data-theme="blue"] .sidebar-title,
+[data-theme="blue-erp"] .sidebar-title,
+[data-theme="blue"] .section-strip,
+[data-theme="blue-erp"] .section-strip {
+  color: #93C5FD !important;
+}
+
+[data-theme="blue"] .server-info,
+[data-theme="blue-erp"] .server-info {
+  background: #071F36 !important;
+  border-color: #1A4773 !important;
+  color: #CBD5E1 !important;
+}
+
+[data-theme="blue"] .endpoint,
+[data-theme="blue-erp"] .endpoint {
+  color: #60A5FA !important;
+}
+
+[data-theme="blue"] .tool-item,
+[data-theme="blue-erp"] .tool-item {
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] .tool-item:hover,
+[data-theme="blue-erp"] .tool-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+[data-theme="blue"] .tool-item.active,
+[data-theme="blue-erp"] .tool-item.active {
+  background: #1976D2 !important;
+  border-color: #60A5FA !important;
+}
+
+[data-theme="blue"] .tool-name,
+[data-theme="blue-erp"] .tool-name {
+  color: #F8FAFC !important;
+}
+
+[data-theme="blue"] .tool-desc,
+[data-theme="blue-erp"] .tool-desc {
+  color: #94A3B8 !important;
+}
+
+[data-theme="blue"] .tool-item.active .tool-name,
+[data-theme="blue-erp"] .tool-item.active .tool-name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .tool-item.active .tool-desc,
+[data-theme="blue-erp"] .tool-item.active .tool-desc {
+  color: #E0E7FF !important;
+}
+
+[data-theme="blue"] .panel-header,
+[data-theme="blue-erp"] .panel-header {
+  background: #FFFFFF !important;
+  border-bottom-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .tool-body,
+[data-theme="blue-erp"] .tool-body {
+  background: #FFFFFF !important;
+}
+
+[data-theme="blue"] .resp-panel,
+[data-theme="blue-erp"] .resp-panel {
+  background: #F8FAFC !important;
+}
+
+[data-theme="blue"] .tab,
+[data-theme="blue-erp"] .tab {
+  color: #64748B !important;
+}
+
+[data-theme="blue"] .tab:hover,
+[data-theme="blue-erp"] .tab:hover {
+  color: #172B4D !important;
+  background: #EDF4FC !important;
+}
+
+[data-theme="blue"] .tab.active,
+[data-theme="blue-erp"] .tab.active {
+  color: #1976D2 !important;
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+  border-bottom-color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .jv,
+[data-theme="blue-erp"] .jv {
+  background: #07192C !important;
+  border-color: #1B3552 !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="blue"] .ci,
+[data-theme="blue-erp"] .ci {
+  background: #112842 !important;
+  border-color: #1F4268 !important;
+  color: #93C5FD !important;
+}
+
+[data-theme="blue"] .rc,
+[data-theme="blue-erp"] .rc {
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .rch,
+[data-theme="blue-erp"] .rch {
+  background: #EDF4FC !important;
+  border-bottom-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .rcb,
+[data-theme="blue-erp"] .rcb {
+  background: #07192C !important;
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] input[type=text],
+[data-theme="blue"] input[type=number],
+[data-theme="blue-erp"] input[type=text],
+[data-theme="blue-erp"] input[type=number] {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #172B4D !important;
+}
+
+[data-theme="blue"] .cbrow,
+[data-theme="blue-erp"] .cbrow {
+  background: #EDF4FC !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .noargs,
+[data-theme="blue-erp"] .noargs {
+  background: #EDF4FC !important;
+  border-color: #D9E5F2 !important;
+  color: #64748B !important;
+}
+
+[data-theme="blue"] .he,
+[data-theme="blue-erp"] .he {
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .he:hover,
+[data-theme="blue-erp"] .he:hover {
+  border-color: #1976D2 !important;
+  background: #EDF4FC !important;
+}
+
+#themeMenu.hidden { display: none !important; }
+#themeMenu:not(.hidden) { display: flex !important; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;overflow:hidden}
 .app{display:grid;grid-template-rows:60px 1fr;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
@@ -118,6 +337,22 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
   </div>
   <div class="header-spacer"></div>
   <div id="sp" class="status-pill"><div class="status-dot"></div><span id="st">Connecting&hellip;</span></div>
+  <!-- Theme Selector -->
+  <div style="position:relative;">
+    <button type="button" class="header-btn" id="themeBtn" onclick="theme.toggleThemeMenu(event)" title="Switch Theme">
+      <span id="themeIco">🌙</span> <span id="themeLbl">DEFAULT</span>
+    </button>
+    <div class="hidden" id="themeMenu" style="position:absolute;top:calc(100% + 8px);right:0;width:150px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:99;flex-direction:column;gap:4px;">
+      <button type="button" class="theme-opt" data-theme="default" onclick="changeTheme('default'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
+        <span style="display:flex;align-items:center;gap:6px;"><span>🌙</span> <b>Default</b></span>
+        <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
+      </button>
+      <button type="button" class="theme-opt" data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
+        <span style="display:flex;align-items:center;gap:6px;"><span>🔷</span> <b>Blue</b></span>
+        <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
+      </button>
+    </div>
+  </div>
   <a href="/" class="header-btn">&#8592; Dashboard</a>
 </header>
 <aside class="sidebar">
@@ -469,5 +704,6 @@ init().then(() => {
 });
 
 </script>
+<script src="../js/theme.js"></script>
 </body>
 </html>

@@ -254,7 +254,8 @@ class RunnerController {
     UI.toast('Starting Playwright test execution...', 'info', 2000);
 
     try {
-      const { id } = await api.startRun(cmd);
+      const env = (window.dashboard && dashboard.currentEnv) ? dashboard.currentEnv : 'DEV';
+      const { id } = await api.startRun(cmd, env);
       this.currentJobId = id;
 
       // ── Broadcast jobId to MCP Inspector via BroadcastChannel ──
@@ -312,9 +313,11 @@ class RunnerController {
         if (data.done) {
           clearInterval(this.pollTimer);
           this.currentJobId = null;
-          this.finishConsole();
 
           const res = data.result || { passed: 0, failed: 0, skipped: 0, total: 0, code: 0 };
+          const hasError = res.code !== 0 || (res.failed && res.failed > 0);
+          this.finishConsole(hasError);
+
           UI.toast(`Tests completed! Exit code: ${res.code}`, res.code === 0 ? 'success' : 'error', 3000);
 
           // Route to results view
@@ -418,11 +421,57 @@ class RunnerController {
     return esc;
   }
 
-  finishConsole() {
+  finishConsole(hasError = false) {
     const status = document.getElementById('crStatus');
     if (status) {
       status.textContent = 'finished';
       status.className = 'text-[9px] px-2 py-0.5 rounded-full border border-slate-700 bg-slate-800 text-slate-400 font-mono';
+    }
+    const btnAi = document.getElementById('btnConsoleAiDiagnose');
+    if (btnAi) {
+      if (hasError) {
+        btnAi.classList.remove('hidden');
+        btnAi.classList.add('inline-flex');
+      } else {
+        btnAi.classList.add('hidden');
+        btnAi.classList.remove('inline-flex');
+      }
+    }
+  }
+
+  switchConsoleTab(tab = 'output') {
+    const tabOutput = document.getElementById('tabConsoleOutput');
+    const tabApi = document.getElementById('tabConsoleApi');
+    const tabAi = document.getElementById('tabConsoleAi');
+
+    const bodyOutput = document.getElementById('crBody');
+    const bodyApi = document.getElementById('crApiBody');
+    const bodyAi = document.getElementById('crAiBody');
+
+    // Reset styles
+    [tabOutput, tabApi, tabAi].forEach(t => {
+      if (!t) return;
+      t.className = 'text-[10px] font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 font-mono transition-all flex items-center gap-1';
+    });
+
+    if (bodyOutput) bodyOutput.classList.add('hidden');
+    if (bodyApi) bodyApi.classList.add('hidden');
+    if (bodyAi) bodyAi.classList.add('hidden');
+
+    if (tab === 'api') {
+      if (tabApi) tabApi.className = 'text-[10px] font-bold px-2.5 py-1 rounded-md bg-slate-800 text-cyan-300 font-mono transition-all flex items-center gap-1';
+      if (bodyApi) bodyApi.classList.remove('hidden');
+    } else if (tab === 'ai') {
+      if (tabAi) tabAi.className = 'text-[10px] font-bold px-2.5 py-1 rounded-md bg-violet-900/60 border border-violet-500/50 text-purple-200 font-mono transition-all flex items-center gap-1 shadow-sm';
+      if (bodyAi) bodyAi.classList.remove('hidden');
+      if (window.aiAssistant) window.aiAssistant.refreshUI();
+    } else {
+      if (tabOutput) tabOutput.className = 'text-[10px] font-bold px-2.5 py-1 rounded-md bg-slate-800 text-cyan-300 font-mono transition-all flex items-center gap-1';
+      if (bodyOutput) bodyOutput.classList.remove('hidden');
+    }
+
+    if (window.UI && typeof window.UI.openRightConsole === 'function') {
+      window.UI.openRightConsole();
     }
   }
 

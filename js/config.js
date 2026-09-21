@@ -27,15 +27,8 @@ const APP_CONFIG = {
 
   // Theme Metadata
   themes: {
-    'dark':      { ico: '🌙', name: 'CYBER' },
-    'light':     { ico: '☀️', name: 'LIGHT' },
-    'cyberpunk': { ico: '⚡', name: 'NEON' },
-    'synthwave': { ico: '👾', name: 'SYNTH' },
-    'aurora':    { ico: '🌠', name: 'AURORA' },
-    'matrix':    { ico: '🌲', name: 'MATRIX' },
-    'crimson':   { ico: '🩸', name: 'CRIMSON' },
-    'sunset':    { ico: '🌅', name: 'SUNSET' },
-    'pastel':    { ico: '🍧', name: 'PASTEL' }
+    'default': { ico: '🌙', name: 'DEFAULT', label: 'Midnight Cyber' },
+    'blue':    { ico: '🔷', name: 'BLUE',    label: 'Blue' }
   },
 
   // CLI Execution Flags

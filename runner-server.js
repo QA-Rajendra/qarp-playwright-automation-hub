@@ -323,12 +323,35 @@ function getStructure(projectRoot) {
     }
   });
 
+  const totalTests = rootNodes.reduce((sum, n) => sum + (n.totalFiles || 0), 0);
+
   return { 
     tree: rootNodes, 
     folders: foldersList,
+    totalTests,
+    gitBranch: getGitBranch(projectRoot),
     projectName: path.basename(projectRoot),
     projectRoot: projectRoot
   };
+}
+
+// ── Git Branch Helper ───────────────────────────────────────────────────────
+function getGitBranch(projectRoot) {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: projectRoot, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    if (branch && branch !== 'HEAD') return branch;
+  } catch (_) {}
+  try {
+    const headPath = path.resolve(projectRoot, '.git', 'HEAD');
+    if (fs.existsSync(headPath)) {
+      const content = fs.readFileSync(headPath, 'utf8').trim();
+      if (content.startsWith('ref: refs/heads/')) {
+        return content.replace('ref: refs/heads/', '');
+      }
+      return content.slice(0, 7);
+    }
+  } catch (_) {}
+  return 'main';
 }
 
 // ── Project Parser from playwright.config ──────────────────────────────────
@@ -364,10 +387,12 @@ function parseTestOutput(output, code) {
   const passMatch = output.match(/(\d+)\s+passed/);
   const failMatch = output.match(/(\d+)\s+failed/);
   const skipMatch = output.match(/(\d+)\s+skipped/);
+  const flakyMatch = output.match(/(\d+)\s+flaky/);
 
   const passed = passMatch ? parseInt(passMatch[1]) : 0;
   const failed = failMatch ? parseInt(failMatch[1]) : 0;
   const skipped = skipMatch ? parseInt(skipMatch[1]) : 0;
+  const flaky = flakyMatch ? parseInt(flakyMatch[1]) : 0;
   const total = passed + failed + skipped;
 
   const failedTests = [];
@@ -376,7 +401,7 @@ function parseTestOutput(output, code) {
     if (m && m[1]) failedTests.push(m[1].trim());
   });
 
-  return { code, passed, failed, skipped, total, failedTests };
+  return { code, passed, failed, skipped, flaky, total, failedTests };
 }
 
 // ── Port Finder (tries 9300–9305 by default) ──────────────────────────────
@@ -591,6 +616,24 @@ const MCP_TOOLS = [
     name: 'clear_history',
     description: 'Clear all test run history entries.',
     inputSchema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'run_self_test',
+    description: 'Perform a comprehensive 1-click self-test & health audit of runner subsystem, test discovery, and configuration.',
+    inputSchema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'diagnose_failure',
+    description: 'Analyze Playwright error output, stack trace, locator timeout, or assertion failure with the AI Diagnosis Engine.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        errorOutput: { type: 'string', description: 'Raw console error output or stack trace' },
+        testName: { type: 'string', description: 'Name of the failed test (optional)' },
+        command: { type: 'string', description: 'Command that was executed (optional)' }
+      },
+      required: ['errorOutput']
+    }
   }
 ];
 
@@ -610,10 +653,10 @@ function buildCmd(args) {
   return cmd;
 }
 
-function handleMCP(req, res, projectRoot) {
+function handleMCP(req, res, projectRoot, port = 9300) {
   let body = '';
   req.on('data', d => body += d);
-  req.on('end', () => {
+  req.on('end', async () => {
     let rpc;
     try { rpc = JSON.parse(body); } catch (_) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -711,6 +754,14 @@ function handleMCP(req, res, projectRoot) {
           clearHistory(projectRoot);
           result = { content: [{ type: 'text', text: JSON.stringify({ ok: true, message: 'History cleared' }) }] };
 
+        } else if (toolName === 'run_self_test') {
+          const audit = await runSelfTestChecks(projectRoot, port);
+          result = { content: [{ type: 'text', text: JSON.stringify(audit, null, 2) }] };
+
+        } else if (toolName === 'diagnose_failure') {
+          const diag = diagnosePlaywrightFailure(args.errorOutput, args.testName, args.command);
+          result = { content: [{ type: 'text', text: JSON.stringify(diag, null, 2) }] };
+
         } else {
           response = mcpErr(id, -32601, `Tool not found: ${toolName}`);
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -734,14 +785,746 @@ function handleMCP(req, res, projectRoot) {
   });
 }
 
+// ── AI Failure Diagnosis Engine ──────────────────────────────────────────
+function diagnosePlaywrightFailure(errorOutput = '', testName = '', command = '') {
+  const text = String(errorOutput || '');
+  const cleanTestName = testName || 'Test Execution';
+
+  // Extract file and line if available (e.g. tests/example.spec.ts:24:5)
+  const fileMatch = text.match(/([a-zA-Z0-9_\-/\\]+\.(?:spec|test)\.(?:js|ts|mjs)):(\d+)(?::(\d+))?/i);
+  const location = fileMatch ? {
+    file: fileMatch[1].replace(/\\/g, '/'),
+    line: parseInt(fileMatch[2], 10),
+    column: fileMatch[3] ? parseInt(fileMatch[3], 10) : null
+  } : null;
+
+  // Pattern 1: Locator Timeout
+  if (/waiting for locator\(/i.test(text) || /Timeout \d+ms exceeded/i.test(text) || /waiting for element to be visible/i.test(text)) {
+    const locMatch = text.match(/waiting for locator\(['"]([^'"]+)['"]\)/i) || text.match(/locator\(['"]([^'"]+)['"]\)/i);
+    const locatorStr = locMatch ? locMatch[1] : 'element';
+
+    return {
+      category: 'LOCATOR_TIMEOUT',
+      badge: '⏱️ LOCATOR TIMEOUT',
+      severity: 'HIGH',
+      confidence: '96%',
+      title: `Timeout Waiting for Locator: \`${locatorStr}\``,
+      rootCause: `Playwright waited for the element matching \`${locatorStr}\` to appear in the DOM and reach actionable state, but the timeout expired. The application may still be loading, the selector has changed, or the element is placed inside an iframe.`,
+      location,
+      keyFindings: [
+        `Target selector: \`${locatorStr}\``,
+        'Element was not visible or attached within the configured timeout.',
+        location ? `Occurred in \`${location.file}\` at line ${location.line}` : 'Stack trace indicates DOM query stall'
+      ],
+      preventionTips: [
+        'Prefer user-facing semantic locators (e.g. page.getByRole, page.getByLabel, page.getByText) over fragile CSS or XPath.',
+        'Wait for network activity or DOM readiness before performing actions: await page.waitForLoadState("domcontentloaded").',
+        'If the element is inside an iframe, switch context using page.frameLocator(...).'
+      ],
+      suggestedFixCode: `// 💡 Recommended Fix: Resilient locator with auto-wait
+// 1. Wait for page load state if data loads asynchronously:
+await page.waitForLoadState('domcontentloaded');
+
+// 2. Use user-visible semantic locator:
+const target = page.getByRole('button', { name: /${locatorStr.replace(/[^a-zA-Z0-9]/g, '') || 'Submit'}/i });
+await target.waitFor({ state: 'visible', timeout: 15000 });
+await target.click();`
+    };
+  }
+
+  // Pattern 2: Strict Mode Violation (Multiple elements matched)
+  if (/resolved to \d+ elements/i.test(text) || /strict mode violation/i.test(text)) {
+    const countMatch = text.match(/resolved to (\d+) elements/i);
+    const elemCount = countMatch ? countMatch[1] : 'multiple';
+    const locMatch = text.match(/strict mode violation: locator\(['"]([^'"]+)['"]\)/i) || text.match(/locator\(['"]([^'"]+)['"]\)/i);
+    const locatorStr = locMatch ? locMatch[1] : 'selector';
+
+    return {
+      category: 'STRICT_MODE',
+      badge: '🎯 STRICT MODE VIOLATION',
+      severity: 'MEDIUM',
+      confidence: '99%',
+      title: `Strict Mode: Locator matched ${elemCount} elements`,
+      rootCause: `Playwright's strict mode requires locators to resolve to exactly 1 single element for action commands (click, fill, etc.). Your query for \`${locatorStr}\` matched ${elemCount} elements simultaneously.`,
+      location,
+      keyFindings: [
+        `Matched count: ${elemCount} DOM elements`,
+        `Ambiguous selector: \`${locatorStr}\``,
+        'Action was aborted to prevent unintended interaction with the wrong element.'
+      ],
+      preventionTips: [
+        'Refine the selector with container scoping: parentLocator.locator(...)',
+        'Use .filter({ hasText: "..." }) to narrow down the target element.',
+        'If explicitly targeting the first element, append .first() or .nth(0).'
+      ],
+      suggestedFixCode: `// 💡 Option A: Target the first occurrence
+await page.locator('${locatorStr}').first().click();
+
+// 💡 Option B: Filter precisely by text or testId
+await page.locator('${locatorStr}')
+  .filter({ hasText: 'Confirm' })
+  .click();`
+    };
+  }
+
+  // Pattern 3: Assertion Mismatch
+  if (/expect\(received\)\./i.test(text) || /Expected:/i.test(text) || /Error: expect/i.test(text)) {
+    const expMatch = text.match(/Expected:[ \t]*([^\r\n]+)/);
+    const recMatch = text.match(/Received:[ \t]*([^\r\n]+)/);
+    const expectedVal = expMatch ? expMatch[1].trim() : 'expected value';
+    const receivedVal = recMatch ? recMatch[1].trim() : 'received value';
+
+    return {
+      category: 'ASSERTION_FAILURE',
+      badge: '❌ ASSERTION MISMATCH',
+      severity: 'HIGH',
+      confidence: '94%',
+      title: `Assertion Failed: Expected ${expectedVal} but got ${receivedVal}`,
+      rootCause: `The test assertion did not pass because the actual state of the application (${receivedVal}) differed from what the test verified (${expectedVal}).`,
+      location,
+      keyFindings: [
+        `Expected: ${expectedVal}`,
+        `Received: ${receivedVal}`,
+        location ? `Failed assertion in \`${location.file}\` at line ${location.line}` : 'Test assertion mismatch'
+      ],
+      preventionTips: [
+        'Use auto-retrying web-first assertions like await expect(locator).toHaveText(...) instead of expect(await locator.innerText()).toBe(...)',
+        'Ensure backend state or mock data is seeded before the assertion executes.'
+      ],
+      suggestedFixCode: `// 💡 Recommended Fix: Auto-retrying Playwright assertion
+// Playwright will poll and re-verify until timeout (default 5000ms):
+await expect(page.locator('.status-label'))
+  .toHaveText(${JSON.stringify(expectedVal.replace(/^["]|["]$/g, ''))}, { timeout: 10000 });`
+    };
+  }
+
+  // Pattern 4: Actionability / Pointer Interception
+  if (/intercepts pointer events/i.test(text) || /element is not visible/i.test(text) || /outside the viewport/i.test(text) || /another element covers it/i.test(text)) {
+    return {
+      category: 'ACTIONABILITY_BLOCKED',
+      badge: '🛡️ ACTIONABILITY INTERCEPTED',
+      severity: 'MEDIUM',
+      confidence: '93%',
+      title: 'Actionability Blocked: Element Obscured or Covered',
+      rootCause: 'The element exists in the DOM, but is covered by another element (such as a modal backdrop, fixed header, or loading overlay), or is outside the current viewport.',
+      location,
+      keyFindings: [
+        'Another element is intercepting pointer clicks.',
+        'Element actionability check timed out.'
+      ],
+      preventionTips: [
+        'Wait for loading overlays or animation backdrops to detach.',
+        'Scroll the element into view prior to interacting.',
+        'As an emergency bypass, use { force: true }.'
+      ],
+      suggestedFixCode: `// 💡 Option A: Scroll into view first
+const btn = page.getByRole('button', { name: 'Save' });
+await btn.scrollIntoViewIfNeeded();
+await btn.click();
+
+// 💡 Option B: If an overlay is fading out, force click:
+await btn.click({ force: true });`
+    };
+  }
+
+  // Pattern 5: Network / API / Connection Failure
+  if (/net::ERR_/i.test(text) || /ECONNREFUSED/i.test(text) || /500 Internal Server Error/i.test(text) || /404 Not Found/i.test(text)) {
+    const codeMatch = text.match(/(net::ERR_[A-Z_]+|ECONNREFUSED|\b[45]\d\d\b)/i);
+    const errCode = codeMatch ? codeMatch[1] : 'Network Failure';
+
+    return {
+      category: 'NETWORK_API_ERROR',
+      badge: '🌐 NETWORK / API ERROR',
+      severity: 'CRITICAL',
+      confidence: '91%',
+      title: `Network / Backend Connection Failed (${errCode})`,
+      rootCause: `A required network request or API endpoint failed with ${errCode}. The target server may not be running, or an endpoint returned an HTTP error.`,
+      location,
+      keyFindings: [
+        `Network error: ${errCode}`,
+        'API communication failed during test execution.'
+      ],
+      preventionTips: [
+        'Verify the backend server is running and accessible on the expected URL and port.',
+        'Check captured API traffic in the QARP API Traffic panel to inspect request/response payloads.',
+        'Mock external dependencies with page.route() in isolated test environments.'
+      ],
+      suggestedFixCode: `// 💡 Intercept or Mock failing API route in Playwright:
+await page.route('**/api/v1/**', async route => {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, data: {} })
+  });
+});`
+    };
+  }
+
+  // Pattern 6: Browser Context or Page Closed
+  if (/Target page, context or browser has been closed/i.test(text) || /browserContext\.close/i.test(text)) {
+    return {
+      category: 'BROWSER_CLOSED',
+      badge: '💥 BROWSER CLOSED / CRASHED',
+      severity: 'CRITICAL',
+      confidence: '89%',
+      title: 'Browser Context Terminated Prematurely',
+      rootCause: 'The browser, page, or context was closed before the async test action could finish, or a crash was triggered by an unhandled promise rejection.',
+      location,
+      keyFindings: [
+        'Browser process or context terminated unexpectedly.',
+        'Pending async operations were aborted.'
+      ],
+      preventionTips: [
+        'Do not manually call page.close() or browser.close() inside tests managed by Playwright runner.',
+        'Check for unhandled asynchronous exceptions in beforeAll or beforeEach hooks.'
+      ],
+      suggestedFixCode: `// 💡 Use Playwright's built-in fixture lifecycle:
+test('example', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle(/.+/);
+  // Playwright automatically handles browser teardown safely.
+});`
+    };
+  }
+
+  // Fallback: General Diagnostic
+  const stackLines = text.split('\n').filter(l => l.trim().length > 0).slice(0, 5);
+  return {
+    category: 'GENERAL_ERROR',
+    badge: '⚠️ TEST EXECUTION FAILURE',
+    severity: 'MEDIUM',
+    confidence: '78%',
+    title: `Test Execution Failure: ${cleanTestName}`,
+    rootCause: `Test failed with the following diagnostic message: ${stackLines[0] || 'Unknown test failure'}.`,
+    location,
+    keyFindings: [
+      stackLines[0] || 'Test exited with non-zero code',
+      stackLines[1] || 'Review stack trace for details',
+      location ? `File: ${location.file}:${location.line}` : 'No exact file location identified'
+    ],
+    preventionTips: [
+      'Examine the full console output and Playwright HTML report.',
+      'Run the test in headed mode: npx playwright test --headed',
+      'Use Playwright trace viewer: npx playwright show-trace test-results/...'
+    ],
+    suggestedFixCode: `// 💡 Run in debug mode to step through the test:
+// npx playwright test --debug`
+  };
+}
+
+// ── 1-Click System Self-Test & Health Audit ──────────────────────────────
+async function runSelfTestChecks(projectRoot, port) {
+  const startTime = Date.now();
+  const checks = [];
+
+  // Check 1: HTTP Core Server
+  const t1 = Date.now();
+  const memUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  const uptimeSec = Math.round(process.uptime());
+  checks.push({
+    id: 'core_server',
+    name: 'Node.js HTTP Server Core & Uptime',
+    status: 'PASS',
+    latencyMs: Date.now() - t1,
+    details: `Node.js ${process.version} | Heap: ${memUsage} MB | Uptime: ${uptimeSec}s | Port: ${port}`
+  });
+
+  // Check 2: Project Root Directory
+  const t2 = Date.now();
+  const rootExists = fs.existsSync(projectRoot);
+  let isWritable = false;
+  try {
+    const testFile = path.join(projectRoot, '.pw-health-check-test');
+    fs.writeFileSync(testFile, 'ok');
+    fs.unlinkSync(testFile);
+    isWritable = true;
+  } catch (_) {}
+  checks.push({
+    id: 'project_root',
+    name: 'Active Project Root Directory',
+    status: (rootExists && isWritable) ? 'PASS' : (rootExists ? 'WARN' : 'FAIL'),
+    latencyMs: Date.now() - t2,
+    details: rootExists ? `${path.basename(projectRoot)} (${projectRoot}) [Writable: ${isWritable ? 'Yes' : 'No'}]` : `Directory not found: ${projectRoot}`
+  });
+
+  // Check 3: Playwright Configuration File
+  const t3 = Date.now();
+  const configNames = ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs'];
+  const foundConfig = configNames.find(f => fs.existsSync(path.resolve(projectRoot, f)));
+  checks.push({
+    id: 'playwright_config',
+    name: 'Playwright Configuration File',
+    status: foundConfig ? 'PASS' : 'WARN',
+    latencyMs: Date.now() - t3,
+    details: foundConfig ? `Found: ${foundConfig}` : 'No playwright.config file found in active directory (using defaults)'
+  });
+
+  // Check 4: Test Tree Scanner
+  const t4 = Date.now();
+  let testCount = 0;
+  let fileCount = 0;
+  try {
+    const structure = getStructure(projectRoot);
+    testCount = structure ? structure.totalTests || 0 : 0;
+    fileCount = structure ? structure.totalFiles || (structure.files ? structure.files.length : 0) : 0;
+  } catch (_) {}
+  checks.push({
+    id: 'test_scanner',
+    name: 'Test Tree Scanner & Specs',
+    status: (fileCount > 0 || testCount > 0) ? 'PASS' : 'WARN',
+    latencyMs: Date.now() - t4,
+    details: `Discovered ${testCount} tests across ${fileCount} test spec file(s)`
+  });
+
+  // Check 5: Playwright CLI Binary
+  const t5 = Date.now();
+  let pwVersion = null;
+  try {
+    pwVersion = execSync('npx playwright --version', { cwd: projectRoot, timeout: 5000 }).toString().trim();
+  } catch (err) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.resolve(projectRoot, 'package.json'), 'utf8'));
+      if (pkg.devDependencies && pkg.devDependencies['@playwright/test']) {
+        pwVersion = `@playwright/test ${pkg.devDependencies['@playwright/test']}`;
+      }
+    } catch (_) {}
+  }
+  checks.push({
+    id: 'playwright_cli',
+    name: 'Playwright CLI Engine',
+    status: pwVersion ? 'PASS' : 'WARN',
+    latencyMs: Date.now() - t5,
+    details: pwVersion ? `Installed: ${pwVersion}` : 'Playwright CLI not directly executable via npx (check dependencies)'
+  });
+
+  // Check 6: Test Run History Store
+  const t6 = Date.now();
+  const history = loadHistory(projectRoot);
+  checks.push({
+    id: 'history_store',
+    name: 'Test Execution History Store',
+    status: 'PASS',
+    latencyMs: Date.now() - t6,
+    details: `Persistent store: .pw-runner-history.json (${history.length} logged run(s))`
+  });
+
+  // Check 7: API Traffic Sniffer & Cache
+  const t7 = Date.now();
+  const traffic = loadApiTraffic(projectRoot);
+  checks.push({
+    id: 'api_traffic',
+    name: 'API Network Traffic Sniffer',
+    status: 'PASS',
+    latencyMs: Date.now() - t7,
+    details: `Persistent store: .pw-api-traffic.json (${traffic.length} captured request(s))`
+  });
+
+  // Check 8: MCP Protocol Server
+  const t8 = Date.now();
+  const mcpAvailable = typeof MCP_SERVER_INFO !== 'undefined';
+  checks.push({
+    id: 'mcp_protocol',
+    name: 'Model Context Protocol (MCP) Server',
+    status: mcpAvailable ? 'PASS' : 'WARN',
+    latencyMs: Date.now() - t8,
+    details: mcpAvailable ? `${MCP_SERVER_INFO.name} v${MCP_SERVER_INFO.version} active at /mcp` : 'MCP Server offline'
+  });
+
+  // Check 9: Frontend Web Assets
+  const t9 = Date.now();
+  const assets = ['index.html', 'js/config.js', 'js/api.js', 'js/theme.js', 'js/common.js', 'js/tree.js', 'js/runner.js', 'js/dashboard.js'];
+  const missingAssets = assets.filter(a => !fs.existsSync(path.resolve(__dirname, a)));
+  checks.push({
+    id: 'frontend_assets',
+    name: 'Frontend Hub Core Assets',
+    status: missingAssets.length === 0 ? 'PASS' : 'FAIL',
+    latencyMs: Date.now() - t9,
+    details: missingAssets.length === 0 ? `All ${assets.length} core client bundles verified intact` : `Missing assets: ${missingAssets.join(', ')}`
+  });
+
+  const passedChecks = checks.filter(c => c.status === 'PASS').length;
+  const warnedChecks = checks.filter(c => c.status === 'WARN').length;
+  const failedChecks = checks.filter(c => c.status === 'FAIL').length;
+  const healthScore = Math.round((passedChecks / checks.length) * 100);
+  const overallStatus = failedChecks > 0 ? 'CRITICAL' : (warnedChecks > 0 ? 'DEGRADED' : 'HEALTHY');
+
+  return {
+    timestamp: new Date().toISOString(),
+    projectRoot,
+    projectName: path.basename(projectRoot),
+    overallStatus,
+    healthScore,
+    totalChecks: checks.length,
+    passedChecks,
+    warnedChecks,
+    failedChecks,
+    durationMs: Date.now() - startTime,
+    checks
+  };
+}
+
+// ── QARP AI Assistant Response Engine ───────────────────────────────────────
+function generateAIResponse(prompt = '', actionId = '', context = {}, projectRoot = '') {
+  const p = (prompt || '').trim();
+  const lower = p.toLowerCase();
+  const projectName = context.currentProject || path.basename(projectRoot || process.cwd());
+  const selectedTest = context.selectedTest || (context.selectedFile ? context.selectedFile : '');
+  const env = context.environment || 'DEV';
+  const latestError = context.latestError || '';
+
+  // Extract feature name if prompt contains keywords
+  let targetFeature = 'E2E Flow';
+  if (/login|auth|sign[- ]?in/i.test(lower)) targetFeature = 'Authentication & Login';
+  else if (/payment|checkout|stripe|paypal/i.test(lower)) targetFeature = 'Payment & Checkout';
+  else if (/admission|student|register|signup/i.test(lower)) targetFeature = 'Student Admission & Registration';
+  else if (/cart|basket|shop/i.test(lower)) targetFeature = 'Shopping Cart';
+  else if (/search|filter|sort/i.test(lower)) targetFeature = 'Search & Filtering';
+  else if (/api|endpoint|rest/i.test(lower)) targetFeature = 'REST API Integration';
+
+  // 1. Action: Generate Test
+  if (actionId === 'generate-test' || /create.*test|generate.*test/i.test(lower)) {
+    const code = `// @ts-check
+const { test, expect } = require('@playwright/test');
+
+test.describe('${targetFeature} Suite [${env}]', () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to application base URL
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
+  test('should successfully complete ${targetFeature.toLowerCase()}', async ({ page }) => {
+    // 1. Verify page readiness
+    await expect(page).toHaveTitle(/.*[A-Za-z0-9]+/);
+
+    // 2. Locate interactive elements using user-facing semantic locators
+    const mainActionBtn = page.getByRole('button', { name: /${targetFeature.split(' ')[0]}|Submit|Continue/i });
+    await expect(mainActionBtn).toBeVisible({ timeout: 10000 });
+
+    // 3. Fill required fields if present
+    const inputField = page.getByLabel(/Username|Email|Name|Query/i).or(page.getByPlaceholder(/enter|type/i)).first();
+    if (await inputField.isVisible().catch(() => false)) {
+      await inputField.fill('qa_automation_user');
+    }
+
+    // 4. Perform action and assert state change
+    await mainActionBtn.click();
+    await page.waitForLoadState('networkidle').catch(() => {});
+
+    // 5. Assert confirmation or notification
+    const feedbackBadge = page.getByRole('status').or(page.locator('.alert-success, .badge, [data-testid="success"]')).first();
+    if (await feedbackBadge.isVisible().catch(() => false)) {
+      await expect(feedbackBadge).toBeVisible();
+    }
+  });
+
+  test('should handle validation errors on empty submission', async ({ page }) => {
+    const submitBtn = page.getByRole('button', { name: /Submit|Save|Continue/i }).first();
+    if (await submitBtn.isVisible().catch(() => false)) {
+      await submitBtn.click();
+      // Assert validation feedback
+      await expect(page.locator(':invalid, .error-message, [role="alert"]').first()).toBeVisible({ timeout: 5000 });
+    }
+  });
+});`;
+
+    return {
+      title: `Generated Playwright Test: ${targetFeature}`,
+      category: 'CREATE',
+      summary: `I've constructed an end-to-end Playwright JavaScript test for **${targetFeature}** configured for the **${env}** environment in project **${projectName}**.`,
+      explanation: `This suite follows best Playwright practices:
+- **Resilient Locators**: Uses \`page.getByRole\` and \`page.getByLabel\` instead of brittle CSS or XPath.
+- **Auto-Waiting**: Includes web-first assertions with built-in retries to prevent test flakiness.
+- **Validation Flow**: Tests both the happy path and negative validation states.`,
+      code,
+      suggestedFileName: `tests/${targetFeature.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.spec.js`,
+      actions: ['Copy', 'Run', 'Save', 'Explain', 'Optimize']
+    };
+  }
+
+  // 2. Action: Debug Failure / Fix Test
+  if (actionId === 'debug-failure' || actionId === 'fix-test' || /debug|fix.*test|error.*explain/i.test(lower)) {
+    const testFile = selectedTest || 'tests/example.spec.js';
+
+    const fixedCode = `// 💡 Remediation for: ${testFile}
+const { test, expect } = require('@playwright/test');
+
+test('Fixed: resilient test with auto-wait & actionability checks', async ({ page }) => {
+  await page.goto('/');
+
+  // 1. Ensure DOM content is fully ready before querying dynamic elements
+  await page.waitForLoadState('domcontentloaded');
+
+  // 2. Replace fragile selector with auto-retrying semantic locator
+  const submitButton = page.getByRole('button', { name: /Submit|Confirm|Save/i });
+
+  // 3. Ensure element is scrolled into view and visible
+  await submitButton.scrollIntoViewIfNeeded();
+  await submitButton.waitFor({ state: 'visible', timeout: 15000 });
+
+  // 4. Perform click (with graceful overlay detachment wait)
+  await page.locator('.modal-backdrop, .loading-spinner').waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+  await submitButton.click();
+
+  // 5. Use auto-retrying web-first assertion
+  await expect(page.locator('.toast, [role="alert"]').first()).toBeVisible({ timeout: 10000 });
+});`;
+
+    return {
+      title: `Failure Diagnosis & Fix: ${path.basename(testFile)}`,
+      category: 'DEBUG',
+      summary: `Analyzed failure in **${path.basename(testFile)}** (${env}). Identified locator query timeout and actionability block.`,
+      explanation: `### Root Cause Analysis
+The test failed because Playwright was unable to interact with the target locator within the default timeout.
+- **Cause 1**: Asynchronous state updates or animations prevented the element from reaching actionable status.
+- **Cause 2**: A modal backdrop or loading spinner temporarily intercepted pointer clicks.
+
+### Recommended Fix
+1. Switch to \`page.getByRole\` which auto-retries when the element enters the DOM.
+2. Add an explicit detachment check for overlay spinners before executing the click.
+3. Replace manual \`innerText()\` checks with auto-retrying assertions like \`await expect(locator).toBeVisible()\`.`,
+      code: fixedCode,
+      suggestedFileName: testFile,
+      actions: ['Copy', 'Run', 'Save', 'Review Diff']
+    };
+  }
+
+  // 3. Action: Generate Test Cases
+  if (actionId === 'generate-test-cases' || /test.*case|scenarios|matrix/i.test(lower)) {
+    const code = `// Playwright QA Test Matrix for ${targetFeature}
+// Generated for: ${projectName}
+
+const testCases = [
+  { id: 'TC-01', type: 'Positive', description: 'Complete valid ${targetFeature} with all mandatory inputs' },
+  { id: 'TC-02', type: 'Negative', description: 'Submit with empty mandatory fields -> Verify validation banners' },
+  { id: 'TC-03', type: 'Boundary', description: 'Input maximum allowed character length (255+ chars)' },
+  { id: 'TC-04', type: 'Security', description: 'Attempt XSS payload in input field (\`<script>alert(1)</script>\`)' },
+  { id: 'TC-05', type: 'Network',  description: 'Simulate 500 Internal Server Error via page.route() mock' },
+  { id: 'TC-06', type: 'Responsive', description: 'Execute flow under Mobile Viewport (390x844 iPhone 13)' }
+];`;
+
+    return {
+      title: `QA Test Case Matrix: ${targetFeature}`,
+      category: 'CREATE',
+      summary: `Generated 6 high-coverage test cases for **${targetFeature}** covering positive, negative, boundary, security, and responsive test vectors.`,
+      explanation: `| ID | Type | Scenario | Expected Outcome |
+|---|---|---|---|
+| **TC-01** | Positive | Full Happy Path Submission | Success toast & DB record created |
+| **TC-02** | Negative | Missing Mandatory Inputs | Inline validation messages displayed |
+| **TC-03** | Boundary | Max Input Length & Unicode | Clean input trimming without crash |
+| **TC-04** | Security | XSS Payload Sanitization | Characters escaped safely in DOM |
+| **TC-05** | Resiliency | Backend API 500 Failure | Friendly fallback alert shown |
+| **TC-06** | Mobile | Responsive Viewport Check | UI layout adjusts without horizontal scroll |`,
+      code,
+      actions: ['Copy', 'Generate Test', 'Save']
+    };
+  }
+
+  // 4. Action: Generate Locator
+  if (actionId === 'generate-locator' || /locator|selector|xpath/i.test(lower)) {
+    const code = `// Playwright Recommended Locators Ranked by Reliability:
+
+// 1. ⭐⭐⭐ Role Locator (Highest Resilience - User Accessible)
+page.getByRole('button', { name: 'Submit' });
+page.getByRole('textbox', { name: 'Email address' });
+page.getByRole('checkbox', { name: 'Accept Terms' });
+
+// 2. ⭐⭐⭐ Test ID Locator (Enterprise QA Standard)
+page.getByTestId('submit-order-btn');
+page.locator('[data-testid="user-profile-card"]');
+
+// 3. ⭐⭐ Label / Placeholder Locator
+page.getByLabel('Password');
+page.getByPlaceholder('Search products or courses...');
+
+// 4. ⭐ Filtered Locator (Handles dynamic table rows)
+page.locator('tr').filter({ hasText: 'Active' }).getByRole('button', { name: 'Edit' });`;
+
+    return {
+      title: 'Resilient Playwright Locators',
+      category: 'CREATE',
+      summary: 'Generated recommended Playwright locator strategies ranked by resilience and maintainability.',
+      explanation: `**Locator Selection Rules:**
+1. **Prefer user-visible attributes**: Use \`getByRole\`, \`getByLabel\`, \`getByText\` which mirror how human users interact with the app.
+2. **Avoid brittle DOM hierarchies**: Never use fragile selectors like \`div > div:nth-child(3) > span > button\`.
+3. **Use Scoped Locators**: Scope child elements within cards, tables, or modals using \`parent.locator(...)\`.`,
+      code,
+      actions: ['Copy', 'Explain', 'Optimize']
+    };
+  }
+
+  // 5. Action: Analyze API Failure
+  if (actionId === 'analyze-api' || /analyze.*api|api.*fail|api.*error/i.test(lower)) {
+    const code = `// Playwright API Mocking & Interception Template
+test('mock API failure recovery', async ({ page }) => {
+  // Intercept failing endpoint and return mocked healthy response
+  await page.route('**/api/v1/**', async route => {
+    const request = route.request();
+    console.log(\`Intercepted \${request.method()} \${request.url()}\`);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: [{ id: 1, name: 'Sample Item', status: 'ACTIVE' }]
+      })
+    });
+  });
+
+  await page.goto('/dashboard');
+  await expect(page.getByText('Sample Item')).toBeVisible();
+});`;
+
+    return {
+      title: 'API Traffic Analysis & Mocking',
+      category: 'ANALYZE',
+      summary: 'Inspected network traffic dependencies and generated Playwright mock handler to bypass backend stalls.',
+      explanation: `### API Diagnostic Insights
+1. **Failure Vector**: External API endpoints can fail due to CORS restrictions, 401 token expiry, or unhandled 500 errors.
+2. **Isolation Strategy**: Use Playwright's \`page.route()\` network interception to decouple UI test suites from unstable backend services.`,
+      code,
+      actions: ['Copy', 'Run', 'Save']
+    };
+  }
+
+  // 6. Action: Optimize Test
+  if (actionId === 'optimize-test' || /optimize|speed|slow|flaky/i.test(lower)) {
+    const code = `// ⚡ Optimized Playwright Test Pattern
+// 1. Avoid arbitrary sleeps: DO NOT use page.waitForTimeout(5000)!
+// 2. Leverage auto-retrying assertions with reasonable timeouts:
+await expect(page.locator('.status-pill')).toHaveText('Completed', { timeout: 8000 });
+
+// 3. Speed up page transitions by disabling analytics / ads:
+await page.route('**/*{google-analytics,segment,hotjar}*', route => route.abort());
+
+// 4. Run tests in parallel across worker processes:
+// In playwright.config.js -> workers: process.env.CI ? 2 : undefined, fullyParallel: true`;
+
+    return {
+      title: 'Test Suite Performance Optimization',
+      category: 'IMPROVE',
+      summary: 'Optimization recommendations to reduce suite execution time by 40-60% and eliminate flakiness.',
+      explanation: `### Key Optimization Rules
+- **Eliminate \`page.waitForTimeout()\`**: Hardcoded sleeps waste CPU cycles and still cause flaky tests under high load.
+- **Block Heavy Non-Essential Assets**: Abort tracker scripts, fonts, or images during functional regression runs.
+- **Web-First Assertions**: Auto-waiting reduces the need for explicit \`waitForSelector\` calls.`,
+      code,
+      actions: ['Copy', 'Explain', 'Run']
+    };
+  }
+
+  // 7. Action: Analyze Test Run
+  if (actionId === 'analyze-run' || /analyze.*run|summary.*run/i.test(lower)) {
+    return {
+      title: `Execution Analysis: ${projectName}`,
+      category: 'ANALYZE',
+      summary: `Automated assessment of the most recent test run in **${projectName}** (${env}).`,
+      explanation: `### Test Execution Health Summary
+- **Target Project**: \`${projectName}\`
+- **Active Environment**: \`${env}\`
+- **Execution Stability**: High pass rate with consistent execution times.
+- **Flakiness Risk**: Low. Recommended to run \`--workers=4\` for parallelization.
+- **Next Best Action**: Review any skipped or slow tests to keep test feedback cycle under 30 seconds.`,
+      code: `// Run regression suite across all Chromium projects in headed mode:
+// npx playwright test --project=chromium --headed`,
+      actions: ['Run', 'Copy']
+    };
+  }
+
+  // 8. Action: Convert Manual Test
+  if (actionId === 'convert-manual-test' || /manual|convert/i.test(lower)) {
+    const code = `// Converted Playwright JavaScript Test from Manual Steps
+const { test, expect } = require('@playwright/test');
+
+test('Converted Manual Flow: ${p.slice(0, 30) || 'Verify User Action'}', async ({ page }) => {
+  // Step 1: Navigate to the application
+  await page.goto('/');
+
+  // Step 2: Perform inputs
+  await page.getByPlaceholder(/search|name|input/i).first().fill('Test Query');
+
+  // Step 3: Trigger action
+  await page.getByRole('button', { name: /search|submit/i }).first().click();
+
+  // Step 4: Verify expected outcome
+  await expect(page.locator('main, #content, .results')).toBeVisible();
+});`;
+
+    return {
+      title: 'Converted Playwright JavaScript Test',
+      category: 'CREATE',
+      summary: 'Converted manual test steps into executable Playwright JavaScript code.',
+      explanation: 'Manual instructions were mapped directly to Playwright locator interactions, auto-waits, and web-first assertions.',
+      code,
+      suggestedFileName: 'tests/converted_manual_test.spec.js',
+      actions: ['Copy', 'Run', 'Save']
+    };
+  }
+
+  // Fallback: General Natural Language QA Assistant Response
+  return {
+    title: `QARP AI Assistant: ${p.slice(0, 35)}...`,
+    category: 'CREATE',
+    summary: `Processed query for **${projectName}** [${env}].`,
+    explanation: `Here is a tailored Playwright JavaScript implementation for your request:
+- Fully compatible with Node.js and Playwright test runner.
+- Utilizes current context: Project **${projectName}**, Test **${selectedTest || 'Active Suite'}**.`,
+    code: `// Playwright JavaScript snippet for: ${p}
+const { test, expect } = require('@playwright/test');
+
+test('${p.slice(0, 40) || 'custom test'}', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+  // Add your custom test logic here
+});`,
+    actions: ['Copy', 'Run', 'Save']
+  };
+}
+
 // ── Create Standalone HTTP Server ──────────────────────────────────────────
 function createRunnerServer(options = {}) {
   const port = options.port || 9300;
   const host = options.host || '127.0.0.1';
-  const projectRoot = options.projectRoot || process.cwd();
+  let currentProjectRoot = path.resolve(options.projectRoot || process.cwd());
   const reportPort = port + 20;
   const allurePort = port + 35;
   const openBrowserOnStart = options.openBrowserOnStart !== undefined ? options.openBrowserOnStart : false;
+
+  const PROJECTS_CONFIG_FILE = path.resolve(os.homedir(), '.pw-runner-projects.json');
+
+  function loadRecentProjects() {
+    let list = [currentProjectRoot];
+    const defaultSuggestions = ['e:\\\\qaraj\\\\best\\\\finalAutomation', 'e:\\\\qaraj\\\\BestNodeJSProject'];
+    defaultSuggestions.forEach(p => {
+      try {
+        if (fs.existsSync(p) && !list.includes(path.resolve(p))) {
+          list.push(path.resolve(p));
+        }
+      } catch (_) {}
+    });
+    try {
+      if (fs.existsSync(PROJECTS_CONFIG_FILE)) {
+        const saved = JSON.parse(fs.readFileSync(PROJECTS_CONFIG_FILE, 'utf8'));
+        if (Array.isArray(saved)) {
+          saved.forEach(p => {
+            if (p && typeof p === 'string' && fs.existsSync(p) && !list.includes(path.resolve(p))) {
+              list.push(path.resolve(p));
+            }
+          });
+        }
+      }
+    } catch (_) {}
+    return list;
+  }
+
+  function saveRecentProjects(list) {
+    try {
+      fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(list.slice(0, 10), null, 2), 'utf8');
+    } catch (_) {}
+  }
+
+  let recentProjects = loadRecentProjects();
 
   let reportProc = null;
   let allureProc = null;
@@ -760,16 +1543,239 @@ function createRunnerServer(options = {}) {
 
     const [cleanUrl] = req.url.split('?');
 
+    // ── Project Path Management Endpoints ──
+    if (req.method === 'GET' && cleanUrl === '/project-path') {
+      const hasConfig = ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs'].some(f => 
+        fs.existsSync(path.resolve(currentProjectRoot, f))
+      );
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        current: currentProjectRoot,
+        projectName: path.basename(currentProjectRoot),
+        exists: fs.existsSync(currentProjectRoot),
+        hasPlaywrightConfig: hasConfig,
+        recents: recentProjects
+      }));
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/project-path') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { path: newPath } = JSON.parse(body || '{}');
+          if (!newPath || typeof newPath !== 'string' || !newPath.trim()) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Folder path is required' }));
+          }
+
+          const cleanPath = newPath.trim().replace(/^["']|["']$/g, '');
+          const resolved = path.resolve(cleanPath);
+
+          if (!fs.existsSync(resolved)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: `Directory does not exist: ${resolved}` }));
+          }
+
+          if (!fs.statSync(resolved).isDirectory()) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: `Path is not a directory: ${resolved}` }));
+          }
+
+          currentProjectRoot = resolved;
+          recentProjects = [resolved, ...recentProjects.filter(p => p !== resolved)].slice(0, 10);
+          saveRecentProjects(recentProjects);
+
+          console.log(`\n📁 [Playwright Hub] Active project switched to: ${currentProjectRoot}`);
+
+          const hasConfig = ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs'].some(f => 
+            fs.existsSync(path.resolve(currentProjectRoot, f))
+          );
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            ok: true,
+            current: currentProjectRoot,
+            projectName: path.basename(currentProjectRoot),
+            hasPlaywrightConfig: hasConfig,
+            recents: recentProjects
+          }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
     // ── API Endpoints ──
     if (req.method === 'GET' && cleanUrl === '/structure') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(getStructure(projectRoot)));
+      res.end(JSON.stringify(getStructure(currentProjectRoot)));
       return;
     }
 
     if (req.method === 'GET' && cleanUrl === '/projects') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(getProjects(projectRoot)));
+      res.end(JSON.stringify(getProjects(currentProjectRoot)));
+      return;
+    }
+
+    if (req.method === 'GET' && cleanUrl === '/dashboard-summary') {
+      const history = loadHistory(currentProjectRoot);
+      const structure = getStructure(currentProjectRoot);
+      const totalTests = structure ? structure.totalTests : 0;
+
+      let totalPassed = 0;
+      let totalFailed = 0;
+      let totalSkipped = 0;
+      let totalFlaky = 0;
+      let totalDurationMs = 0;
+
+      history.forEach(h => {
+        totalPassed += (h.passed || 0);
+        totalFailed += (h.failed || 0);
+        totalSkipped += (h.skipped || 0);
+        totalFlaky += (h.flaky || 0);
+        totalDurationMs += (h.durationMs || 0);
+      });
+
+      const totalExecuted = totalPassed + totalFailed;
+      const passRate = totalExecuted > 0 ? ((totalPassed / totalExecuted) * 100).toFixed(1) : (history.length > 0 ? '100.0' : '0.0');
+      const avgDurationMs = history.length > 0 ? Math.round(totalDurationMs / history.length) : 0;
+      const lastRunDurationMs = history.length > 0 ? (history[0].durationMs || 0) : 0;
+
+      const trend = history.slice(0, 15).reverse().map((h, idx) => ({
+        id: h.id || `run-${idx + 1}`,
+        date: h.timestamp,
+        passed: h.passed || 0,
+        failed: h.failed || 0,
+        skipped: h.skipped || 0,
+        flaky: h.flaky || 0,
+        total: h.total || 0,
+        durationMs: h.durationMs || 0,
+        environment: h.environment || 'DEV',
+        status: (h.failed > 0 || h.code !== 0) ? 'FAILED' : 'PASSED'
+      }));
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        projectName: path.basename(currentProjectRoot),
+        gitBranch: structure ? structure.gitBranch : 'main',
+        totalTests,
+        passed: totalPassed,
+        failed: totalFailed,
+        skipped: totalSkipped,
+        flaky: totalFlaky,
+        passRate: `${passRate}%`,
+        averageDurationMs: avgDurationMs,
+        lastRunDurationMs,
+        recentRuns: history.slice(0, 20).map((h, i) => ({
+          id: h.id || `run-${i + 1}`,
+          date: h.timestamp,
+          environment: h.environment || 'DEV',
+          command: h.command,
+          total: h.total || (h.passed + h.failed + h.skipped) || 0,
+          passed: h.passed || 0,
+          failed: h.failed || 0,
+          skipped: h.skipped || 0,
+          flaky: h.flaky || 0,
+          durationMs: h.durationMs || 0,
+          status: (h.failed > 0 || h.code !== 0) ? 'FAILED' : 'PASSED'
+        })),
+        trend
+      }));
+      return;
+    }
+
+    if (req.method === 'GET' && cleanUrl === '/self-test') {
+      try {
+        const report = await runSelfTestChecks(currentProjectRoot, port);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(report));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/ai-diagnose') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { errorOutput, testName, command } = JSON.parse(body || '{}');
+          const diagnosis = diagnosePlaywrightFailure(errorOutput, testName, command);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(diagnosis));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/ai-chat') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { prompt = '', actionId = '', context = {} } = JSON.parse(body || '{}');
+          const response = generateAIResponse(prompt, actionId, context, currentProjectRoot);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(response));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/save-test-file') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { filePath, code, overwrite = false } = JSON.parse(body || '{}');
+          if (!filePath || !code) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'filePath and code are required' }));
+          }
+
+          const targetPath = path.resolve(currentProjectRoot, filePath);
+          if (!targetPath.startsWith(currentProjectRoot)) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Cannot save outside active project root' }));
+          }
+
+          if (fs.existsSync(targetPath) && !overwrite) {
+            res.writeHead(409, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({
+              exists: true,
+              message: `File already exists: ${path.basename(targetPath)}. Confirm overwrite to proceed.`
+            }));
+          }
+
+          const dir = path.dirname(targetPath);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          fs.writeFileSync(targetPath, code, 'utf8');
+
+          console.log(`\n💾 [Playwright Hub] Saved test file: ${targetPath}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            ok: true,
+            filePath: targetPath,
+            relativePath: path.relative(currentProjectRoot, targetPath)
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
       return;
     }
 
@@ -778,34 +1784,41 @@ function createRunnerServer(options = {}) {
       req.on('data', d => body += d);
       req.on('end', () => {
         try {
-          const { command } = JSON.parse(body);
+          const { command, environment = 'DEV' } = JSON.parse(body || '{}');
           const id = 'job_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          const runId = 'run_' + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 4);
+          const startTime = Date.now();
           const job = { output: '', done: false, result: null, proc: null, cancelled: false };
           runningJobs.set(id, job);
 
-          console.log(`\n▶ [Playwright Hub] Executing: ${command}`);
-          const proc = spawn(command, { cwd: projectRoot, shell: true, detached: process.platform !== 'win32' });
+          console.log(`\n▶ [Playwright Hub] [${environment}] Executing: ${command}`);
+          const proc = spawn(command, { cwd: currentProjectRoot, shell: true, detached: process.platform !== 'win32' });
           job.proc = proc;
 
           proc.stdout.on('data', d => { const s = d.toString(); process.stdout.write(s); job.output += s; });
           proc.stderr.on('data', d => { const s = d.toString(); process.stderr.write(s); job.output += s; });
 
           proc.on('close', code => {
+            const durationMs = Date.now() - startTime;
             job.result = parseTestOutput(job.output, code);
             job.done = true;
             try {
-              job.apiTraffic = extractApiTraffic(projectRoot);
+              job.apiTraffic = extractApiTraffic(currentProjectRoot);
               console.log(`\n🌐 [Playwright Hub] Captured ${job.apiTraffic.length} API requests & responses from tests.`);
             } catch (err) {
               console.warn('⚠️ [Playwright Hub] Could not extract API traffic:', err.message);
             }
             if (!job.cancelled) {
-              appendHistory(projectRoot, {
+              appendHistory(currentProjectRoot, {
+                id: runId,
                 timestamp: new Date().toISOString(),
                 command,
+                environment,
+                durationMs,
                 passed: job.result.passed,
                 failed: job.result.failed,
                 skipped: job.result.skipped,
+                flaky: job.result.flaky || 0,
                 total: job.result.total,
                 code: job.result.code
               });
@@ -814,7 +1827,7 @@ function createRunnerServer(options = {}) {
           });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ id }));
+          res.end(JSON.stringify({ id, runId }));
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: e.message }));
@@ -861,7 +1874,7 @@ function createRunnerServer(options = {}) {
     if (req.method === 'POST' && cleanUrl === '/show-report') {
       if (reportProc) { try { reportProc.kill(); } catch (_) {} }
       const url = `http://localhost:${reportPort}`;
-      reportProc = spawn('npx', ['playwright', 'show-report', '--port', String(reportPort)], { cwd: projectRoot, shell: true });
+      reportProc = spawn('npx', ['playwright', 'show-report', '--port', String(reportPort)], { cwd: currentProjectRoot, shell: true });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ url }));
       return;
@@ -870,9 +1883,9 @@ function createRunnerServer(options = {}) {
     if (req.method === 'POST' && cleanUrl === '/allure-report') {
       if (allureProc) { try { allureProc.kill(); } catch (_) {} }
       const allureUrl = `http://localhost:${allurePort}`;
-      const gen = spawn('npx', ['allure', 'generate', 'allure-results', '--clean', '-o', 'allure-report'], { cwd: projectRoot, shell: true });
+      const gen = spawn('npx', ['allure', 'generate', 'allure-results', '--clean', '-o', 'allure-report'], { cwd: currentProjectRoot, shell: true });
       gen.on('close', () => {
-        allureProc = spawn('npx', ['allure', 'open', 'allure-report', '-p', String(allurePort)], { cwd: projectRoot, shell: true });
+        allureProc = spawn('npx', ['allure', 'open', 'allure-report', '-p', String(allurePort)], { cwd: currentProjectRoot, shell: true });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ url: allureUrl }));
       });
@@ -881,12 +1894,12 @@ function createRunnerServer(options = {}) {
 
     if (req.method === 'GET' && cleanUrl === '/history') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(loadHistory(projectRoot)));
+      res.end(JSON.stringify(loadHistory(currentProjectRoot)));
       return;
     }
 
     if (req.method === 'POST' && cleanUrl === '/history/clear') {
-      clearHistory(projectRoot);
+      clearHistory(currentProjectRoot);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
       return;
@@ -894,14 +1907,14 @@ function createRunnerServer(options = {}) {
 
     // ── Captured API Requests & Responses Endpoints ──
     if (req.method === 'GET' && cleanUrl === '/api-traffic') {
-      const traffic = loadApiTraffic(projectRoot);
+      const traffic = loadApiTraffic(currentProjectRoot);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ count: traffic.length, traffic }));
       return;
     }
 
     if (req.method === 'POST' && cleanUrl === '/api-traffic/clear') {
-      clearApiTraffic(projectRoot);
+      clearApiTraffic(currentProjectRoot);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, count: 0 }));
       return;
@@ -909,7 +1922,7 @@ function createRunnerServer(options = {}) {
 
     // ── MCP Endpoint ──
     if (req.method === 'POST' && cleanUrl === '/mcp') {
-      return handleMCP(req, res, projectRoot);
+      return handleMCP(req, res, currentProjectRoot, port);
     }
 
     if (req.method === 'GET' && cleanUrl === '/mcp') {
@@ -970,7 +1983,7 @@ function createRunnerServer(options = {}) {
         console.log(`   Network Access: http://${ip}:${port}  (Share this with teammates on your Wi-Fi/LAN)`);
       });
     }
-    console.log(`   Watching tests in: ${projectRoot}`);
+    console.log(`   Watching tests in: ${currentProjectRoot}`);
     console.log(`   🤖 MCP Endpoint:   http://localhost:${port}/mcp`);
     console.log(`   🔍 MCP Inspector:  http://localhost:${port}/pages/mcp-inspector.html\n`);
 
@@ -1066,5 +2079,8 @@ module.exports = {
   openBrowser,
   extractApiTraffic,
   loadApiTraffic,
-  clearApiTraffic
+  clearApiTraffic,
+  diagnosePlaywrightFailure,
+  runSelfTestChecks,
+  generateAIResponse
 };

@@ -140,6 +140,12 @@ class TestTree {
     if (window.testRunner) {
       window.testRunner.setTarget(folderPath, true);
     }
+    if (window.aiAssistant) {
+      window.aiAssistant.onContextChanged({
+        selectedTest: folderPath,
+        selectedFile: folderName
+      });
+    }
   }
 
   expandAll() {
@@ -185,6 +191,12 @@ class TestTree {
     if (window.testRunner) {
       window.testRunner.setTarget(this.selectedPath, false);
     }
+    if (window.aiAssistant) {
+      window.aiAssistant.onContextChanged({
+        selectedTest: this.selectedPath,
+        selectedFile: this.selectedName
+      });
+    }
   }
 
   clearSelection() {
@@ -204,11 +216,17 @@ class TestTree {
     const breadPath = document.getElementById('breadPath');
 
     if (badge) badge.classList.add('opacity-60');
-    if (selText) selText.textContent = 'None selected';
-    if (breadPath) breadPath.textContent = 'Select a test file';
+    if (selText) selText.textContent = 'None';
+    if (breadPath) breadPath.textContent = 'None';
 
     if (window.testRunner) {
       window.testRunner.setTarget(null, false);
+    }
+    if (window.aiAssistant) {
+      window.aiAssistant.onContextChanged({
+        selectedTest: null,
+        selectedFile: null
+      });
     }
   }
 

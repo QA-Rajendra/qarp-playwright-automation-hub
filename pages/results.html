@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: ['class', '[data-theme="dark"]'],
+      darkMode: ['class', '[data-theme="default"], [data-theme="dark"]'],
       theme: {
         extend: {
           fontFamily: {
@@ -40,7 +40,7 @@
       <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-300 text-[10px]"
               id="themeBtn" onclick="theme.toggleThemeMenu(event)">
         <span id="themeIco">🌙</span>
-        <span id="themeLbl">CYBER</span>
+        <span id="themeLbl">DEFAULT</span>
       </button>
     </div>
   </header>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,43 +9,156 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/custom.css">
   <style>
-    :root{--bg:#0a0b10;--card:#13161f;--code:#0d1117;--bdr:#1e2330;--muted:#64748b;--pur:#7c3aed;--cyn:#06b6d4;--grn:#3fb950;--red:#f85149;--amb:#f59e0b}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:#e2e8f0;font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden}
-    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(6,182,212,.08) 0%,transparent 55%);pointer-events:none;z-index:0}
-    .wrap{position:relative;z-index:1}
-    .topbar{background:rgba(13,14,20,.92);border-bottom:1px solid var(--bdr);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
-    .catbar{border-bottom:1px solid rgba(30,35,48,.6);background:rgba(15,17,27,.4);backdrop-filter:blur(8px);position:sticky;top:53px;z-index:50}
-    .srch{background:rgba(15,17,27,.9);border:1px solid var(--bdr);color:#e2e8f0;font-family:inherit;border-radius:.5rem;padding:.5rem 1rem .5rem 2.25rem;font-size:.75rem;width:280px;outline:none;transition:border-color .2s,box-shadow .2s}
-    .srch:focus{border-color:var(--pur);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
-    .srch::placeholder{color:var(--muted)}
-    .tabs{display:flex;gap:.375rem;flex-wrap:wrap}
-    .tab{padding:.35rem .875rem;border-radius:9999px;font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--bdr);background:transparent;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit}
-    .tab:hover{border-color:#334155;color:#e2e8f0}
-    .tab.on{background:linear-gradient(135deg,var(--pur),var(--cyn));border-color:transparent;color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.35)}
-    .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:1.25rem}
-    @media(max-width:640px){.sgrid{grid-template-columns:1fr}.srch{width:100%}}
-    .scard{background:var(--card);border:1px solid var(--bdr);border-radius:.875rem;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column}
-    .scard:hover{border-color:#2a3050;transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 1px rgba(124,58,237,.12)}
-    .sch{padding:.875rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:rgba(15,17,27,.7)}
-    .stitle{font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-    .sbadge{font-size:.55rem;padding:.15rem .5rem;border-radius:9999px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-    .cpbtn{display:flex;align-items:center;gap:.35rem;padding:.3rem .75rem;border-radius:.375rem;font-size:.62rem;font-weight:700;border:1px solid #2a3040;background:rgba(30,35,50,.8);color:var(--muted);cursor:pointer;transition:all .18s;font-family:inherit}
-    .cpbtn:hover{border-color:var(--cyn);color:var(--cyn)}
-    .cpbtn.done{border-color:var(--grn);color:var(--grn)}
-    .scb{background:var(--code);padding:1rem 1.125rem;font-size:.7rem;line-height:1.8;overflow-x:auto;flex:1;max-height:340px;overflow-y:auto}
-    .scb::-webkit-scrollbar{width:5px;height:5px}
-    .scb::-webkit-scrollbar-thumb{background:#1e2330;border-radius:9999px}
-    pre code{color:#cdd6f4;white-space:pre;display:block}
-    .kw{color:#cba6f7}.fn{color:#89b4fa}.st{color:#a6e3a1}.cm{color:#585b70;font-style:italic}.nm{color:#fab387}
-    .scf{padding:.5rem 1rem;border-top:1px solid var(--bdr);background:rgba(10,11,16,.6);display:flex;align-items:center;gap:.75rem;font-size:.6rem;color:var(--muted);flex-wrap:wrap}
-    .stag{padding:.1rem .45rem;border-radius:9999px;background:rgba(30,35,50,.9);border:1px solid var(--bdr);color:#64748b}
-    .empty-s{text-align:center;padding:5rem 2rem;color:var(--muted)}
-    .hl{background:rgba(124,58,237,.3);border-radius:2px;color:#c4b5fd}
-    .grad{background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .chip{font-size:.6rem;padding:.2rem .6rem;border-radius:9999px;border:1px solid var(--bdr);color:var(--muted)}
-    .lnum{display:inline-block;user-select:none;color:#2a3050;margin-right:.75rem;min-width:1.5rem;text-align:right}
+    :root {
+      --bg: #090d13;
+      --card: #131722;
+      --code: #0b0f17;
+      --bdr: #232b3b;
+      --muted: #94a3b8;
+      --text: #f1f5f9;
+      --pur: #a78bfa;
+      --cyn: #38bdf8;
+      --grn: #34d399;
+      --red: #f87171;
+      --amb: #fbbf24;
+    }
+
+    [data-theme="blue"],
+    [data-theme="blue-erp"] {
+      --bg: #F5F9FF;
+      --card: #FFFFFF;
+      --code: #07192C;
+      --bdr: #D9E5F2;
+      --muted: #64748B;
+      --text: #172B4D;
+      --pur: #1976D2;
+      --cyn: #0284C7;
+      --grn: #16A34A;
+      --red: #DC2626;
+      --amb: #D97706;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+    
+    .wrap { position: relative; z-index: 1; }
+    .topbar { background: rgba(13, 17, 24, 0.95); border-bottom: 1px solid var(--bdr); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; transition: background 0.3s; }
+    .catbar { border-bottom: 1px solid var(--bdr); background: rgba(18, 23, 34, 0.85); backdrop-filter: blur(8px); position: sticky; top: 57px; z-index: 50; transition: background 0.3s; }
+    .srch { background: rgba(13, 17, 24, 0.9); border: 1px solid var(--bdr); color: var(--text); font-family: inherit; border-radius: 0.5rem; padding: 0.5rem 1rem 0.5rem 2.25rem; font-size: 0.75rem; width: 260px; outline: none; transition: all 0.2s; }
+    .srch:focus { border-color: var(--pur); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
+    .srch::placeholder { color: var(--muted); }
+    .tabs { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+    .tab { padding: 0.35rem 0.875rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid var(--bdr); background: var(--card); color: var(--muted); cursor: pointer; transition: all 0.18s; white-space: nowrap; font-family: inherit; }
+    .tab:hover { border-color: var(--pur); color: var(--text); }
+    .tab.on { background: linear-gradient(135deg, var(--pur), var(--cyn)); border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35); }
+    .sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 1.25rem; }
+    @media (max-width: 640px) { .sgrid { grid-template-columns: 1fr; } .srch { width: 100%; } }
+    .scard { background: var(--card); border: 1px solid var(--bdr); border-radius: 0.875rem; overflow: hidden; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+    .scard:hover { border-color: var(--pur); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+    .sch { padding: 0.875rem 1rem; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; background: rgba(0, 0, 0, 0.05); }
+    .stitle { font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--text); }
+    .sbadge { font-size: 0.6rem; padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .cpbtn { display: flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.75rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 700; border: 1px solid var(--bdr); background: rgba(0, 0, 0, 0.08); color: var(--muted); cursor: pointer; transition: all 0.18s; font-family: inherit; }
+    .cpbtn:hover { border-color: var(--cyn); color: var(--cyn); }
+    .cpbtn.done { border-color: var(--grn); color: var(--grn); }
+    .scb { background: var(--code); padding: 1rem 1.125rem; font-size: 0.72rem; line-height: 1.8; overflow-x: auto; flex: 1; max-height: 340px; overflow-y: auto; }
+    .scb::-webkit-scrollbar { width: 5px; height: 5px; }
+    .scb::-webkit-scrollbar-thumb { background: #232b3b; border-radius: 9999px; }
+    pre code { color: #e2e8f0; white-space: pre; display: block; font-family: 'JetBrains Mono', monospace; }
+    
+    /* Code Highlighting Syntax Tokens */
+    .cm { color: #8b949e; font-style: italic; }
+    .st { color: #86efac; }
+    .kw { color: #c4b5fd; font-weight: 600; }
+    .fn { color: #93c5fd; }
+    .nm { color: #fde047; }
+    
+    .scf { padding: 0.5rem 1rem; border-top: 1px solid var(--bdr); background: rgba(0, 0, 0, 0.04); display: flex; align-items: center; gap: 0.75rem; font-size: 0.65rem; color: var(--muted); flex-wrap: wrap; }
+    .stag { padding: 0.1rem 0.45rem; border-radius: 9999px; background: rgba(0, 0, 0, 0.06); border: 1px solid var(--bdr); color: var(--muted); }
+    .empty-s { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+    .hl { background: rgba(124, 58, 237, 0.3); border-radius: 2px; color: #c4b5fd; }
+    .grad { background: linear-gradient(135deg, var(--pur), var(--cyn)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .chip { font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid var(--bdr); color: var(--muted); }
+    .lnum { display: inline-block; user-select: none; color: #475569; margin-right: 0.75rem; min-width: 1.5rem; text-align: right; }
+
+    /* Blue Theme Specific Overrides for Snippets Page */
+    [data-theme="blue"] .topbar,
+    [data-theme="blue-erp"] .topbar {
+      background: #00264B !important;
+      border-bottom-color: rgba(217, 229, 242, 0.2) !important;
+      color: #FFFFFF !important;
+    }
+    [data-theme="blue"] .topbar a,
+    [data-theme="blue"] .topbar span,
+    [data-theme="blue-erp"] .topbar a,
+    [data-theme="blue-erp"] .topbar span {
+      color: #D9E5F2 !important;
+    }
+    [data-theme="blue"] .catbar,
+    [data-theme="blue-erp"] .catbar {
+      background: #FFFFFF !important;
+      border-bottom-color: #D9E5F2 !important;
+    }
+    [data-theme="blue"] .scard,
+    [data-theme="blue-erp"] .scard {
+      background: #FFFFFF !important;
+      border-color: #D9E5F2 !important;
+      color: #172B4D !important;
+      box-shadow: 0 2px 8px rgba(11, 45, 77, 0.06) !important;
+    }
+    [data-theme="blue"] .sch,
+    [data-theme="blue-erp"] .sch {
+      background: #F8FAFD !important;
+      border-bottom-color: #D9E5F2 !important;
+      color: #172B4D !important;
+    }
+    [data-theme="blue"] .stitle,
+    [data-theme="blue-erp"] .stitle {
+      color: #172B4D !important;
+    }
+    [data-theme="blue"] .scf,
+    [data-theme="blue-erp"] .scf {
+      background: #FAFCFE !important;
+      border-top-color: #D9E5F2 !important;
+      color: #64748B !important;
+    }
+    [data-theme="blue"] .stag,
+    [data-theme="blue-erp"] .stag {
+      background: #EDF4FC !important;
+      border-color: #D9E5F2 !important;
+      color: #1976D2 !important;
+    }
+    [data-theme="blue"] .srch,
+    [data-theme="blue-erp"] .srch {
+      background: #FFFFFF !important;
+      border-color: #D9E5F2 !important;
+      color: #172B4D !important;
+    }
+    [data-theme="blue"] .tab,
+    [data-theme="blue-erp"] .tab {
+      background: #FFFFFF !important;
+      border-color: #D9E5F2 !important;
+      color: #64748B !important;
+    }
+    [data-theme="blue"] .tab.on,
+    [data-theme="blue-erp"] .tab.on {
+      background: #1976D2 !important;
+      color: #FFFFFF !important;
+      border-color: #1976D2 !important;
+    }
+    [data-theme="blue"] .cpbtn,
+    [data-theme="blue-erp"] .cpbtn {
+      background: #EDF4FC !important;
+      border-color: #D9E5F2 !important;
+      color: #1976D2 !important;
+    }
+    [data-theme="blue"] .cpbtn:hover,
+    [data-theme="blue-erp"] .cpbtn:hover {
+      background: #1976D2 !important;
+      color: #FFFFFF !important;
+    }
   </style>
 </head>
 <body>
@@ -63,6 +176,26 @@
         <div class="relative">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">&#128269;</span>
           <input type="text" id="si" class="srch" placeholder="Search snippets&#8230; (press /)" oninput="flt()">
+        </div>
+        <!-- Theme Toggle -->
+        <div class="relative">
+          <button type="button" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 text-[11px] font-mono hover:border-slate-500 transition-all cursor-pointer"
+                  id="themeBtn" onclick="theme.toggleThemeMenu(event)" title="Switch Theme">
+            <span id="themeIco">🌙</span>
+            <span id="themeLbl">DEFAULT</span>
+          </button>
+          <div class="hidden absolute top-full right-0 mt-2 w-44 p-2 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-50 flex flex-col gap-1 text-[11px]" id="themeMenu">
+            <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 text-left transition-all"
+                    data-theme="default" onclick="changeTheme('default'); theme.toggleThemeMenu(event);">
+              <span class="flex items-center gap-2"><span>🌙</span> <b>Default</b></span>
+              <span class="theme-check font-bold text-xs text-purple-400"></span>
+            </button>
+            <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 text-left transition-all"
+                    data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);">
+              <span class="flex items-center gap-2"><span>🔷</span> <b>Blue</b></span>
+              <span class="theme-check font-bold text-xs text-blue-400"></span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -160,21 +293,30 @@ function hlText(t){
   return escH(t).replace(re,'<span class="hl">$1</span>');
 }
 function synHL(code){
-  var isBash=/^(#|npx|npm|mkdir)/.test(code.trim());
-  if(isBash){
-    return escH(code)
-      .replace(/(#[^\n]*)/g,'<span class="cm">$1</span>')
-      .replace(/\b(npx|npm|mkdir|cd|node|export)\b/g,'<span class="kw">$1</span>');
+  var isBash = /^(#|npx|npm|mkdir|cd)/.test(code.trim());
+  if (isBash) {
+    return code.replace(/(#[^\n]*)|(\b(?:npx|npm|mkdir|cd|node|export)\b)/g, function(m, c, k){
+      if (c) return '<span class="cm">' + escH(c) + '</span>';
+      if (k) return '<span class="kw">' + escH(k) + '</span>';
+      return escH(m);
+    });
   }
-  var h=escH(code);
-  h=h.replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>');
-  h=h.replace(/(&apos;[^&]*&apos;|'[^'\n]*')/g,'<span class="st">$1</span>');
-  h=h.replace(/(&quot;[^&]*&quot;)/g,'<span class="st">$1</span>');
-  var kws=['const','let','var','function','class','return','async','await','import','export','require','module','new','this','if','else','for','of','in','true','false','null','undefined','from'];
-  h=h.replace(new RegExp('\\b('+kws.join('|')+')\\b','g'),'<span class="kw">$1</span>');
-  h=h.replace(/\b(test|expect|describe|beforeEach|afterEach|beforeAll|afterAll|page|request|context|route)\b/g,'<span class="fn">$1</span>');
-  h=h.replace(/\b(\d+)\b/g,'<span class="nm">$1</span>');
-  return h;
+  // Single-pass tokenizer for JS tokens to prevent nested HTML corruption
+  var re = /(\/\/[^\n]*)|('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|class|return|async|await|import|export|require|module|new|this|if|else|for|of|in|true|false|null|undefined|from)\b)|(\b(?:test|expect|describe|beforeEach|afterEach|beforeAll|afterAll|page|request|context|route)\b)|(\b\d+\b)/g;
+  var lastIdx = 0, result = '';
+  var match;
+  while ((match = re.exec(code)) !== null) {
+    result += escH(code.slice(lastIdx, match.index));
+    var comment = match[1], str = match[2], kw = match[3], fn = match[4], num = match[5];
+    if (comment) result += '<span class="cm">' + escH(comment) + '</span>';
+    else if (str) result += '<span class="st">' + escH(str) + '</span>';
+    else if (kw) result += '<span class="kw">' + escH(kw) + '</span>';
+    else if (fn) result += '<span class="fn">' + escH(fn) + '</span>';
+    else if (num) result += '<span class="nm">' + escH(num) + '</span>';
+    lastIdx = re.lastIndex;
+  }
+  result += escH(code.slice(lastIdx));
+  return result;
 }
 function withLN(code){
   return code.split('\n').map(function(l,i){
@@ -230,5 +372,6 @@ window.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
+<script src="../js/theme.js"></script>
 </body>
 </html>

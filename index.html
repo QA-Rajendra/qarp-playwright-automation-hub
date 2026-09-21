@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: ['class', '[data-theme="dark"]'],
+      darkMode: ['class', '[data-theme="default"], [data-theme="dark"]'],
       theme: {
         extend: {
           fontFamily: {
@@ -59,61 +59,43 @@
         <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/60">
           <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Theme</span>
           <div class="relative">
-            <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 text-[10px] transition-all"
-                    id="themeBtn" onclick="theme.toggleThemeMenu(event)">
+            <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 text-[10px] transition-all shadow-sm"
+                    id="themeBtn" onclick="theme.toggleThemeMenu(event)" title="Switch Application Theme">
               <span id="themeIco" class="text-xs">🌙</span>
-              <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-              <span id="themeLbl" class="tracking-wider">CYBER</span>
+              <span class="w-2 h-2 rounded-full bg-violet-500" id="themeDot"></span>
+              <span id="themeLbl" class="tracking-wider font-semibold">DEFAULT</span>
             </button>
 
-            <!-- Theme Picker Dropdown -->
-            <div class="hidden absolute top-full right-0 mt-2 w-56 p-2 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1 text-[11px]"
+            <!-- Theme Picker Dropdown (Only Default & Blue ERP) -->
+            <div class="hidden absolute top-full right-0 mt-2 w-48 p-2 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1 text-[11px]"
                  id="themeMenu">
-              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1">Animated Themes</div>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="dark" onclick="theme.applyTheme('dark')">
-                <span>🌙</span> <span>Midnight Cyber</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="light" onclick="theme.applyTheme('light')">
-                <span>☀️</span> <span>Daylight Neo</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="cyberpunk" onclick="theme.applyTheme('cyberpunk')">
-                <span>⚡</span> <span>Cyberpunk 2077</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="synthwave" onclick="theme.applyTheme('synthwave')">
-                <span>👾</span> <span>Synthwave 80s</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="aurora" onclick="theme.applyTheme('aurora')">
-                <span>🌠</span> <span>Cosmic Aurora</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="matrix" onclick="theme.applyTheme('matrix')">
-                <span>🌲</span> <span>Matrix Code</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="crimson" onclick="theme.applyTheme('crimson')">
-                <span>🩸</span> <span>Crimson Red</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="sunset" onclick="theme.applyTheme('sunset')">
-                <span>🌅</span> <span>Sunset Glow</span>
-              </button>
-              <button class="theme-opt flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-300 text-left transition-all" data-theme="pastel" onclick="theme.applyTheme('pastel')">
-                <span>🍧</span> <span>Pastel Vapor</span>
+              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1">Select Theme</div>
+
+              <!-- Theme 1: Default (Midnight Cyber) -->
+              <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-violet-950/60 hover:text-purple-200 text-left transition-all"
+                      data-theme="default" onclick="changeTheme('default'); theme.toggleThemeMenu(event);">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm">🌙</span>
+                  <div>
+                    <span class="font-bold text-xs block leading-tight">Default</span>
+                    <span class="text-[9px] text-slate-400 block font-mono">Midnight Cyber</span>
+                  </div>
+                </div>
+                <span class="theme-check font-bold text-xs text-purple-400"></span>
               </button>
 
-              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-2 mt-1 border-t border-slate-800">Typography</div>
-              <div class="flex gap-1 px-1">
-                <button type="button" class="flex-1 py-1 rounded bg-slate-800 border border-slate-700 hover:border-violet-500 text-slate-300 text-xs font-bold" id="boldBtn" onclick="theme.toggleBold(event)">B Bold</button>
-                <button type="button" class="flex-1 py-1 rounded bg-slate-800 border border-slate-700 hover:border-violet-500 text-slate-300 text-xs italic" id="italicBtn" onclick="theme.toggleItalic(event)">I Italic</button>
-              </div>
-
-              <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-2 mt-1 border-t border-slate-800">Accents</div>
-              <div class="flex items-center justify-between px-2 py-1 text-[10px] text-slate-400">
-                <span>Folder Color</span>
-                <input type="color" id="folderColorPicker" value="#38bdf8" oninput="theme.setFolderColor(this.value)" class="w-5 h-5 rounded-full cursor-pointer bg-transparent border-0">
-              </div>
-              <div class="flex items-center justify-between px-2 py-1 text-[10px] text-slate-400">
-                <span>Spec Color</span>
-                <input type="color" id="fileColorPicker" value="#34d399" oninput="theme.setFileColor(this.value)" class="w-5 h-5 rounded-full cursor-pointer bg-transparent border-0">
-              </div>
-              <button type="button" class="w-full mt-1 py-1 text-[9px] text-slate-400 hover:text-slate-200 text-center" onclick="theme.resetColors()">↺ Reset Colors</button>
+              <!-- Theme 2: Blue -->
+              <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-blue-950/60 hover:text-blue-200 text-left transition-all"
+                      data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm">🔷</span>
+                  <div>
+                    <span class="font-bold text-xs block leading-tight">Blue</span>
+                    <span class="text-[9px] text-slate-400 block font-mono">Enterprise Blue</span>
+                  </div>
+                </div>
+                <span class="theme-check font-bold text-xs text-blue-400"></span>
+              </button>
             </div>
           </div>
         </div>
@@ -197,156 +179,429 @@
     <!-- ── Center Main Execution Panel ── -->
     <main class="flex-1 flex flex-col h-full overflow-y-auto min-w-0 bg-slate-950/60 z-10">
 
-      <!-- Main Navigation Header -->
-      <header class="flex items-center justify-between px-6 py-3.5 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30">
-        <div class="flex items-center gap-3 min-w-0">
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center gap-1.5"
+      <!-- Improved Application Header -->
+      <header class="flex items-center justify-between px-5 py-2.5 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 flex-wrap gap-2">
+        <!-- Left: Brand, Project, Environment, Status & Git Branch -->
+        <div class="flex items-center gap-2.5 min-w-0 flex-wrap">
+          <button type="button" class="px-2 py-1 rounded border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center"
                   id="btnToggleLeft" onclick="UI.toggleLeftSidebar()" title="Toggle Sidebar (Ctrl+B)">
-            ◀ Sidebar
+            ◀
           </button>
-          <div class="text-xs text-slate-400 truncate flex items-center gap-1.5">
-            <span id="projectBadge" class="hidden px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-800/60 text-purple-300 font-mono text-[10px]"></span>
-            Runner &nbsp;›&nbsp; <span class="text-purple-400 font-semibold" id="breadPath">Select a test file</span>
+
+          <!-- QARP Runner Brand Logo -->
+          <div class="flex items-center gap-1.5 flex-shrink-0 cursor-pointer" onclick="dashboard.switchView('dashboard')">
+            <span class="text-sm">🎭</span>
+            <span class="font-bold text-xs tracking-tight bg-gradient-to-r from-violet-300 via-purple-200 to-cyan-300 bg-clip-text text-transparent">
+              QARP Runner
+            </span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-800 hidden sm:block"></div>
+
+          <!-- Project Selector Dropdown Button -->
+          <button type="button" 
+                  id="btnSwitchProject" 
+                  onclick="UI.openModal('projectModal')"
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-800/70 bg-purple-950/40 hover:bg-purple-900/60 hover:border-purple-500 text-purple-300 font-mono text-[11px] transition-all shadow-sm group max-w-[170px]"
+                  title="Switch Playwright Project Directory">
+            <span class="text-xs">📁</span>
+            <span id="headerProjectName" class="font-bold tracking-wide truncate">Project</span>
+            <span class="text-[9px] text-purple-400 group-hover:text-purple-200">▼</span>
+          </button>
+
+          <!-- Environment Selector -->
+          <div class="relative flex items-center">
+            <select id="envSelector" 
+                    class="appearance-none bg-slate-950 border border-slate-700 rounded-lg pl-2 pr-5 py-1 text-[10px] font-mono font-bold text-slate-200 hover:border-slate-500 focus:outline-none focus:border-violet-500 cursor-pointer transition-colors"
+                    title="Select Test Execution Environment">
+              <option value="DEV">DEV</option>
+              <option value="QA">QA</option>
+              <option value="UAT">UAT</option>
+              <option value="PROD">PROD</option>
+            </select>
+            <span class="pointer-events-none absolute right-1.5 text-[8px] text-slate-400">▼</span>
+          </div>
+
+          <!-- Connection Status Badge -->
+          <div id="connStatusBadge" 
+               class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-800/60 bg-emerald-950/40 text-emerald-400 font-mono text-[10px] font-semibold transition-all">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Online</span>
+          </div>
+
+          <!-- Git Branch Badge -->
+          <div id="gitBranchBadge" 
+               class="hidden flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-700 bg-slate-800/80 text-slate-300 text-[10px] font-mono"
+               title="Current Git branch">
+            <span>🌿</span> <span class="font-mono">main</span>
+          </div>
+
+          <!-- Test Count Badge -->
+          <div id="headerTestCount" 
+               class="px-2 py-0.5 rounded-md border border-cyan-800/60 bg-cyan-950/30 text-cyan-300 text-[10px] font-mono font-semibold hidden md:block"
+               title="Total test files discovered">
+            Loading...
           </div>
         </div>
 
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <button type="button" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-slate-200"
-                  onclick="UI.openModal('settingsModal')" title="API Server Settings">
-            ⚙ API: <span id="activeApiPort">9300</span>
+        <!-- Right: View Navigation Tabs, Settings & User Profile -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- View Switcher Tabs: Dashboard vs Runner -->
+          <div class="flex items-center p-0.5 rounded-lg border border-slate-800 bg-slate-950/90 gap-1">
+            <button type="button" id="tabDashboard" onclick="dashboard.switchView('dashboard')"
+                    class="px-2.5 py-1 rounded-md font-bold text-[10px] bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-md transition-all flex items-center gap-1">
+              <span>📊</span> <span>Dashboard</span>
+            </button>
+            <button type="button" id="tabRunner" onclick="dashboard.switchView('runner')"
+                    class="px-2.5 py-1 rounded-md font-semibold text-[10px] text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1">
+              <span>🧪</span> <span>Runner</span>
+            </button>
+          </div>
+
+          <!-- 🤖 1-Click AI Self-Test & Health Audit Button -->
+          <button type="button" id="btnHeaderSelfTest" onclick="dashboard.openSelfTest()"
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-600/70 bg-purple-950/60 hover:bg-purple-900 text-purple-200 text-[10px] font-bold font-mono transition-all shadow-sm group hover:scale-[1.02]"
+                  title="Run 1-Click System Self-Test & Diagnostic Audit">
+            <span class="text-xs group-hover:rotate-12 transition-transform">🤖</span>
+            <span>Self-Test</span>
           </button>
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center gap-1.5"
+
+          <!-- 💡 AI Assistant Quick Action Button -->
+          <button type="button" id="btnHeaderAiAssistant" onclick="testRunner.switchConsoleTab('ai')"
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-violet-500/70 bg-gradient-to-r from-violet-950/80 to-purple-950/80 hover:from-violet-900 hover:to-purple-900 text-purple-200 text-[10px] font-bold font-mono transition-all shadow-sm group hover:scale-[1.02]"
+                  title="Open Intelligent AI Assistant with Context Suggestions">
+            <span class="text-xs group-hover:scale-110 transition-transform">💡</span>
+            <span>AI Assistant</span>
+          </button>
+
+          <!-- Settings Button -->
+          <button type="button" class="p-1 px-2 rounded-lg border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-500 text-xs transition-colors"
+                  onclick="UI.openModal('settingsModal')" title="Server Settings (⚙)">
+            ⚙
+          </button>
+
+          <!-- User Profile -->
+          <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-300 text-[10px]" title="QA Engineer">
+            <span class="w-4 h-4 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center text-[8px] font-bold text-white">
+              QR
+            </span>
+            <span class="font-medium hidden lg:inline text-slate-300">QA-Rajendra</span>
+          </div>
+
+          <!-- Live Console Toggle -->
+          <button type="button" class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 text-xs transition-all flex items-center gap-1"
                   id="btnToggleRight" onclick="UI.toggleRightConsole()" title="Toggle Live Console (Ctrl+J)">
-            Live Console ▶
+            Console ▶
           </button>
         </div>
       </header>
 
-      <!-- Configuration Canvas -->
-      <div class="p-6 flex flex-col gap-5 max-w-5xl w-full mx-auto" id="configPanel">
-
-        <!-- Panel: Project Filter -->
-        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
-            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <span>🧩</span> Configured Projects
+      <!-- ── View 1: DASHBOARD HOME ── -->
+      <div class="p-6 flex flex-col gap-6 max-w-6xl w-full mx-auto" id="dashboardView">
+        
+        <!-- Welcome & Quick Banner -->
+        <div class="flex items-center justify-between pb-1 flex-wrap gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <span>📊</span> Test Automation Dashboard
             </h2>
-            <span class="text-[9px] text-slate-500">Select target browser project</span>
+            <p class="text-xs text-slate-400 mt-0.5">Overview of test health, execution trends, and recent test suite runs</p>
           </div>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-2" id="projectList">
-              <span class="text-xs text-slate-500 animate-pulse">Loading projects…</span>
-            </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="px-3.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-300 text-xs font-mono transition-all flex items-center gap-1.5"
+                    onclick="dashboard.loadDashboard()">
+              <span>🔄</span> Refresh
+            </button>
+            <button type="button" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                    onclick="dashboard.switchView('runner')">
+              <span>▶</span> Run Tests
+            </button>
           </div>
-        </section>
-
-        <!-- Panel: Tag & Grep Filter -->
-        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
-            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <span>🏷️</span> Tag & Grep Filter
-            </h2>
-            <span class="text-[9px] text-slate-500">Filter test cases by title, tag, or regex</span>
-          </div>
-          <div class="p-4 flex flex-col gap-3">
-            <!-- Quick Tag Presets -->
-            <div class="flex flex-col gap-1.5">
-              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Quick Tag Presets</span>
-              <div class="flex flex-wrap gap-2" id="tagPresetsList"></div>
-            </div>
-
-            <!-- Custom Grep Input & Invert -->
-            <div class="flex items-center gap-2 pt-2 border-t border-slate-800/60">
-              <span class="text-xs text-slate-400 font-mono">--grep</span>
-              <input type="text" id="grepInput" placeholder="e.g. @sanity, @regression, TC-001, or /(auth|cart)/"
-                     class="flex-1 bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 font-mono">
-              <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-400 text-xs font-mono transition-all"
-                      id="grepInvertBtn" onclick="testRunner.toggleGrepInvert()" title="Invert grep condition (--grep-invert)">
-                invert
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Panel: Execution Flags & Timeout -->
-        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
-            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <span>⚑</span> Execution Flags & Timeout
-            </h2>
-            <span class="text-[9px] text-slate-500">CLI runner parameters</span>
-          </div>
-          <div class="p-4 flex flex-col gap-4">
-            <div class="flex flex-wrap gap-2" id="flagsList"></div>
-
-            <!-- Timeout Slider -->
-            <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-              <span class="text-xs text-slate-400 whitespace-nowrap">⏱ Timeout</span>
-              <input type="range" id="timeoutSlider" min="5000" max="120000" step="5000" value="30000"
-                     class="flex-1 accent-violet-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
-              <span class="text-xs px-2.5 py-1 rounded bg-violet-950/60 border border-violet-600 text-purple-300 font-mono min-w-[75px] text-center" id="timeoutVal">
-                30,000 ms
-              </span>
-              <button type="button" class="text-xs px-2.5 py-1 rounded border border-slate-700 hover:border-slate-500 text-slate-400 font-mono transition-all"
-                      id="timeoutToggle" onclick="testRunner.toggleTimeout()">
-                disabled
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Panel: Live Command Preview -->
-        <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
-            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <span>⌨</span> Generated Command Preview
-            </h2>
-            <span class="text-[9px] text-slate-500">Real-time CLI command</span>
-          </div>
-          <div class="p-4">
-            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs leading-relaxed break-all" id="cmdPreview">
-              <span class="text-slate-500">— select a test file from the sidebar —</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Actions Bar -->
-        <div class="flex gap-3 pt-2">
-          <button type="button" class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-sm tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-violet-900/30 btn-glow disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
-                  id="btnRun" disabled onclick="testRunner.run()">
-            ▶ Run Tests + Show Report
-          </button>
-          <!-- Run + MCP Inspector simultaneously -->
-          <button type="button" class="py-3.5 px-4 rounded-xl border border-indigo-700 bg-indigo-950/40 hover:bg-indigo-900/60 hover:border-indigo-500 text-indigo-300 font-bold text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  id="btnRunMcp" disabled onclick="testRunner.runViaMCP()"
-                  title="Run tests AND monitor live output in MCP Inspector simultaneously">
-            🤖 Run + MCP
-          </button>
-          <button type="button" class="py-3.5 px-5 rounded-xl border border-violet-700 bg-violet-950/40 hover:bg-violet-900/50 text-purple-300 font-bold text-xs transition-all"
-                  onclick="api.openAllureReport()">
-            ✨ Allure Report
-          </button>
-          <button type="button" class="py-3.5 px-5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-400 text-xs transition-all"
-                  onclick="testTree.clearSelection()">
-            ✕ Clear
-          </button>
         </div>
 
+        <!-- 8 KPI Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <!-- 1. Total Tests -->
+          <div class="p-4 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Total Tests</span>
+              <span>🧪</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-slate-100" id="kpiTotalTests">0</div>
+              <span class="text-[10px] text-slate-500">Discovered in workspace</span>
+            </div>
+          </div>
+
+          <!-- 2. Passed -->
+          <div class="p-4 rounded-xl border border-emerald-900/50 bg-emerald-950/20 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-emerald-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Passed</span>
+              <span>✅</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-emerald-400" id="kpiPassed">0</div>
+              <span class="text-[10px] text-emerald-600/80">Cumulative passed</span>
+            </div>
+          </div>
+
+          <!-- 3. Failed -->
+          <div class="p-4 rounded-xl border border-rose-900/50 bg-rose-950/20 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-rose-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Failed</span>
+              <span>❌</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-rose-400" id="kpiFailed">0</div>
+              <span class="text-[10px] text-rose-600/80">Cumulative failed</span>
+            </div>
+          </div>
+
+          <!-- 4. Skipped -->
+          <div class="p-4 rounded-xl border border-amber-900/50 bg-amber-950/20 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-amber-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Skipped</span>
+              <span>⏭</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-amber-400" id="kpiSkipped">0</div>
+              <span class="text-[10px] text-amber-600/80">Omitted tests</span>
+            </div>
+          </div>
+
+          <!-- 5. Flaky -->
+          <div class="p-4 rounded-xl border border-purple-900/50 bg-purple-950/20 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-purple-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Flaky</span>
+              <span>⚠️</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-purple-400" id="kpiFlaky">0</div>
+              <span class="text-[10px] text-purple-500/80">Passed on retry</span>
+            </div>
+          </div>
+
+          <!-- 6. Pass Rate -->
+          <div class="p-4 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Pass Rate</span>
+              <span>📈</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-cyan-300" id="kpiPassRate">100.0%</div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                <div class="bg-emerald-500 h-1.5 rounded-full" id="passRateBar" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Average Duration -->
+          <div class="p-4 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Avg Duration</span>
+              <span>⏱</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-slate-200" id="kpiAvgDuration">0.0s</div>
+              <span class="text-[10px] text-slate-500">Across test runs</span>
+            </div>
+          </div>
+
+          <!-- 8. Last Run Duration -->
+          <div class="p-4 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span class="font-bold uppercase tracking-wider text-[10px]">Last Run Duration</span>
+              <span>⚡</span>
+            </div>
+            <div class="mt-2">
+              <div class="text-2xl font-bold font-mono text-purple-300" id="kpiLastDuration">0.0s</div>
+              <span class="text-[10px] text-slate-500">Most recent execution</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test Execution Trend Chart -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/80 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs">📈</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">Test Execution Trend</h3>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] font-mono">
+              <span class="flex items-center gap-1.5 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Passed</span>
+              <span class="flex items-center gap-1.5 text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Failed</span>
+              <span class="flex items-center gap-1.5 text-amber-400"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Skipped</span>
+            </div>
+          </div>
+          <div class="p-5" id="trendChartContainer">
+            <div class="h-44 flex items-center justify-center text-slate-500 text-xs">Loading execution trend…</div>
+          </div>
+        </section>
+
+        <!-- Recent Test Runs Table -->
+        <section class="rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/80">
+            <div class="flex items-center gap-2">
+              <span class="text-xs">📋</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">Recent Test Runs</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-rose-700/70 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-mono text-[10px] font-bold transition-all shadow-sm group"
+                      onclick="dashboard.performDiagnosis('Error: expect(received).toBe(expected)\nTimed out waiting for locator(\'button#submit-login\') to be visible after 30000ms.\n    at tests/auth.spec.js:42:15', 'Timeout Failure Diagnosis', 'npx playwright test')"
+                      title="Run AI Failure Diagnosis Analyzer">
+                <span>🧠</span> <span>AI Diagnose Sample</span>
+              </button>
+              <span class="text-[10px] text-slate-500 font-mono hidden sm:inline">Click any run to view details</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950/70 text-slate-500 font-mono text-[10px] uppercase border-b border-slate-800/80">
+                <tr>
+                  <th class="px-4 py-2.5">Run ID</th>
+                  <th class="px-4 py-2.5">Date &amp; Time</th>
+                  <th class="px-4 py-2.5">Environment</th>
+                  <th class="px-4 py-2.5">Tests</th>
+                  <th class="px-4 py-2.5">Passed</th>
+                  <th class="px-4 py-2.5">Failed</th>
+                  <th class="px-4 py-2.5">Duration</th>
+                  <th class="px-4 py-2.5">Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentRunsTbody">
+                <tr><td colspan="8" class="p-6 text-center text-slate-500 text-xs">Loading recent test runs…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
       </div>
 
-      <!-- Live Running Execution State -->
-      <div class="hidden flex-1 flex flex-col items-center justify-center p-12 gap-5" id="runningState">
-        <div class="w-12 h-12 rounded-full border-4 border-slate-700 border-t-violet-500 animate-spin"></div>
-        <div class="text-sm font-semibold text-slate-200 animate-pulse tracking-wide" id="runLabel">
-          Running tests… please wait
+      <!-- ── View 2: TEST RUNNER VIEW ── -->
+      <div id="runnerView" class="hidden flex-1 flex flex-col">
+        <!-- Configuration Canvas -->
+        <div class="p-6 flex flex-col gap-5 max-w-5xl w-full mx-auto" id="configPanel">
+
+          <!-- Panel: Project Filter -->
+          <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+              <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <span>🧩</span> Configured Projects
+              </h2>
+              <span class="text-[9px] text-slate-500">Select target browser project</span>
+            </div>
+            <div class="p-4">
+              <div class="flex flex-wrap gap-2" id="projectList">
+                <span class="text-xs text-slate-500 animate-pulse">Loading projects…</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel: Tag & Grep Filter -->
+          <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+              <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <span>🏷️</span> Tag & Grep Filter
+              </h2>
+              <span class="text-[9px] text-slate-500">Filter test cases by title, tag, or regex</span>
+            </div>
+            <div class="p-4 flex flex-col gap-3">
+              <!-- Quick Tag Presets -->
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Quick Tag Presets</span>
+                <div class="flex flex-wrap gap-2" id="tagPresetsList"></div>
+              </div>
+
+              <!-- Custom Grep Input & Invert -->
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-800/60">
+                <span class="text-xs text-slate-400 font-mono">--grep</span>
+                <input type="text" id="grepInput" placeholder="e.g. @sanity, @regression, TC-001, or /(auth|cart)/"
+                       class="flex-1 bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 font-mono">
+                <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-slate-500 text-slate-400 text-xs font-mono transition-all"
+                        id="grepInvertBtn" onclick="testRunner.toggleGrepInvert()" title="Invert grep condition (--grep-invert)">
+                  invert
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel: Execution Flags & Timeout -->
+          <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+              <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <span>⚑</span> Execution Flags & Timeout
+              </h2>
+              <span class="text-[9px] text-slate-500">CLI runner parameters</span>
+            </div>
+            <div class="p-4 flex flex-col gap-4">
+              <div class="flex flex-wrap gap-2" id="flagsList"></div>
+
+              <!-- Timeout Slider -->
+              <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                <span class="text-xs text-slate-400 whitespace-nowrap">⏱ Timeout</span>
+                <input type="range" id="timeoutSlider" min="5000" max="120000" step="5000" value="30000"
+                       class="flex-1 accent-violet-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+                <span class="text-xs px-2.5 py-1 rounded bg-violet-950/60 border border-violet-600 text-purple-300 font-mono min-w-[75px] text-center" id="timeoutVal">
+                  30,000 ms
+                </span>
+                <button type="button" class="text-xs px-2.5 py-1 rounded border border-slate-700 hover:border-slate-500 text-slate-400 font-mono transition-all"
+                        id="timeoutToggle" onclick="testRunner.toggleTimeout()">
+                  disabled
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel: Live Command Preview -->
+          <section class="rounded-xl border border-slate-800/90 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/70">
+              <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <span>⌨</span> Generated Command Preview
+              </h2>
+              <span class="text-[9px] text-slate-500">Real-time CLI command</span>
+            </div>
+            <div class="p-4">
+              <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs leading-relaxed break-all" id="cmdPreview">
+                <span class="text-slate-500">— select a test file from the sidebar —</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Actions Bar -->
+          <div class="flex gap-3 pt-2">
+            <button type="button" class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-sm tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-violet-900/30 btn-glow disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+                    id="btnRun" disabled onclick="testRunner.run()">
+              ▶ Run Tests + Show Report
+            </button>
+            <button type="button" class="py-3.5 px-4 rounded-xl border border-indigo-700 bg-indigo-950/40 hover:bg-indigo-900/60 hover:border-indigo-500 text-indigo-300 font-bold text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    id="btnRunMcp" disabled onclick="testRunner.runViaMCP()"
+                    title="Run tests AND monitor live output in MCP Inspector simultaneously">
+              🤖 Run + MCP
+            </button>
+            <button type="button" class="py-3.5 px-5 rounded-xl border border-violet-700 bg-violet-950/40 hover:bg-violet-900/50 text-purple-300 font-bold text-xs transition-all"
+                    onclick="api.openAllureReport()">
+              ✨ Allure Report
+            </button>
+            <button type="button" class="py-3.5 px-5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-400 text-xs transition-all"
+                    onclick="testTree.clearSelection()">
+              ✕ Clear
+            </button>
+          </div>
         </div>
-        <div class="text-xs text-purple-300 font-mono text-center max-w-xl break-all bg-slate-900/70 p-3 rounded-xl border border-slate-800" id="runCmd"></div>
-        <div class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-900/80 rounded-lg p-3 max-w-xl text-center" id="runError"></div>
-        <button type="button" class="px-5 py-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-300 text-xs font-mono transition-all mt-2"
-                id="btnCancelRun" onclick="testRunner.cancelRun()">
-          ✕ Cancel run
-        </button>
+
+        <!-- Live Running Execution State -->
+        <div class="hidden flex-1 flex flex-col items-center justify-center p-12 gap-5" id="runningState">
+          <div class="w-12 h-12 rounded-full border-4 border-slate-700 border-t-violet-500 animate-spin"></div>
+          <div class="text-sm font-semibold text-slate-200 animate-pulse tracking-wide" id="runLabel">
+            Running tests… please wait
+          </div>
+          <div class="text-xs text-purple-300 font-mono text-center max-w-xl break-all bg-slate-900/70 p-3 rounded-xl border border-slate-800" id="runCmd"></div>
+          <div class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-900/80 rounded-lg p-3 max-w-xl text-center" id="runError"></div>
+          <button type="button" class="px-5 py-2.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-rose-500 hover:text-rose-400 text-slate-300 text-xs font-mono transition-all mt-2"
+                  id="btnCancelRun" onclick="testRunner.cancelRun()">
+            ✕ Cancel run
+          </button>
+        </div>
       </div>
 
     </main>
@@ -369,8 +624,18 @@
             <span>🌐 APIs</span>
             <span id="crApiBadge" class="text-[9px] px-1.5 py-0.2 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">0</span>
           </button>
+          <button type="button" id="tabConsoleAi" class="text-[10px] font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-purple-300 font-mono transition-all flex items-center gap-1" onclick="testRunner.switchConsoleTab('ai')">
+            <span>🤖 AI</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+          </button>
         </div>
         <div class="flex items-center gap-2">
+          <button type="button" id="btnConsoleAiDiagnose" 
+                  class="hidden text-[9px] px-2 py-0.5 rounded-full border border-rose-600/80 bg-rose-950/60 text-rose-300 hover:bg-rose-900 font-mono font-bold transition-all items-center gap-1 shadow-sm"
+                  onclick="dashboard.diagnoseActiveConsoleFailure()"
+                  title="Analyze failing test with AI Diagnosis Engine">
+            <span>🧠</span> <span>AI Diagnose</span>
+          </button>
           <span class="text-[9px] px-2 py-0.5 rounded-full border border-slate-700 bg-slate-800 text-slate-400 font-mono" id="crStatus">idle</span>
           <button type="button" class="text-slate-500 hover:text-slate-300 text-xs p-1" onclick="UI.toggleRightConsole()" title="Close console">✕</button>
         </div>
@@ -384,6 +649,120 @@
       <!-- View 2: API Traffic Stream -->
       <div class="hidden flex-1 overflow-y-auto p-3 space-y-2 text-xs font-mono bg-slate-950/80" id="crApiBody">
         <div class="text-slate-500 text-xs p-2">API requests & responses will appear here as tests execute.</div>
+      </div>
+
+      <!-- View 3: AI Assistant & Suggestion Box -->
+      <div class="hidden flex-1 flex flex-col min-h-0 bg-slate-950/90 overflow-hidden relative" id="crAiBody">
+        <!-- AI Header Controls -->
+        <div class="px-3 py-2 border-b border-slate-800 flex items-center justify-between flex-shrink-0 bg-slate-900/60">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm">🤖</span>
+            <span class="font-bold text-xs text-slate-100 font-mono tracking-tight">QARP AI Assistant</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" id="btnAiExpand" class="px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-700/60 transition-all" onclick="aiAssistant.toggleExpand()" title="Expand/Contract Console Width">
+              ⛶ Expand
+            </button>
+            <button type="button" id="btnAiClear" class="px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 hover:text-rose-300 hover:bg-rose-950/30 border border-slate-700/60 transition-all" onclick="aiAssistant.clearChat()" title="Clear Conversation">
+              🗑 Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Live Context Bar -->
+        <div class="px-3 py-1.5 border-b border-slate-800/80 bg-slate-950 flex items-center justify-between text-[10px] font-mono overflow-x-auto gap-2 flex-shrink-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span id="aiCtxProject" class="flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-800 bg-slate-900/40 text-slate-500 text-[9px] font-mono cursor-pointer transition-all" title="Current Project">
+              <span>•</span> <span>Project</span>
+            </span>
+            <span id="aiCtxTest" class="flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-800 bg-slate-900/40 text-slate-500 text-[9px] font-mono cursor-pointer transition-all" title="Selected Test">
+              <span>•</span> <span>Test</span>
+            </span>
+            <span id="aiCtxRun" class="flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-800 bg-slate-900/40 text-slate-500 text-[9px] font-mono cursor-pointer transition-all" title="Latest Run Status">
+              <span>•</span> <span>Run</span>
+            </span>
+            <span id="aiCtxError" class="flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-800 bg-slate-900/40 text-slate-500 text-[9px] font-mono cursor-pointer transition-all" title="Errors Detected">
+              <span>•</span> <span>Errors</span>
+            </span>
+            <span id="aiCtxApi" class="flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-800 bg-slate-900/40 text-slate-500 text-[9px] font-mono cursor-pointer transition-all" title="API Traffic Status">
+              <span>•</span> <span>API</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Chat History Scroll Area -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs" id="aiChatHistory">
+          <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300">
+            <div class="flex items-center gap-1.5 font-bold text-cyan-400 text-xs mb-1">
+              <span>🤖</span> <span>QARP AI Assistant</span>
+            </div>
+            <p class="leading-relaxed">
+              Hello! I analyze your Playwright JavaScript test context in real time. Choose a suggestion below, or ask any question about creating, debugging, and running tests.
+            </p>
+          </div>
+        </div>
+
+        <!-- Suggestion Box Container -->
+        <div class="border-t border-slate-800 bg-slate-900/80 backdrop-blur-sm flex-shrink-0 flex flex-col max-h-[50%] overflow-y-auto p-2.5 space-y-2">
+          <!-- Pinned Suggestions Section -->
+          <div id="aiPinnedSection" class="hidden">
+            <div class="text-[9px] uppercase tracking-wider font-bold text-amber-400/90 flex items-center gap-1 mb-1">
+              <span>⭐</span> <span>Pinned Quick Actions</span>
+            </div>
+            <div id="aiPinnedContainer" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <!-- Suggestions Header & Count -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-xs font-bold font-mono text-slate-200">
+              <span>💡</span>
+              <span>SUGGESTIONS</span>
+              <span id="aiSuggestionsCount" class="text-[9px] px-1.5 py-0.2 rounded-full bg-violet-950 text-purple-300 border border-violet-800">(6)</span>
+            </div>
+            <button type="button" id="btnAiMoreSuggestions" onclick="aiAssistant.toggleMoreSuggestions()" class="text-[10px] text-purple-400 hover:text-purple-300 font-mono flex items-center gap-1">
+              <span>+ More Suggestions</span>
+            </button>
+          </div>
+
+          <!-- Category Filter Tabs -->
+          <div id="aiCategoryTabs" class="hidden items-center gap-1 overflow-x-auto pb-1 flex-wrap">
+            <button type="button" class="ai-cat-tab active px-2.5 py-0.5 rounded text-[10px] font-bold bg-purple-900/60 text-purple-200 border border-purple-700 transition-all" data-cat="ALL" onclick="aiAssistant.setCategory('ALL')">ALL</button>
+            <button type="button" class="ai-cat-tab px-2.5 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800 transition-all" data-cat="CREATE" onclick="aiAssistant.setCategory('CREATE')">✨ CREATE</button>
+            <button type="button" class="ai-cat-tab px-2.5 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800 transition-all" data-cat="DEBUG" onclick="aiAssistant.setCategory('DEBUG')">🐞 DEBUG</button>
+            <button type="button" class="ai-cat-tab px-2.5 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800 transition-all" data-cat="ANALYZE" onclick="aiAssistant.setCategory('ANALYZE')">🔍 ANALYZE</button>
+            <button type="button" class="ai-cat-tab px-2.5 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800 transition-all" data-cat="IMPROVE" onclick="aiAssistant.setCategory('IMPROVE')">⚡ IMPROVE</button>
+          </div>
+
+          <!-- Suggestion Cards Container -->
+          <div id="aiSuggestionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <!-- Cards populated dynamically -->
+          </div>
+
+          <!-- Recent AI Actions History -->
+          <div id="aiRecentSection" class="hidden pt-1.5 border-t border-slate-800/60">
+            <div class="text-[9px] uppercase tracking-wider font-bold text-slate-500 flex items-center gap-1 mb-1">
+              <span>🕘</span> <span>Recent AI Actions</span>
+            </div>
+            <div id="aiRecentActionsList" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+
+        <!-- Smart Chat Input with Predictive Autocomplete Dropdown -->
+        <div class="p-2 border-t border-slate-800 bg-slate-900/90 flex-shrink-0 relative">
+          <!-- Floating Autocomplete Popup -->
+          <div id="aiSmartSuggestionsPopup" class="hidden absolute bottom-full left-2 right-2 mb-1 bg-slate-900 border border-violet-800/80 rounded-xl shadow-2xl p-1.5 z-40 max-h-48 overflow-y-auto font-mono text-xs backdrop-blur-md">
+            <!-- Autocomplete matches populated dynamically -->
+          </div>
+
+          <form onsubmit="event.preventDefault(); aiAssistant.sendUserPrompt();" class="flex items-center gap-1.5">
+            <input type="text" id="aiChatInput" placeholder="Ask AI or type 'create', 'debug', 'locator'..." autocomplete="off"
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500 font-mono transition-colors">
+            <button type="submit" id="btnAiSend" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-mono text-xs font-bold shadow-md transition-all flex items-center gap-1 flex-shrink-0">
+              <span>Send</span>
+              <span>➤</span>
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
 
@@ -416,6 +795,318 @@
     </div>
   </div>
 
+  <!-- Project Switcher Modal -->
+  <div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/75 backdrop-blur-md" id="projectModal">
+    <div class="w-full max-w-lg p-6 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl font-mono text-xs text-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
+          <span>📁</span> Switch Active Playwright Project
+        </h3>
+        <button type="button" class="text-slate-400 hover:text-slate-200 text-sm" onclick="UI.closeModal('projectModal')">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <!-- Current Path Display -->
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col gap-1">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Current Active Project</span>
+          <div class="text-xs text-purple-300 font-semibold truncate flex items-center gap-2" id="modalCurrentPath">
+            <span>📁</span> <span id="modalCurrentPathText" class="truncate font-mono">Loading...</span>
+          </div>
+        </div>
+
+        <!-- Recent Projects / Presets -->
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Recent / Suggested Projects</span>
+          <div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1" id="recentProjectsList">
+            <span class="text-xs text-slate-500">Loading suggestions...</span>
+          </div>
+        </div>
+
+        <!-- Custom Path Input -->
+        <div class="flex flex-col gap-1.5 pt-2 border-t border-slate-800/80">
+          <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Or Enter Any Project Directory Path</label>
+          <div class="flex gap-2">
+            <input type="text" id="customProjectPath" placeholder="e.g. e:\qaraj\best\finalAutomation"
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:border-violet-500 focus:outline-none placeholder-slate-600 font-mono"
+                   onkeydown="if(event.key==='Enter') executeProjectSwitch()">
+            <button type="button" class="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold transition-all shadow-md"
+                    onclick="executeProjectSwitch()" id="btnConfirmSwitch">
+              Switch
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-0.5">
+            Target folder should contain tests (<code>tests/</code>, <code>test/</code>, <code>e2e/</code>) or <code>playwright.config.js</code>.
+          </p>
+        </div>
+
+        <div id="projectSwitchStatus" class="hidden p-2.5 rounded-lg text-xs font-sans"></div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5 pt-3 border-t border-slate-800">
+        <button type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors" onclick="UI.closeModal('projectModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run Details Modal -->
+  <div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/75 backdrop-blur-md" id="runDetailsModal">
+    <div class="w-full max-w-lg p-6 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl font-mono text-xs text-slate-200 animate-fadeIn">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">🧪</span>
+          <h3 class="font-bold text-sm text-slate-100">Test Run Details</h3>
+          <span id="rdId" class="text-xs text-purple-400 font-bold">#run</span>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-slate-200 text-sm" onclick="UI.closeModal('runDetailsModal')">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <!-- Status & Environment Banner -->
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Status:</span>
+            <span id="rdStatusBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">PASSED</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Env:</span>
+            <span id="rdEnv" class="px-2 py-0.5 rounded border border-purple-800 bg-purple-950/40 text-purple-300 font-bold text-[10px]">DEV</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Duration:</span>
+            <span id="rdDuration" class="text-slate-200 font-bold">12.4s</span>
+          </div>
+        </div>
+
+        <!-- Metrics Breakdown -->
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+            <span class="text-[9px] text-slate-500 uppercase font-bold block">Total</span>
+            <span class="text-base font-bold text-slate-200" id="rdTotal">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-900/40">
+            <span class="text-[9px] text-emerald-500 uppercase font-bold block">Passed</span>
+            <span class="text-base font-bold text-emerald-400" id="rdPassed">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-rose-950/20 border border-rose-900/40">
+            <span class="text-[9px] text-rose-500 uppercase font-bold block">Failed</span>
+            <span class="text-base font-bold text-rose-400" id="rdFailed">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-amber-950/20 border border-amber-900/40">
+            <span class="text-[9px] text-amber-500 uppercase font-bold block">Skipped</span>
+            <span class="text-base font-bold text-amber-400" id="rdSkipped">0</span>
+          </div>
+        </div>
+
+        <!-- Command Executed -->
+        <div class="flex flex-col gap-1">
+          <span class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">CLI Command Executed</span>
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-cyan-300 break-all leading-relaxed" id="rdCommand">
+            npx playwright test
+          </div>
+        </div>
+
+        <!-- Date & Timestamp -->
+        <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+          <span>Executed At:</span>
+          <span id="rdDate" class="text-slate-300 font-mono">2026-09-21 14:10</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mt-6 pt-3 border-t border-slate-800 gap-2">
+        <div class="flex items-center gap-2">
+          <button type="button" class="px-3.5 py-2 rounded-lg border border-purple-700 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5"
+                  onclick="dashboard.rerunActiveRun()">
+            <span>🔁</span> Re-run
+          </button>
+          <button type="button" id="btnDiagnoseRun" class="hidden px-3.5 py-2 rounded-lg border border-rose-600/80 bg-rose-950/50 hover:bg-rose-900/70 text-rose-300 text-xs font-bold transition-all items-center gap-1.5 shadow-sm"
+                  onclick="dashboard.diagnoseActiveRun()">
+            <span>🧠</span> AI Diagnose
+          </button>
+        </div>
+        <button type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors" onclick="UI.closeModal('runDetailsModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🤖 1-Click System Self-Test & Health Audit Modal -->
+  <div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-md p-4" id="selfTestModal">
+    <div class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-slate-900 border border-purple-800/80 shadow-2xl font-mono text-xs text-slate-200 animate-fadeIn overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/70 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-purple-950/80 border border-purple-700/60 flex items-center justify-center text-sm shadow-inner">
+            🤖
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-sm text-slate-100">System Self-Test & Diagnostic Audit</h3>
+              <span id="stScoreBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold">100% OPERATIONAL</span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">Automated health verification of core subsystems, runners, and configuration</p>
+          </div>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-slate-200 text-sm p-1 rounded-lg hover:bg-slate-800 transition-colors" onclick="UI.closeModal('selfTestModal')">✕</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Top Metrics Cards Grid -->
+        <div class="grid grid-cols-4 gap-2.5 text-center">
+          <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+            <span class="text-[9px] text-slate-500 uppercase font-bold block tracking-wider">Health Score</span>
+            <span class="text-lg font-bold text-emerald-400" id="stHealthScore">100%</span>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-900/40">
+            <span class="text-[9px] text-emerald-500 uppercase font-bold block tracking-wider">Passed</span>
+            <span class="text-lg font-bold text-emerald-400" id="stPassedCount">9</span>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-950/20 border border-amber-900/40">
+            <span class="text-[9px] text-amber-500 uppercase font-bold block tracking-wider">Warnings</span>
+            <span class="text-lg font-bold text-amber-400" id="stWarnCount">0</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+            <span class="text-[9px] text-slate-500 uppercase font-bold block tracking-wider">Duration</span>
+            <span class="text-lg font-bold text-cyan-300" id="stDuration">38ms</span>
+          </div>
+        </div>
+
+        <!-- Animated Progress Bar -->
+        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+          <div id="stProgressBar" class="h-full bg-gradient-to-r from-violet-500 via-cyan-400 to-emerald-400 transition-all duration-500" style="width: 100%;"></div>
+        </div>
+
+        <!-- Checks Checklist Container -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-bold tracking-wider px-1">
+            <span>Subsystem Verifications (<span id="stTotalChecks">9</span> checks)</span>
+            <span id="stProjectNameBadge" class="font-mono text-purple-400 lowercase">BestNodeJSProject</span>
+          </div>
+
+          <div id="stChecksList" class="space-y-2">
+            <!-- Dynamic checks rendered here -->
+            <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-center text-slate-500 text-xs py-8">
+              Running system diagnostic scan...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between p-4 border-t border-slate-800 bg-slate-950/70 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <button type="button" class="px-3.5 py-2 rounded-lg border border-purple-700 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                  onclick="dashboard.runSelfTestAudit()">
+            <span>🔄</span> Run Audit Again
+          </button>
+          <button type="button" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-all flex items-center gap-1.5"
+                  onclick="dashboard.copySelfTestReport()">
+            <span>📋</span> Copy Report
+          </button>
+        </div>
+        <button type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors" onclick="UI.closeModal('selfTestModal')">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧠 AI Failure Diagnosis Modal -->
+  <div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-md p-4" id="aiDiagnoseModal">
+    <div class="w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-rose-900/70 shadow-2xl font-mono text-xs text-slate-200 animate-fadeIn overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/70 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-rose-950/80 border border-rose-700/60 flex items-center justify-center text-base shadow-inner">
+            🧠
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-sm text-slate-100">AI Failure Diagnosis Engine</h3>
+              <span id="diagBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800 font-bold uppercase tracking-wider">
+                ⏱️ LOCATOR TIMEOUT
+              </span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5" id="diagSub">Intelligent root-cause explanation & 1-click code remediation</p>
+          </div>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-slate-200 text-sm p-1 rounded-lg hover:bg-slate-800 transition-colors" onclick="UI.closeModal('aiDiagnoseModal')">✕</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Diagnostic Summary Banner -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Identified Issue:</span>
+            <div class="flex items-center gap-2">
+              <span id="diagSeverity" class="text-[10px] px-2 py-0.5 rounded bg-rose-900/60 text-rose-300 font-bold border border-rose-800">HIGH SEVERITY</span>
+              <span id="diagConfidence" class="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 font-bold border border-purple-800">96% Confidence</span>
+            </div>
+          </div>
+          <h4 class="text-sm font-bold text-rose-300" id="diagTitle">Timeout Waiting for Locator</h4>
+          <div id="diagLocation" class="text-[11px] text-cyan-300 font-mono bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
+            <span>📍</span> <span id="diagLocationText">tests/example.spec.js:42</span>
+          </div>
+        </div>
+
+        <!-- Root Cause Card -->
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-1.5">
+          <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+            <span>🔍</span> <span>Root Cause Analysis</span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed" id="diagRootCause">
+            Playwright waited for the element to appear and reach actionable state, but the timeout expired.
+          </p>
+        </div>
+
+        <!-- Key Findings & Evidence -->
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+            <span>📋</span> <span>Key Findings & Trace Evidence</span>
+          </div>
+          <ul class="space-y-1.5 text-[11px] text-slate-300" id="diagFindings">
+            <!-- Dynamic findings -->
+          </ul>
+        </div>
+
+        <!-- Prevention & Best Practices -->
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+            <span>💡</span> <span>Prevention & Playwright Best Practices</span>
+          </div>
+          <ul class="space-y-1.5 text-[11px] text-slate-300" id="diagTips">
+            <!-- Dynamic tips -->
+          </ul>
+        </div>
+
+        <!-- Suggested Fix Code Block -->
+        <div class="rounded-xl border border-slate-800 bg-slate-950 flex flex-col overflow-hidden shadow-lg">
+          <div class="flex items-center justify-between px-3.5 py-2 border-b border-slate-800 bg-slate-900/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <span>⚡</span> <span>1-Click Suggested Fix Code</span>
+            </span>
+            <button type="button" id="btnCopyDiagFix" class="text-[10px] px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:border-emerald-600 hover:text-emerald-300 text-slate-300 transition-all flex items-center gap-1 font-mono"
+                    onclick="dashboard.copyDiagnosisFix()">
+              <span>📋</span> Copy Fix
+            </button>
+          </div>
+          <pre class="p-4 text-[11px] font-mono text-cyan-200 overflow-x-auto leading-relaxed" id="diagFixCode">// Code fix will appear here</pre>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between p-4 border-t border-slate-800 bg-slate-950/70 flex-shrink-0">
+        <button type="button" class="px-3.5 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-all flex items-center gap-1.5"
+                onclick="dashboard.copyAllDiagnosis()">
+          <span>📄</span> Copy Full Diagnosis
+        </button>
+        <button type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors" onclick="UI.closeModal('aiDiagnoseModal')">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
@@ -423,17 +1114,25 @@
   <script src="js/common.js"></script>
   <script src="js/tree.js"></script>
   <script src="js/runner.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/ai-assistant.js"></script>
 
   <script>
     // Initialize Dashboard Application
     window.addEventListener('DOMContentLoaded', async () => {
       UI.initResizablePanels();
       UI.initShortcuts();
+      await loadProjectInfo();
       await testTree.init();
       await testRunner.init();
+      dashboard.init();
+      if (window.aiAssistant) {
+        aiAssistant.init();
+      }
 
       // Check API connection
       const isOnline = await api.checkHealth();
+      dashboard.setConnectionState(isOnline ? 'Online' : 'Offline');
       const portEl = document.getElementById('activeApiPort');
       const activePort = (window.location && window.location.port) ? window.location.port : '9300';
       if (portEl) {
@@ -445,6 +1144,91 @@
         settingInput.value = api.baseUrl;
       }
     });
+
+    async function loadProjectInfo() {
+      try {
+        const info = await api.getProjectPath();
+        if (info && info.current) {
+          const nameEl = document.getElementById('headerProjectName');
+          if (nameEl) nameEl.textContent = info.projectName || 'Project';
+          const btn = document.getElementById('btnSwitchProject');
+          if (btn) btn.title = `Current project directory: ${info.current}\nClick to switch project.`;
+          const curText = document.getElementById('modalCurrentPathText');
+          if (curText) curText.textContent = info.current;
+
+          // Render recent / suggested projects list
+          const list = document.getElementById('recentProjectsList');
+          if (list && Array.isArray(info.recents)) {
+            list.innerHTML = info.recents.map(p => {
+              const isCurrent = p.toLowerCase() === info.current.toLowerCase();
+              const baseName = p.split(/[\\\/]/).filter(Boolean).pop() || p;
+              const safePath = p.replace(/\\/g, '\\\\');
+              return `
+                <div class="flex items-center justify-between p-2 rounded-lg border ${isCurrent ? 'border-purple-600/80 bg-purple-950/40 text-purple-200' : 'border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40'} transition-all cursor-pointer group"
+                     onclick="switchAndReload('${safePath}')">
+                  <div class="min-w-0 flex items-center gap-2">
+                    <span class="text-xs">${isCurrent ? '⭐' : '📂'}</span>
+                    <div class="truncate">
+                      <span class="font-bold text-[11px] block">${baseName}</span>
+                      <span class="text-[9px] text-slate-500 truncate block font-mono">${p}</span>
+                    </div>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-sans ${isCurrent ? 'bg-purple-900/70 text-purple-200 font-bold' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-200'}">
+                    ${isCurrent ? 'Active' : 'Select'}
+                  </span>
+                </div>`;
+            }).join('');
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load project info:', e);
+      }
+    }
+
+    async function switchAndReload(pathStr) {
+      const statusEl = document.getElementById('projectSwitchStatus');
+      if (statusEl) {
+        statusEl.className = 'p-2.5 rounded-lg text-xs bg-slate-800 text-slate-300 block animate-pulse';
+        statusEl.textContent = `⏳ Switching project to: ${pathStr}...`;
+        statusEl.classList.remove('hidden');
+      }
+
+      try {
+        const res = await api.switchProjectPath(pathStr);
+        if (res && res.ok) {
+          if (statusEl) {
+            statusEl.className = 'p-2.5 rounded-lg text-xs bg-emerald-950/70 border border-emerald-800 text-emerald-300 block';
+            statusEl.textContent = `✅ Successfully switched to: ${res.projectName}!`;
+          }
+          UI.toast(`Active project: ${res.projectName}`, 'success');
+          await loadProjectInfo();
+          await testTree.init();
+          if (window.dashboard && typeof dashboard.loadDashboard === 'function') {
+            await dashboard.loadDashboard();
+          }
+          if (window.testRunner && typeof testRunner.renderProjects === 'function') {
+            await testRunner.renderProjects();
+          }
+          setTimeout(() => {
+            UI.closeModal('projectModal');
+            if (statusEl) statusEl.classList.add('hidden');
+          }, 600);
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.className = 'p-2.5 rounded-lg text-xs bg-red-950/70 border border-red-800 text-red-300 block';
+          statusEl.textContent = `❌ ${err.message}`;
+          statusEl.classList.remove('hidden');
+        }
+      }
+    }
+
+    function executeProjectSwitch() {
+      const input = document.getElementById('customProjectPath');
+      if (input && input.value.trim()) {
+        switchAndReload(input.value.trim());
+      }
+    }
 
     function saveSettings() {
       const input = document.getElementById('settingApiUrl');

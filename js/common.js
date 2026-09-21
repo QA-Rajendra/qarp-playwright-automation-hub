@@ -206,6 +206,17 @@ const UI = {
     localStorage.setItem('pw_console_collapsed', isHidden);
   },
 
+  openRightConsole() {
+    const consoleRail = document.getElementById('rightConsole');
+    const resizerRight = document.getElementById('resizerRight');
+    const btn = document.getElementById('btnToggleRight');
+    if (!consoleRail) return;
+    consoleRail.classList.remove('hidden');
+    if (resizerRight) resizerRight.classList.remove('hidden');
+    if (btn) btn.innerHTML = 'Live Console ▶';
+    localStorage.setItem('pw_console_collapsed', 'false');
+  },
+
   /**
    * Setup Keyboard Shortcuts
    */
