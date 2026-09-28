@@ -1,0 +1,580 @@
+/* Custom CSS Variables & Theme Palettes for Playwright Test Runner */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+/* ==========================================================================
+   THEME 1 — DEFAULT (MIDNIGHT CYBER)
+   ========================================================================== */
+:root,
+[data-theme="default"],
+[data-theme="dark"] {
+  --primary: #7c3aed;
+  --dark-primary: #5b21b6;
+  --sidebar: #0d1117;
+  --header: #0f141c;
+  --background: #090d13;
+  --bg: #090d13;
+  --card: #161b22;
+  --border: #30363d;
+  --border2: #3d444d;
+  --text: #e6edf3;
+  --muted-text: #8b949e;
+  --success: #3fb950;
+  --warning: #d29922;
+  --error: #f85149;
+  --info: #06b6d4;
+
+  /* Table Variables */
+  --table-header: #131822;
+  --table-header-text: #e6edf3;
+  --table-background: #0d1117;
+  --table-bg: #0d1117;
+  --table-row: #0d1117;
+  --table-row-alternate: #121822;
+  --table-row-alt: #121822;
+  --table-row-hover: #1c2433;
+  --table-border: #30363d;
+  --table-text: #e6edf3;
+  --table-muted-text: #8b949e;
+
+  /* Legacy & component mapped variables */
+  --surface: var(--card);
+  --surface2: #1c2330;
+  --surface3: #21262d;
+  --t1: var(--text);
+  --t2: var(--muted-text);
+  --t3: #484f58;
+  --acc: var(--primary);
+  --acc-g: rgba(124, 58, 237, 0.18);
+  --acc2: var(--info);
+  --green: var(--success);
+  --green-bg: #0d2a18;
+  --green-b: #1a4a2a;
+  --red: var(--error);
+  --red-bg: #2a0d0d;
+  --red-b: #4a1a1a;
+  --amber: var(--warning);
+  --purple: var(--primary);
+  --folder-color: #38bdf8;
+  --folder-sub-color: #fbbf24;
+  --file-color: #34d399;
+  --file-hover-color: #6ee7b7;
+  --mono: 'JetBrains Mono', monospace;
+  --bg-animated: radial-gradient(circle at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 40%),
+                 radial-gradient(circle at 80% 80%, rgba(6,182,212,0.12) 0%, transparent 40%);
+}
+
+/* ==========================================================================
+   THEME 2 — BLUE THEME
+   ========================================================================== */
+[data-theme="blue"],
+[data-theme="blue-erp"] {
+  --primary: #1976D2;
+  --dark-primary: #1565C0;
+  --sidebar: #0B2D4D;
+  --header: #00264B;
+  --background: #F5F9FF;
+  --bg: #F5F9FF;
+  --card: #FFFFFF;
+  --border: #D9E5F2;
+  --border2: #B8CEE5;
+  --text: #172B4D;
+  --muted-text: #64748B;
+  --success: #16A34A;
+  --warning: #D97706;
+  --error: #DC2626;
+  --info: #0284C7;
+
+  /* Table Variables */
+  --table-header: #EBF3FC;
+  --table-header-text: #0B2D4D;
+  --table-background: #FFFFFF;
+  --table-bg: #FFFFFF;
+  --table-row: #FFFFFF;
+  --table-row-alternate: #F7FAFD;
+  --table-row-alt: #F7FAFD;
+  --table-row-hover: #EDF5FE;
+  --table-border: #D9E5F2;
+  --table-text: #172B4D;
+  --table-muted-text: #64748B;
+
+  /* Legacy & component mapped variables */
+  --surface: var(--card);
+  --surface2: #EDF4FC;
+  --surface3: #E2ECF8;
+  --t1: var(--text);
+  --t2: var(--muted-text);
+  --t3: #8C9CAB;
+  --acc: var(--primary);
+  --acc-g: rgba(25, 118, 210, 0.18);
+  --acc2: var(--info);
+  --green: var(--success);
+  --green-bg: #dcfce7;
+  --green-b: #86efac;
+  --red: var(--error);
+  --red-bg: #fee2e2;
+  --red-b: #fca5a5;
+  --amber: var(--warning);
+  --purple: var(--primary);
+  --folder-color: #1976D2;
+  --folder-sub-color: #0284C7;
+  --file-color: #16A34A;
+  --file-hover-color: #1565C0;
+  --mono: 'JetBrains Mono', monospace;
+  --bg-animated: radial-gradient(circle at 15% 15%, rgba(25,118,210,0.06) 0%, transparent 40%),
+                 radial-gradient(circle at 85% 85%, rgba(2,132,199,0.05) 0%, transparent 40%);
+}
+
+/* Base resets & animated background */
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background .3s ease, color .3s ease;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--bg-animated);
+  animation: themeBgFloat 18s linear infinite alternate;
+  opacity: 0.85;
+  transition: background 0.5s ease, opacity 0.5s ease;
+}
+
+@keyframes themeBgFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-4%, 3%) scale(1.05); }
+  100% { transform: translate(3%, -4%) scale(1); }
+}
+
+/* ==========================================================================
+   TABLE THEME STYLING
+   ========================================================================== */
+table {
+  background-color: var(--table-bg) !important;
+  border-color: var(--table-border) !important;
+  color: var(--table-text) !important;
+}
+
+table thead,
+table thead tr,
+table thead th {
+  background-color: var(--table-header) !important;
+  color: var(--table-header-text) !important;
+  border-bottom: 1px solid var(--table-border) !important;
+}
+
+table tbody tr {
+  background-color: var(--table-row) !important;
+  border-bottom: 1px solid var(--table-border) !important;
+  color: var(--table-text) !important;
+  transition: background-color 0.15s ease;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: var(--table-row-alt) !important;
+}
+
+table tbody tr:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+table td {
+  border-color: var(--table-border) !important;
+  color: var(--table-text) !important;
+}
+
+table td .text-slate-400,
+table td .text-slate-500 {
+  color: var(--table-muted-text) !important;
+}
+
+/* ==========================================================================
+   BLUE THEME COMPONENT OVERRIDES
+   ========================================================================== */
+[data-theme="blue"] body,
+[data-theme="blue-erp"] body {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] header,
+[data-theme="blue-erp"] header {
+  background-color: var(--header) !important;
+  border-bottom: 1px solid rgba(217, 229, 242, 0.18) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] header button,
+[data-theme="blue"] header .text-slate-200,
+[data-theme="blue"] header .text-slate-300,
+[data-theme="blue"] header .text-slate-400,
+[data-theme="blue-erp"] header button,
+[data-theme="blue-erp"] header .text-slate-200,
+[data-theme="blue-erp"] header .text-slate-300,
+[data-theme="blue-erp"] header .text-slate-400 {
+  color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] header .bg-slate-800,
+[data-theme="blue"] header .bg-slate-800\/80,
+[data-theme="blue"] header .bg-slate-950\/60,
+[data-theme="blue-erp"] header .bg-slate-800,
+[data-theme="blue-erp"] header .bg-slate-800\/80,
+[data-theme="blue-erp"] header .bg-slate-950\/60 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(217, 229, 242, 0.22) !important;
+}
+
+[data-theme="blue"] #leftSidebar,
+[data-theme="blue-erp"] #leftSidebar {
+  background-color: var(--sidebar) !important;
+  border-right: 1px solid rgba(217, 229, 242, 0.15) !important;
+  color: #E0EBF7 !important;
+}
+
+[data-theme="blue"] #leftSidebar .bg-slate-950\/80,
+[data-theme="blue"] #leftSidebar .bg-slate-950\/60,
+[data-theme="blue"] #leftSidebar .bg-slate-950\/40,
+[data-theme="blue"] #leftSidebar .bg-slate-900\/60,
+[data-theme="blue-erp"] #leftSidebar .bg-slate-950\/80,
+[data-theme="blue-erp"] #leftSidebar .bg-slate-950\/60,
+[data-theme="blue-erp"] #leftSidebar .bg-slate-950\/40,
+[data-theme="blue-erp"] #leftSidebar .bg-slate-900\/60 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(217, 229, 242, 0.15) !important;
+}
+
+[data-theme="blue"] #leftSidebar input,
+[data-theme="blue-erp"] #leftSidebar input {
+  background-color: #07223C !important;
+  border-color: rgba(217, 229, 242, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] #leftSidebar .text-slate-400,
+[data-theme="blue"] #leftSidebar .text-slate-300,
+[data-theme="blue-erp"] #leftSidebar .text-slate-400,
+[data-theme="blue-erp"] #leftSidebar .text-slate-300 {
+  color: #B8CEE5 !important;
+}
+
+[data-theme="blue"] #leftSidebar .text-slate-500,
+[data-theme="blue-erp"] #leftSidebar .text-slate-500 {
+  color: #7E97B0 !important;
+}
+
+[data-theme="blue"] #leftSidebar .file:hover,
+[data-theme="blue"] #leftSidebar .fr:hover,
+[data-theme="blue-erp"] #leftSidebar .file:hover,
+[data-theme="blue-erp"] #leftSidebar .fr:hover {
+  background-color: rgba(25, 118, 210, 0.2) !important;
+}
+
+[data-theme="blue"] main,
+[data-theme="blue-erp"] main {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] .bg-slate-900,
+[data-theme="blue"] .bg-slate-900\/90,
+[data-theme="blue"] .bg-slate-900\/80,
+[data-theme="blue"] .bg-slate-900\/60,
+[data-theme="blue"] .bg-slate-900\/50,
+[data-theme="blue"] .bg-slate-900\/40,
+[data-theme="blue"] .bg-slate-950,
+[data-theme="blue"] .bg-slate-950\/90,
+[data-theme="blue"] .bg-slate-950\/80,
+[data-theme="blue"] .bg-slate-950\/70,
+[data-theme="blue"] .bg-slate-950\/60,
+[data-theme="blue"] .bg-slate-950\/40,
+[data-theme="blue-erp"] .bg-slate-900,
+[data-theme="blue-erp"] .bg-slate-900\/90,
+[data-theme="blue-erp"] .bg-slate-900\/80,
+[data-theme="blue-erp"] .bg-slate-900\/60,
+[data-theme="blue-erp"] .bg-slate-900\/50,
+[data-theme="blue-erp"] .bg-slate-900\/40,
+[data-theme="blue-erp"] .bg-slate-950,
+[data-theme="blue-erp"] .bg-slate-950\/90,
+[data-theme="blue-erp"] .bg-slate-950\/80,
+[data-theme="blue-erp"] .bg-slate-950\/70,
+[data-theme="blue-erp"] .bg-slate-950\/60,
+[data-theme="blue-erp"] .bg-slate-950\/40 {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] .border-slate-800,
+[data-theme="blue"] .border-slate-800\/80,
+[data-theme="blue"] .border-slate-800\/60,
+[data-theme="blue"] .border-slate-700,
+[data-theme="blue"] .border-slate-700\/80,
+[data-theme="blue-erp"] .border-slate-800,
+[data-theme="blue-erp"] .border-slate-800\/80,
+[data-theme="blue-erp"] .border-slate-800\/60,
+[data-theme="blue-erp"] .border-slate-700,
+[data-theme="blue-erp"] .border-slate-700\/80 {
+  border-color: var(--border) !important;
+}
+
+[data-theme="blue"] .text-slate-100,
+[data-theme="blue"] .text-slate-200,
+[data-theme="blue"] .text-slate-300,
+[data-theme="blue-erp"] .text-slate-100,
+[data-theme="blue-erp"] .text-slate-200,
+[data-theme="blue-erp"] .text-slate-300 {
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] .text-slate-400,
+[data-theme="blue"] .text-slate-500,
+[data-theme="blue-erp"] .text-slate-400,
+[data-theme="blue-erp"] .text-slate-500 {
+  color: var(--muted-text) !important;
+}
+
+[data-theme="blue"] #rightConsole,
+[data-theme="blue-erp"] #rightConsole {
+  background-color: var(--card) !important;
+  border-left-color: var(--border) !important;
+}
+
+[data-theme="blue"] #crBody,
+[data-theme="blue-erp"] #crBody {
+  background-color: #07192C !important;
+  color: #E2EDF8 !important;
+}
+
+[data-theme="blue"] #crApiBody,
+[data-theme="blue-erp"] #crApiBody {
+  background-color: #F8FAFD !important;
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] #crAiBody,
+[data-theme="blue-erp"] #crAiBody {
+  background-color: var(--bg) !important;
+}
+
+[data-theme="blue"] .ai-sugg-card,
+[data-theme="blue-erp"] .ai-sugg-card {
+  background-color: #FFFFFF !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: 0 1px 3px rgba(11, 45, 77, 0.05);
+}
+
+[data-theme="blue"] .ai-sugg-card:hover,
+[data-theme="blue-erp"] .ai-sugg-card:hover {
+  background-color: #F0F6FE !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="blue"] #settingsModal > div,
+[data-theme="blue"] #projectModal > div,
+[data-theme="blue"] #selfTestModal > div,
+[data-theme="blue"] #aiDiagnoseModal > div,
+[data-theme="blue-erp"] #settingsModal > div,
+[data-theme="blue-erp"] #projectModal > div,
+[data-theme="blue-erp"] #selfTestModal > div,
+[data-theme="blue-erp"] #aiDiagnoseModal > div {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] #settingsModal input,
+[data-theme="blue"] #projectModal input,
+[data-theme="blue-erp"] #settingsModal input,
+[data-theme="blue-erp"] #projectModal input {
+  background-color: #F8FAFD !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* Theme Switcher Active Styles */
+.theme-opt.active {
+  background-color: rgba(124, 58, 237, 0.25) !important;
+  border: 1px solid rgba(124, 58, 237, 0.6) !important;
+  color: #d8b4fe !important;
+  font-weight: 600;
+}
+
+[data-theme="blue"] #themeMenu,
+[data-theme="blue-erp"] #themeMenu {
+  background-color: #FFFFFF !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: 0 10px 25px rgba(11, 45, 77, 0.12) !important;
+}
+
+[data-theme="blue"] .theme-opt,
+[data-theme="blue-erp"] .theme-opt {
+  color: var(--text) !important;
+}
+
+[data-theme="blue"] .theme-opt:hover,
+[data-theme="blue-erp"] .theme-opt:hover {
+  background-color: #EDF4FC !important;
+  color: var(--primary) !important;
+}
+
+[data-theme="blue"] .theme-opt.active,
+[data-theme="blue-erp"] .theme-opt.active {
+  background-color: #E1EDFA !important;
+  border: 1px solid var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border2);
+}
+
+/* Resizer Draggable Splitters */
+.resizer {
+  width: 8px;
+  margin: 0 -4px;
+  cursor: col-resize;
+  z-index: 40;
+  position: relative;
+  flex-shrink: 0;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.resizer::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: var(--border);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.resizer:hover::before,
+.resizer.dragging::before {
+  background: var(--acc);
+  box-shadow: 0 0 10px var(--acc);
+}
+.resizer-grip {
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  background: var(--border2);
+  z-index: 2;
+  pointer-events: none;
+  transition: background 0.15s, height 0.15s;
+}
+.resizer:hover .resizer-grip,
+.resizer.dragging .resizer-grip {
+  background: var(--primary);
+  height: 52px;
+}
+
+/* Syntax Highlighting for Live Console Logs */
+.log-pass  { color: var(--green); font-weight: 600; }
+.log-fail  { color: var(--red); font-weight: 600; }
+.log-warn  { color: var(--amber); }
+.log-info  { color: var(--info); }
+.log-skip  { color: var(--purple); }
+.log-time  { color: var(--acc2); }
+.log-err   { color: #ff7b72; background: rgba(248,81,73,0.12); border-radius: 3px; padding: 1px 4px; }
+
+/* Progress bar shimmer */
+.prog-fill-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.prog-fill-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -60%; bottom: 0; width: 60%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: shimmerAnim 2s linear infinite;
+}
+@keyframes shimmerAnim {
+  from { left: -60%; }
+  to   { left: 150%; }
+}
+
+/* Glowing Button Pulse */
+.btn-glow {
+  box-shadow: 0 0 16px rgba(124,58,237,0.4), 0 4px 12px rgba(0,0,0,0.3);
+}
+.btn-glow:hover {
+  box-shadow: 0 0 24px rgba(124,58,237,0.7), 0 6px 16px rgba(0,0,0,0.4);
+}
+
+/* Keep compact navigation and chat metadata readable without changing dense data views. */
+#appHeader [class~="text-[8px]"],
+#appHeader [class~="text-[9px]"],
+#appHeader [class~="text-[10px]"],
+#rightConsole [class~="text-[8px]"],
+#rightConsole [class~="text-[9px]"],
+#rightConsole [class~="text-[10px]"] {
+  font-size: 11px !important;
+  line-height: 1.35;
+}
+
+#appHeader [class~="text-[11px]"],
+#rightConsole [class~="text-[11px]"] {
+  font-size: 12px !important;
+  line-height: 1.4;
+}
+
+@media (max-width: 767px) {
+  #leftSidebar,
+  #rightConsole {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    height: 100dvh !important;
+    z-index: 60 !important;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.55);
+  }
+
+  #leftSidebar {
+    left: 0;
+    width: min(86vw, 320px) !important;
+    max-width: none !important;
+  }
+
+  #rightConsole {
+    right: 0;
+    width: min(94vw, 420px) !important;
+    max-width: none !important;
+  }
+
+  #resizerLeft,
+  #resizerRight {
+    display: none !important;
+  }
+
+  #appHeader {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

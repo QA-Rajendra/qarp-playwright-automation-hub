@@ -1,0 +1,50 @@
+{
+  "name": "Qarp-uiPlaywrightTool",
+  "version": "1.0.0",
+  "description": "Modern Playwright Test Runner Dashboard & Automation Hub (Frontend + Node.js Runner Module)",
+  "main": "runner-server.js",
+  "bin": {
+    "qarp-uiPlaywrightTool": "./runner-server.js"
+  },
+  "module": "js/index.js",
+  "exports": {
+    ".": {
+      "require": "./runner-server.js",
+      "import": "./js/index.js"
+    },
+    "./server": "./runner-server.js",
+    "./middleware": "./runner-server.js"
+  },
+  "scripts": {
+    "start": "node runner-server.js",
+    "test:ui": "node runner-server.js"
+  },
+  "files": [
+    "runner-server.js",
+    "index.html",
+    "pages",
+    "js",
+    "assets",
+    "README.md"
+  ],
+  "keywords": [
+    "playwright",
+    "test-runner",
+    "dashboard",
+    "e2e",
+    "testing",
+    "automation",
+    "allure"
+  ],
+  "author": "QARP",
+  "license": "qarp-uiPlaywrightTool",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QA-Rajendra/qarp-playwright-automation-hub.git"
+  },
+  "homepage": "https://github.com/QA-Rajendra/qarp-playwright-automation-hub#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "playwright": "^1.63.0"
+  }
+}
