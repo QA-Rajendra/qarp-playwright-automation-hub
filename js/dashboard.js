@@ -17,6 +17,7 @@ class DashboardController {
     this.setupEnvListeners();
     this.loadDashboard();
     this.setupRunnerSessions();
+    this.switchView('runner');
   }
 
   setupRunnerSessions() {

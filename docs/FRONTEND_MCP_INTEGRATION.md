@@ -1,6 +1,6 @@
 # Frontend Integration Guide for MCP, Chat, and API Execution
 
-This document explains how a frontend application can use the Seratek Playwright automation through the MCP server, a chat layer, and a thin API adapter.
+This document explains how a frontend application can use the QARP Playwright automation through the MCP server, a chat layer, and a thin API adapter.
 
 ## Overview
 
@@ -149,7 +149,7 @@ Response:
   "testFile": "tests/E2EadamissonToStudentlist/allFlow.spec.js",
   "status": "failed",
   "error": "Command failed (1): ...",
-  "reportPath": "D:\\SeratekAutomation\\Testsuite\\tta-report"
+  "reportPath": "D:\\DemoAutomation\\Testsuite\\tta-report"
 }
 ```
 
@@ -185,7 +185,7 @@ Response:
     "failed": 0,
     "skipped": 0
   },
-  "reportPath": "D:\\SeratekAutomation\\Testsuite\\playwright-report"
+  "reportPath": "D:\\DemoAutomation\\Testsuite\\playwright-report"
 }
 ```
 
@@ -225,7 +225,7 @@ Response:
   "success": true,
   "runId": "run-1790577901687",
   "reportUrl": "/reports/tta-report/index.html",
-  "reportDir": "D:\\SeratekAutomation\\Testsuite\\tta-report",
+  "reportDir": "D:\\DemoAutomation\\Testsuite\\tta-report",
   "status": "failed",
   "output": "...full execution output..."
 }

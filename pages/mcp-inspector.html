@@ -231,6 +231,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;overflow:hidden}
 .app{display:grid;grid-template-rows:60px 1fr;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
+.app.monitor-open{grid-template-columns:320px 1fr 300px}
 .header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;z-index:10}
 .header-logo{display:flex;align-items:center;gap:10px}
 .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px var(--accent-glow)}
@@ -325,6 +326,99 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
 .hc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hs,.ht{font-size:11px;color:var(--text3);flex-shrink:0}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* ── Sidebar Tab Switcher ──────────────────────────────────────────────── */
+.sb-tabs{display:flex;gap:2px;padding:8px 8px 0;flex-shrink:0;}
+.sb-tab{flex:1;padding:6px 4px;font-size:11px;font-weight:600;font-family:inherit;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;background:var(--surface2);color:var(--text3);cursor:pointer;transition:all .15s;}
+.sb-tab.active{background:var(--surface3);color:var(--text);border-color:var(--border2);}
+.sb-tab:hover:not(.active){color:var(--text2);}
+#sb-tools-pane{display:flex;flex-direction:column;flex:1;overflow:hidden;border-top:1px solid var(--border);}
+#sb-prompts-pane{border-top:1px solid var(--border);}
+/* Prompt Items */
+.prompt-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px;}
+.prompt-item:hover{background:var(--surface2);border-color:var(--border);}
+.prompt-item.active{background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.4);}
+.prompt-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+.prompt-item.active .prompt-name{color:var(--green);}
+.prompt-desc{font-size:11px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.prompt-tag{font-size:9px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:var(--green);border-radius:10px;padding:1px 6px;font-weight:600;}
+.btn-get-prompt{background:linear-gradient(135deg,var(--green),#059669);border:none;color:#fff;padding:10px 24px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-top:20px;box-shadow:0 4px 16px rgba(52,211,153,.25);}
+.btn-get-prompt:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(52,211,153,.35);}
+.prompt-msg{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);max-height:260px;overflow-y:auto;position:relative;margin-top:12px;}
+.prompt-msg-copy{position:absolute;top:8px;right:8px;background:var(--surface3);border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.prompt-msg-copy:hover{color:var(--text);border-color:var(--border2);}
+[data-theme="blue"] .sb-tab,[data-theme="blue-erp"] .sb-tab{background:#112842 !important;border-color:#1F4268 !important;color:#93C5FD !important;}
+[data-theme="blue"] .sb-tab.active,[data-theme="blue-erp"] .sb-tab.active{background:#1976D2 !important;color:#FFFFFF !important;}
+[data-theme="blue"] .prompt-item,[data-theme="blue-erp"] .prompt-item{color:#E2E8F0 !important;}
+[data-theme="blue"] .prompt-item.active,[data-theme="blue-erp"] .prompt-item.active{background:rgba(25,118,210,0.15) !important;border-color:rgba(25,118,210,0.4) !important;}
+
+/* ── Project Selector ──────────────────────────────────────────────────── */
+.proj-section{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.proj-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.proj-selector{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.proj-selector select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:6px 8px;outline:none;cursor:pointer;transition:border-color .2s;}
+.proj-selector select:focus{border-color:var(--accent);}
+.proj-add-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--accent);font-size:18px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.proj-add-btn:hover{background:var(--accent-glow);border-color:var(--accent);}
+.proj-path{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);word-break:break-all;line-height:1.4;margin-bottom:6px;padding:4px 6px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);}
+.proj-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;margin-bottom:4px;}
+.proj-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.proj-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.proj-dot.warn{background:#f59e0b;box-shadow:0 0 6px #f59e0b;}
+.proj-dot.err{background:var(--red);box-shadow:0 0 6px var(--red);}
+.proj-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap;}
+.proj-chip{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:10px;}
+
+/* ── Add Project Modal ─────────────────────────────────────────────────── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:fadeIn .2s ease;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);}
+.modal-close{background:transparent;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:0 4px;transition:color .15s;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);}
+.mf{display:flex;flex-direction:column;gap:5px;}
+.ml{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;}
+.btn-detect{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:9px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;width:fit-content;}
+.btn-detect:hover{background:var(--surface3);color:var(--text);border-color:var(--accent);}
+.btn-detect:disabled{opacity:.5;cursor:not-allowed;}
+.detect-list{display:flex;flex-direction:column;gap:5px;}
+.check-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;}
+.check-icon{font-size:14px;flex-shrink:0;}
+.check-label{flex:1;color:var(--text2);}
+.check-detail{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-cancel{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-cancel:hover{background:var(--surface3);}
+.btn-save{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:8px 20px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(124,106,247,.3);}
+.btn-save:hover:not(:disabled){transform:translateY(-1px);}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+[data-theme="blue"] .proj-selector select,[data-theme="blue-erp"] .proj-selector select{background:#071F36 !important;border-color:#1A4773 !important;color:#CBD5E1 !important;}
+[data-theme="blue"] .modal-box,[data-theme="blue-erp"] .modal-box{background:#0B2D4D !important;border-color:#16426C !important;}
+[data-theme="blue"] .check-row,[data-theme="blue-erp"] .check-row{background:#071F36 !important;border-color:#1A4773 !important;}
+
+/* ── Protocol Traffic Monitor Sidebar ──────────────────────────────────── */
+
+.mon-sidebar{display:none;flex-direction:column;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);}
+.app.monitor-open .mon-sidebar{display:flex;}
+.mon-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.mon-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);flex:1;}
+.mon-clear-btn{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px;font-family:inherit;transition:color .15s;}
+.mon-clear-btn:hover{color:var(--red);}
+.mon-list{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;display:flex;flex-direction:column;gap:6px;}
+.mon-entry{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px;}
+.mon-entry-hdr{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);cursor:pointer;}
+.mon-dir{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.mon-dir.out{background:rgba(124,106,247,.2);color:var(--accent);}
+.mon-dir.in{background:rgba(52,211,153,.15);color:var(--green);}
+.mon-method{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mon-ts{color:var(--text3);font-size:10px;flex-shrink:0;}
+.mon-body{padding:8px 10px;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all;line-height:1.5;color:var(--text2);max-height:150px;overflow-y:auto;display:none;}
+.mon-body.open{display:block;}
+.mon-empty{padding:24px;text-align:center;color:var(--text3);font-size:12px;}
+[data-theme="blue"] .mon-sidebar,[data-theme="blue-erp"] .mon-sidebar{background:#0B2D4D !important;border-color:#16426C !important;}
+[data-theme="blue"] .mon-entry,[data-theme="blue-erp"] .mon-entry{background:#071F36 !important;border-color:#1A4773 !important;}
+[data-theme="blue"] .mon-body,[data-theme="blue-erp"] .mon-body{color:#CBD5E1 !important;}
 </style>
 </head>
 <body>
@@ -333,7 +427,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
   <div class="header-logo">
     <div class="logo-icon">&#129302;</div>
     <h1>MCP Inspector</h1>
-    <span class="logo-tag">2025-03-26</span>
+    <span class="logo-tag">2026-07-28</span>
   </div>
   <div class="header-spacer"></div>
   <div id="sp" class="status-pill"><div class="status-dot"></div><span id="st">Connecting&hellip;</span></div>
@@ -353,9 +447,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
       </button>
     </div>
   </div>
+  <button id="pinMonBtn" class="header-btn" onclick="toggleMonitor()" title="Pin Protocol Traffic Monitor">📡 Monitor</button>
+  <button class="header-btn" onclick="copyPageUrl()" title="Copy page URL with current state">🔗 Copy Page</button>
   <a href="/" class="header-btn">&#8592; Dashboard</a>
 </header>
 <aside class="sidebar">
+  <!-- MCP Server Info -->
   <div class="sidebar-header">
     <div class="sidebar-title">MCP Server</div>
     <div class="server-info">
@@ -364,9 +461,116 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
       <button class="copy-btn" id="cpBtn" onclick="copyEP()">&#128203; Copy Endpoint URL</button>
     </div>
   </div>
-  <div class="section-strip">Tools (<span id="tc">0</span>)</div>
-  <div class="tools-list" id="tl"></div>
+
+  <!-- Project Selector -->
+  <div class="proj-section">
+    <div class="proj-label">PROJECT</div>
+    <div class="proj-selector">
+      <select id="projSelect" onchange="selectNamedProject(this.value)">
+        <option value="">Loading projects...</option>
+      </select>
+      <button class="proj-add-btn" onclick="openAddModal()" title="Add Playwright Project">+</button>
+      <button class="proj-add-btn" style="margin-left:8px;" onclick="openAiScenarioModal()" title="Dynamic AI Scenario Check">&#129302;</button>
+    </div>
+    <div class="proj-path" id="projPath">...</div>
+    <div class="proj-status" id="projStatus">
+      <span class="proj-dot" id="projDot"></span>
+      <span id="projStatusText">Detecting...</span>
+    </div>
+    <div class="proj-meta" id="projMeta"></div>
+  </div>
+
+  <!-- Tools / Prompts Tabs -->
+  <div class="sb-tabs">
+    <button class="sb-tab active" id="sbt-tools" onclick="switchSbTab('tools')">&#128295; Tools <span id="tc">0</span></button>
+    <button class="sb-tab" id="sbt-prompts" onclick="switchSbTab('prompts')">&#128172; Prompts <span id="pc">0</span></button>
+  </div>
+  <div id="sb-tools-pane">
+    <div class="tools-list" id="tl"></div>
+  </div>
+  <div id="sb-prompts-pane" style="display:none;flex:1;overflow-y:auto;">
+    <div class="tools-list" id="pl"></div>
+  </div>
 </aside>
+
+<!-- Add Project Modal -->
+<div id="addProjModal" class="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">&#10133; Add Playwright Project</span>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf">
+        <label class="ml">Project Name</label>
+        <input type="text" id="mpName" placeholder="e.g. Demo Project" />
+      </div>
+      <div class="mf">
+        <label class="ml">Project Path</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mpPath" placeholder="e.g. E:\qa\my-playwright-project" style="flex:1" oninput="resetDetect()" />
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Paste the full absolute path to your Playwright project folder</div>
+      </div>
+      <button class="btn-detect" id="detectBtn" onclick="detectProject()">&#128270; Detect Playwright</button>
+      <div id="detectResults" style="display:none;margin-top:12px;">
+        <div class="detect-list" id="detectList"></div>
+      </div>
+      <div id="detectError" style="display:none;color:var(--red);font-size:12px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-save" id="saveBtn" onclick="saveProject()" disabled>&#128279; Save &amp; Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add AI Scenario Check Modal -->
+<div id="aiScenarioModal" class="modal-backdrop" style="display:none;" onclick="closeAiScenarioModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">&#129302; Add Dynamic AI Scenario Check</span>
+      <button class="modal-close" onclick="closeAiScenarioModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Input Form -->
+      <div id="aiScenarioForm">
+        <div class="mf">
+          <label class="ml">Target URL</label>
+          <input type="text" id="aiScenarioUrl" placeholder="e.g. https://qa-rp-learner-platform.vercel.app/signin" style="width:100%; box-sizing: border-box;" />
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Browser Engine</label>
+          <select id="aiScenarioBrowser" style="width:100%; box-sizing: border-box; padding: 8px; border-radius: 4px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border);">
+            <option value="chromium" selected>Google Chrome (Chromium)</option>
+            <option value="firefox">Mozilla Firefox</option>
+            <option value="webkit">Apple Safari (WebKit)</option>
+          </select>
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Scenario Prompt</label>
+          <textarea id="aiScenarioPrompt" placeholder="e.g. Test the login flow and verify the dashboard loads" rows="4" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box; resize: vertical;"></textarea>
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Description (Optional)</label>
+          <textarea id="aiScenarioDesc" placeholder="Any specific assertions or data to use..." rows="3" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box;"></textarea>
+        </div>
+        <button class="btn-detect" style="margin-top: 16px; width: 100%; background: #4a5568;" onclick="startDynamicScenario()">&#9654; Run Dynamic Scenario</button>
+      </div>
+
+      <!-- Live Progress Flow Tracker -->
+      <div id="aiScenarioProgress" style="display:none; margin-top: 16px;">
+        <h4 style="color: var(--text1); margin-bottom: 12px;">Live Execution Progress:</h4>
+        <ul id="progressList" style="list-style: none; padding: 0; color: var(--text2); font-size: 14px; line-height: 1.8;">
+        </ul>
+        <div id="scenarioResult" style="display:none; margin-top: 16px; padding: 12px; border-radius: 6px; background: rgba(72, 187, 120, 0.1); color: #48bb78; border: 1px solid #48bb78;">
+          &#9989; <strong>Scenario Passed!</strong> All dynamic assertions verified successfully.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <main class="main">
   <div class="tool-panel">
     <div class="panel-header">
@@ -392,29 +596,286 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
     </div>
   </div>
 </main>
+<aside class="mon-sidebar" id="monSidebar">
+  <div class="mon-header">
+    <span class="mon-title">📡 Protocol Traffic</span>
+    <button class="mon-clear-btn" onclick="clearMonitor()" title="Clear traffic log">✕ Clear</button>
+  </div>
+  <div class="mon-list" id="monList"><div class="mon-empty">No traffic yet.<br>Call a tool to see live JSON-RPC frames.</div></div>
+</aside>
 </div><script>
 const BASE=window.location.origin,MCP=BASE+'/mcp';
-let tools=[],active=null,hist=[],cid=1;
+let tools=[],prompts=[],active=null,activePrompt=null,hist=[],cid=1,monEntries=[];
 const ICONS={list_test_files:'📂',list_projects:'🌐',run_tests:'▶️',poll_job:'📊',cancel_job:'❌',get_history:'📜',clear_history:'🗑️'};
 document.getElementById('epUrl').textContent=MCP;
 
 async function init(){
   try{
-    const r=await rpc('initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}});
-    if(r.result&&r.result.serverInfo)setSt('connected','🟢 '+r.result.serverInfo.name);
-    else setSt('connected','🟢 Connected');
+    const req={jsonrpc:'2.0',id:cid,method:'initialize',params:{protocolVersion:'2026-07-28',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}}};
+    addMonEntry('out','initialize',req);
+    const r=await rpc('initialize',{protocolVersion:'2026-07-28',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}});
+    addMonEntry('in','initialize \u2190 response',r);
+    if(r.result&&r.result.serverInfo)setSt('connected','\ud83d\udfe2 '+r.result.serverInfo.name);
+    else setSt('connected','\ud83d\udfe2 Connected');
     await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:cid++,method:'notifications/initialized',params:{}})});
+    addMonEntry('out','notifications/initialized',{jsonrpc:'2.0',method:'notifications/initialized'});
     const tr=await rpc('tools/list',{});
+    addMonEntry('in','tools/list \u2190 response',tr);
     if(tr.result&&tr.result.tools){tools=tr.result.tools;renderTools();}
-  }catch(e){setSt('error','🔴 Offline');}
+    await loadPrompts();
+    await loadNamedProjects();
+  }catch(e){setSt('error','\ud83d\udd34 Offline');}
+}
+
+// ── Project Selector ──────────────────────────────────────────────────────
+let namedProjects=[], currentProjPath='';
+
+async function loadNamedProjects(){
+  try{
+    const r=await fetch(BASE+'/named-projects');
+    const d=await r.json();
+    namedProjects=d.projects||[];
+    currentProjPath=d.current||'';
+    // Auto-add current project if not in list
+    if(currentProjPath && !namedProjects.find(p=>p.path===currentProjPath)){
+      const name=currentProjPath.split(/[/\\]/).pop()||'Current Project';
+      namedProjects.unshift({name,path:currentProjPath});
+    }
+    renderProjectDropdown();
+    updateProjectStatus(currentProjPath);
+  }catch(_){}
+}
+
+function renderProjectDropdown(){
+  const sel=document.getElementById('projSelect');
+  if(!sel)return;
+  sel.innerHTML=namedProjects.map(p=>
+    `<option value="${esc(p.path)}" ${p.path===currentProjPath?'selected':''}>${esc(p.name)}</option>`
+  ).join('')|'<option value="">No projects saved</option>';
+}
+
+async function selectNamedProject(projPath){
+  if(!projPath)return;
+  try{
+    const r=await fetch(BASE+'/project-path',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.ok){
+      currentProjPath=d.current;
+      updateProjectStatus(d.current,d);
+    }
+  }catch(e){console.warn('Project switch failed',e);}
+}
+
+async function updateProjectStatus(projPath, info){
+  const pathEl=document.getElementById('projPath');
+  const dot=document.getElementById('projDot');
+  const txt=document.getElementById('projStatusText');
+  const meta=document.getElementById('projMeta');
+  if(!projPath){dot.className='proj-dot err';txt.textContent='No project selected';return;}
+  if(pathEl)pathEl.textContent=projPath;
+  // Detect project
+  try{
+    const r=await fetch(BASE+'/project-detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.ok){
+      dot.className='proj-dot ok';
+      txt.textContent='Project Connected';
+      txt.style.color='var(--green)';
+    } else {
+      dot.className='proj-dot warn';
+      txt.textContent='Partial — no playwright.config';
+      txt.style.color='#f59e0b';
+    }
+    // Meta chips
+    const chips=[];
+    if(d.testCount>0)chips.push(`${d.testCount} tests`);
+    if(d.browserProjects&&d.browserProjects.length>0)chips.push(d.browserProjects.join(' · '));
+    if(meta)meta.innerHTML=chips.map(c=>`<span class="proj-chip">${esc(c)}</span>`).join('');
+  }catch(_){
+    dot.className='proj-dot err';
+    txt.textContent='Detection failed';
+    txt.style.color='var(--red)';
+  }
+}
+
+// ── Add Project Modal ─────────────────────────────────────────────────────
+let detectResult=null;
+
+function openAddModal(){
+  document.getElementById('addProjModal').classList.add('open');
+  document.getElementById('mpName').value='';
+  document.getElementById('mpPath').value='';
+  resetDetect();
+  setTimeout(()=>document.getElementById('mpPath').focus(),100);
+}
+
+function closeAddModal(e){
+  if(e&&e.target!==document.getElementById('addProjModal'))return;
+  document.getElementById('addProjModal').classList.remove('open');
+  detectResult=null;
+}
+
+function resetDetect(){
+  detectResult=null;
+  document.getElementById('detectResults').style.display='none';
+  document.getElementById('detectError').style.display='none';
+  document.getElementById('saveBtn').disabled=true;
+}
+
+async function detectProject(){
+  const projPath=document.getElementById('mpPath').value.trim();
+  if(!projPath){document.getElementById('detectError').textContent='Enter a project path first';document.getElementById('detectError').style.display='block';return;}
+  const btn=document.getElementById('detectBtn');
+  btn.disabled=true;btn.textContent='\ud83d\udd0d Detecting...';
+  document.getElementById('detectError').style.display='none';
+  try{
+    const r=await fetch(BASE+'/project-detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    detectResult=d;
+    // Auto-fill name if empty
+    if(!document.getElementById('mpName').value.trim()&&d.projectName){
+      document.getElementById('mpName').value=d.projectName;
+    }
+    // Render checks
+    const list=document.getElementById('detectList');
+    list.innerHTML=(d.checks||[]).map(c=>`
+      <div class="check-row">
+        <span class="check-icon">${c.ok?'\u2705':'\u274c'}</span>
+        <span class="check-label">${esc(c.label)}</span>
+        ${c.detail?`<span class="check-detail" title="${esc(c.detail)}">${esc(c.detail)}</span>`:''}
+      </div>`).join('');
+    document.getElementById('detectResults').style.display='block';
+    document.getElementById('saveBtn').disabled=!d.ok;
+    if(!d.ok){
+      document.getElementById('detectError').textContent='playwright.config not found. You can still save, but tools may not work correctly.';
+      document.getElementById('detectError').style.display='block';
+      document.getElementById('saveBtn').disabled=false;
+    }
+  }catch(err){
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  }
+  btn.disabled=false;btn.innerHTML='\ud83d\udd0d Detect Playwright';
+}
+
+async function saveProject(){
+  const name=document.getElementById('mpName').value.trim();
+  const projPath=document.getElementById('mpPath').value.trim();
+  if(!name){document.getElementById('detectError').textContent='Project name is required';document.getElementById('detectError').style.display='block';return;}
+  if(!projPath){document.getElementById('detectError').textContent='Project path is required';document.getElementById('detectError').style.display='block';return;}
+  try{
+    // Save to named projects
+    await fetch(BASE+'/named-projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,path:projPath})});
+    // Switch active project
+    await fetch(BASE+'/project-path',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    currentProjPath=projPath;
+    await loadNamedProjects();
+    closeAddModal();
+  }catch(err){
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  }
+}
+
+async function loadPrompts(){
+  try{
+    const pr=await rpc('prompts/list',{});
+    if(pr.result&&pr.result.prompts){prompts=pr.result.prompts;renderPrompts();}
+  }catch(_){}
+}
+
+function switchSbTab(tab){
+  document.getElementById('sbt-tools').classList.toggle('active',tab==='tools');
+  document.getElementById('sbt-prompts').classList.toggle('active',tab==='prompts');
+  document.getElementById('sb-tools-pane').style.display=tab==='tools'?'flex':'none';
+  document.getElementById('sb-prompts-pane').style.display=tab==='prompts'?'block':'none';
+}
+
+const PROMPT_ICONS={run_all_tests:'🚀',run_smoke_tests:'💨',diagnose_last_failure:'🔍',run_file:'📄',full_regression:'🔄',check_api_traffic:'🌐',cross_browser_check:'💻',health_check:'❤️'};
+
+function renderPrompts(){
+  const el=document.getElementById('pl');
+  document.getElementById('pc').textContent=prompts.length;
+  if(!el)return;
+  el.innerHTML='';
+  prompts.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='prompt-item';d.id='pi-'+p.name;
+    const hasArgs=p.arguments&&p.arguments.length>0;
+    d.innerHTML=`<div class="prompt-name">${PROMPT_ICONS[p.name]||'💬'} ${p.name} ${hasArgs?'<span class="prompt-tag">'+p.arguments.length+' args</span>':''}</div><div class="prompt-desc">${p.description}</div>`;
+    d.addEventListener('click',()=>selectPrompt(p));
+    el.appendChild(d);
+  });
+}
+
+function selectPrompt(prompt){
+  activePrompt=prompt;
+  document.querySelectorAll('.prompt-item').forEach(e=>e.classList.remove('active'));
+  const it=document.getElementById('pi-'+prompt.name);if(it)it.classList.add('active');
+  document.getElementById('stn').textContent=prompt.name;
+  const args=prompt.arguments||[];
+  let h=`<div class="fi"><div class="tool-hdr"><div class="t-icon">${PROMPT_ICONS[prompt.name]||'💬'}</div><div class="t-meta"><h2>${prompt.name}</h2><p>${prompt.description}</p></div></div>`;
+  h+='<div class="slabel">Prompt Arguments</div>';
+  if(!args.length){
+    h+='<div class="noargs">This prompt takes no arguments — ready to use as-is.</div>';
+  }else{
+    h+='<div class="args">';
+    args.forEach(a=>{
+      const fid='pa-'+a.name;
+      h+=`<div class="fg"><div class="fl">${a.name} ${a.required?'<span class="rbadge">required</span>':''}</div><div class="fd">${a.description||''}</div><input type="text" id="${fid}" placeholder="${a.description||a.name}" /></div>`;
+    });
+    h+='</div>';
+  }
+  h+='<button class="btn-get-prompt" id="gpb" onclick="getPrompt()"><div class="spin"></div><span>► Get Prompt Messages</span></button></div>';
+  document.getElementById('tb').innerHTML=h;
+  sw('result');
+}
+
+async function getPrompt(){
+  if(!activePrompt)return;
+  const btn=document.getElementById('gpb');
+  btn.classList.add('loading');btn.disabled=true;
+  const args={};
+  (activePrompt.arguments||[]).forEach(a=>{
+    const el=document.getElementById('pa-'+a.name);
+    if(el&&el.value.trim())args[a.name]=el.value.trim();
+  });
+  try{
+    const res=await rpc('prompts/get',{name:activePrompt.name,arguments:args});
+    const p=document.getElementById('pane-result');
+    if(res.error){
+      p.innerHTML=`<div class="rc fi"><div class="rch"><span class="terr">Error</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">${activePrompt.name}</span></div><div class="rcb" style="color:var(--red)">${esc(res.error.message)}</div></div>`;
+    }else{
+      const messages=res.result&&res.result.messages||[];
+      const desc=res.result&&res.result.description||'';
+      let h=`<div class="rc fi"><div class="rch"><span class="tok">✓ Prompt Ready</span><span style="font-family:monospace;font-size:12px;color:var(--text2);margin-left:6px">${activePrompt.name}</span><span style="font-size:11px;color:var(--text3);margin-left:auto">${messages.length} message(s)</span></div>`;
+      if(desc)h+=`<div class="rcb" style="color:var(--text3);font-size:11px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:0">${esc(desc)}</div>`;
+      messages.forEach((m,i)=>{
+        const txt=typeof m.content==='string'?m.content:(m.content&&m.content.text)||JSON.stringify(m.content);
+        h+=`<div class="prompt-msg"><button class="prompt-msg-copy" onclick="cp(this.getAttribute('data-v'))" data-v="${txt.replace(/"/g,'&quot;')}">Copy</button>${esc(txt)}</div>`;
+      });
+      h+='</div>';
+      p.innerHTML=h;
+      addHist(activePrompt.name,args,res,0);
+    }
+    sw('result');
+  }catch(e){
+    document.getElementById('pane-result').innerHTML=`<div class="es"><div class="ei">⚠️</div><p>${esc(e.message)}</p></div>`;
+  }
+  btn.classList.remove('loading');btn.disabled=false;
 }
 
 async function rpc(method,params){
   const id=cid++;
-  const r=await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id,method,params})});
+  const body={jsonrpc:'2.0',id,method,params};
+  addMonEntry('out',method,body);
+  const r=await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.status===204)return{};
   const t=await r.text();
-  return t?JSON.parse(t):{};
+  const parsed=t?JSON.parse(t):{};
+  addMonEntry('in',method+' ← response',parsed);
+  return parsed;
 }
 
 function setSt(type,text){
@@ -457,7 +918,11 @@ function selectTool(tool){
     });
     h+='</div>';
   }
-  h+='<button class="btn-run" id="rb" onclick="run()"><div class="spin"></div><span>&#9654; Call Tool</span></button></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-run" id="rb" onclick="run()"><div class="spin"></div><span>&#9654; Call Tool</span></button>';
+  if(keys.length) {
+    h+='<button class="btn-run" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);" onclick="fillDemoData()" title="Auto-fill with demo data"><span>&#128161; Demo Data</span></button>';
+  }
+  h+='</div></div>';
   document.getElementById('tb').innerHTML=h;
 }
 
@@ -482,6 +947,28 @@ async function run(){
     showRes(res);showResult(res,active.name,ms);addHist(active.name,args,res,ms);sw('result');
   }catch(e){showResult({error:{message:e.message}},active.name,0);sw('result');}
   btn.classList.remove('loading');btn.disabled=false;
+}
+
+function fillDemoData() {
+  if(!active) return;
+  const props=(active.inputSchema&&active.inputSchema.properties)||{};
+  Object.keys(props).forEach(k=>{
+    const el=document.getElementById('a-'+k);if(!el)return;
+    const type = props[k].type;
+    const name = k.toLowerCase();
+    
+    if(type==='boolean') {
+      el.checked = true;
+    } else if(type==='number' || name.includes('limit')) {
+      el.value = 5;
+    } else {
+      if(name.includes('jobid')) el.value = 'job-1712000000000';
+      else if(name.includes('testfile') || name.includes('file')) el.value = 'tests/example.spec.js';
+      else if(name.includes('project')) el.value = 'chromium';
+      else if(name.includes('grep')) el.value = '@smoke';
+      else el.value = 'demo_value';
+    }
+  });
 }
 
 function showReq(body){
@@ -556,9 +1043,59 @@ function copyEP(){
   setTimeout(()=>{b.textContent='📋 Copy Endpoint URL';},2000);
 }
 
+function copyPageUrl(){
+  const url=window.location.href;
+  navigator.clipboard.writeText(url);
+  // brief visual feedback on the button
+  const btns=document.querySelectorAll('.header-btn');
+  btns.forEach(b=>{ if(b.textContent.includes('Copy Page')){
+    const orig=b.textContent; b.textContent='✅ Copied!';
+    setTimeout(()=>{b.textContent=orig;},2000);
+  }});
+}
+
 function cp(text){navigator.clipboard.writeText(text);}
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Protocol Traffic Monitor ─────────────────────────────────────────────
+function addMonEntry(dir,method,payload){
+  monEntries.unshift({dir,method,payload,ts:new Date()});
+  if(monEntries.length>200)monEntries.pop();
+  renderMonitor();
+}
+function renderMonitor(){
+  const list=document.getElementById('monList');
+  if(!list)return;
+  if(!monEntries.length){list.innerHTML='<div class="mon-empty">No traffic yet.<br>Call a tool to see live JSON-RPC frames.</div>';return;}
+  list.innerHTML=monEntries.map((e,i)=>{
+    const isOut=e.dir==='out';
+    const ts=e.ts.toLocaleTimeString(undefined,{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const json=JSON.stringify(e.payload,null,2);
+    return `<div class="mon-entry"><div class="mon-entry-hdr" onclick="toggleMonBody(${i})">`+
+      `<div class="mon-dir ${isOut?'out':'in'}">${isOut?'↑':'↓'}</div>`+
+      `<div class="mon-method">${esc(e.method)}</div>`+
+      `<div class="mon-ts">${ts}</div></div>`+
+      `<div class="mon-body" id="mb-${i}">${esc(json)}</div></div>`;
+  }).join('');
+}
+function toggleMonBody(i){
+  const el=document.getElementById('mb-'+i);
+  if(el)el.classList.toggle('open');
+}
+function clearMonitor(){
+  monEntries=[];
+  renderMonitor();
+}
+function toggleMonitor(){
+  const app=document.querySelector('.app');
+  const btn=document.getElementById('pinMonBtn');
+  const open=app.classList.toggle('monitor-open');
+  btn.style.background=open?'var(--accent-glow)':'';
+  btn.style.borderColor=open?'var(--accent)':'';
+  btn.style.color=open?'var(--accent)':'';
+  if(open)renderMonitor();
+}
 
 function sh(json){
   json=esc(json);
@@ -702,6 +1239,125 @@ init().then(() => {
     window._pendingMonitorJobId = null;
   }
 });
+
+// --- AI Dynamic Scenario Controller ---
+function openAiScenarioModal() {
+  document.getElementById('aiScenarioModal').style.display = 'flex';
+  document.getElementById('aiScenarioForm').style.display = 'block';
+  document.getElementById('aiScenarioProgress').style.display = 'none';
+  document.getElementById('progressList').innerHTML = '';
+  document.getElementById('scenarioResult').style.display = 'none';
+}
+
+function closeAiScenarioModal(event) {
+  if (event && event.target !== document.getElementById('aiScenarioModal')) return;
+  document.getElementById('aiScenarioModal').style.display = 'none';
+}
+
+function startDynamicScenario() {
+  const url = document.getElementById('aiScenarioUrl').value;
+  const prompt = document.getElementById('aiScenarioPrompt').value;
+  const browserEngine = document.getElementById('aiScenarioBrowser').value;
+  
+  if (!url || !prompt) {
+    alert("Please enter both a URL and a Scenario Prompt.");
+    return;
+  }
+
+  let domain = url;
+  try { domain = new URL(url).hostname; } catch(e) {}
+
+  document.getElementById('aiScenarioForm').style.display = 'none';
+  document.getElementById('aiScenarioProgress').style.display = 'block';
+  
+  const progressList = document.getElementById('progressList');
+  const steps = [
+    `&#9203; Initializing AI browser agent for <strong>${domain}</strong>...`,
+    `&#9203; Analyzing DOM and mapping UI elements...`,
+    `&#9203; Executing prompt: <em>"${prompt}"</em>...`,
+    `&#9203; Performing dynamic interactions and assertions...`,
+    `&#9989; Execution complete. Gathering results.`
+  ];
+
+  // Add a hidden system prompt to the user prompt for robust checks
+  const systemPrompt = `\\n[SYSTEM PROMPT]: You are an expert QA tester. Analyze the UI for any visual bugs, console errors, and broken links across all test cases.`;
+  const fullPrompt = prompt + systemPrompt;
+
+  // Send request to our merged AI Scenario Backend on port 9300
+  fetch('http://localhost:9300/api/run-scenario', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, prompt: fullPrompt, browser: browserEngine })
+  })
+  .then(res => res.json())
+  .then(data => {
+    clearInterval(interval);
+    
+    // Complete the UI steps visually
+    while(currentStep < steps.length) {
+      if(currentStep > 0) {
+        const prevLi = progressList.children[currentStep - 1];
+        if(prevLi) {
+          prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
+          prevLi.style.color = '#48bb78';
+        }
+      }
+      const li = document.createElement('li');
+      li.innerHTML = steps[currentStep];
+      if (currentStep === steps.length - 1) {
+         li.innerHTML = li.innerHTML.replace('&#9203;', '&#9989;');
+         li.style.color = '#48bb78';
+      }
+      progressList.appendChild(li);
+      currentStep++;
+    }
+
+    setTimeout(() => {
+      const resDiv = document.getElementById('scenarioResult');
+      resDiv.style.display = 'block';
+      const color = data.status === 'success' ? '#48bb78' : '#e53e3e';
+      const icon = data.status === 'success' ? '&#9989;' : '&#10060;';
+      
+      resDiv.innerHTML = `
+        ${icon} <strong style="color:${color}">${data.message}</strong><br/><br/>
+        <strong>Console Report:</strong>
+        <pre style="background:var(--bg1); padding:8px; border-radius:4px; font-size:11px; white-space:pre-wrap; max-height:150px; overflow-y:auto; border:1px solid var(--border);">${data.report}</pre>
+        <strong>Final Screenshot Report:</strong><br/>
+        <img src="../scenario-result.png?t=${new Date().getTime()}" loading="lazy" style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};" alt="Scenario Report Screenshot" />
+        <br/><br/>
+        <strong>Execution Video Replay:</strong><br/>
+        <video controls autoplay muted style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};">
+          <source src="../scenario-video.webm?t=${new Date().getTime()}" type="video/webm">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    }, 500);
+  })
+  .catch(err => {
+    clearInterval(interval);
+    const li = document.createElement('li');
+    li.innerHTML = `<span style="color:#e53e3e;">&#10060; Could not connect to AI Scenario Server.</span>`;
+    progressList.appendChild(li);
+  });
+
+  let currentStep = 0;
+  const interval = setInterval(() => {
+    if (currentStep > 0) {
+      const prevLi = progressList.children[currentStep - 1];
+      if(prevLi) {
+        prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
+        prevLi.style.color = '#48bb78';
+      }
+    }
+
+    if (currentStep < steps.length - 1) {
+      const li = document.createElement('li');
+      li.innerHTML = steps[currentStep];
+      progressList.appendChild(li);
+      currentStep++;
+    }
+  }, 1500);
+}
 
 </script>
 <script src="../js/theme.js"></script>

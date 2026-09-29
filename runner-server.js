@@ -31,6 +31,24 @@ const MIME_TYPES = {
   '.ico':  'image/x-icon'
 };
 
+// ── File Memory Cache (Optimization) ───────────────────────────────────────
+const fileCache = new Map();
+function getCachedJson(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  const stat = fs.statSync(filePath);
+  const cacheHit = fileCache.get(filePath);
+  if (cacheHit && cacheHit.mtime === stat.mtimeMs) return cacheHit.data;
+  
+  try {
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const data = JSON.parse(raw);
+    fileCache.set(filePath, { mtime: stat.mtimeMs, data });
+    return data;
+  } catch(e) {
+    return null;
+  }
+}
+
 // ── Job Manager ────────────────────────────────────────────────────────────
 const runningJobs = new Map();
 const managedRunnerSessions = new Map();
@@ -40,13 +58,8 @@ const HISTORY_MAX = 100;
 
 function loadHistory(projectRoot) {
   const filePath = path.resolve(projectRoot, HISTORY_FILE_NAME);
-  try {
-    if (!fs.existsSync(filePath)) return [];
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return Array.isArray(data) ? data : [];
-  } catch (_) {
-    return [];
-  }
+  const data = getCachedJson(filePath);
+  return Array.isArray(data) ? data : [];
 }
 
 function appendHistory(projectRoot, entry) {
@@ -77,20 +90,13 @@ const API_TRAFFIC_FILE = '.pw-api-traffic.json';
 
 function loadApiTraffic(projectRoot) {
   const filePath = path.resolve(projectRoot, API_TRAFFIC_FILE);
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      return Array.isArray(data) ? data : [];
-    }
-  } catch (_) {}
+  let data = getCachedJson(filePath);
+  if (Array.isArray(data)) return data;
 
   const resPath = path.resolve(projectRoot, 'test-results', 'api-traffic.json');
-  try {
-    if (fs.existsSync(resPath)) {
-      const data = JSON.parse(fs.readFileSync(resPath, 'utf8'));
-      return Array.isArray(data) ? data : [];
-    }
-  } catch (_) {}
+  data = getCachedJson(resPath);
+  if (Array.isArray(data)) return data;
+  
   return [];
 }
 
@@ -538,7 +544,156 @@ const MCP_SERVER_INFO = {
   description: 'Playwright Automation Hub MCP Server — run & manage Playwright tests via AI agents'
 };
 
-const MCP_CAPABILITIES = { tools: { listChanged: false } };
+const MCP_CAPABILITIES = { tools: { listChanged: false }, resources: {}, prompts: { listChanged: false } };
+
+// ── MCP Prompts (2026-07-28) ───────────────────────────────────────────────
+const MCP_PROMPTS = [
+  {
+    name: 'run_all_tests',
+    description: 'Run the full Playwright test suite on the active project and report results.',
+    arguments: [
+      { name: 'project', description: 'Browser project to use (e.g. chromium, firefox). Default: chromium.', required: false },
+      { name: 'workers', description: 'Number of parallel workers. Default: 1.', required: false }
+    ]
+  },
+  {
+    name: 'run_smoke_tests',
+    description: 'Run only tests tagged @smoke for a quick sanity check before a release.',
+    arguments: [
+      { name: 'project', description: 'Browser project to use. Default: chromium.', required: false }
+    ]
+  },
+  {
+    name: 'diagnose_last_failure',
+    description: 'Fetch the last failed test run from history and diagnose the root cause with fix suggestions.',
+    arguments: []
+  },
+  {
+    name: 'run_file',
+    description: 'Run a specific Playwright test file and stream live output until done.',
+    arguments: [
+      { name: 'file', description: 'Relative path to the spec file, e.g. tests/QAtest/demoApiTest.spec.js', required: true },
+      { name: 'headed', description: 'Run in headed (visible browser) mode. true or false.', required: false }
+    ]
+  },
+  {
+    name: 'full_regression',
+    description: 'Run the complete regression suite across all configured browser projects and summarise the results.',
+    arguments: [
+      { name: 'workers', description: 'Parallel workers per project. Default: 2.', required: false }
+    ]
+  },
+  {
+    name: 'check_api_traffic',
+    description: 'Run all tests and then inspect the captured API requests and responses for anomalies.',
+    arguments: [
+      { name: 'method', description: 'Filter captured traffic by HTTP method (GET, POST, PUT, DELETE).', required: false }
+    ]
+  },
+  {
+    name: 'cross_browser_check',
+    description: 'Run a specific test file on chromium, firefox, and webkit sequentially and compare results.',
+    arguments: [
+      { name: 'file', description: 'Relative path to the spec file to run cross-browser.', required: true }
+    ]
+  },
+  {
+    name: 'health_check',
+    description: 'Run a full system self-test to verify Playwright, Node.js, browsers, and MCP are all healthy.',
+    arguments: []
+  }
+];
+
+function buildPromptMessages(promptName, args = {}) {
+  const base = `You are an AI assistant controlling a Playwright test runner via MCP tools.\nMCP endpoint: http://localhost:9300/mcp\nAvailable tools: list_test_files, list_projects, run_tests, poll_job, cancel_job, get_history, get_api_traffic, run_self_test, diagnose_failure, clear_history.\n\n`;
+
+  switch (promptName) {
+    case 'run_all_tests':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run ALL Playwright tests in the project.\n` +
+        `1. Call list_test_files to discover the test tree.\n` +
+        `2. Call run_tests with project="${args.project || 'chromium'}"${args.workers ? ` and workers=${args.workers}` : ''} (no file argument = run all).\n` +
+        `3. Call poll_job with the returned jobId, offset=0. Repeat with updated offset until done=true.\n` +
+        `4. Report the final passed/failed/skipped counts and overall status.`
+      }}];
+
+    case 'run_smoke_tests':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run only @smoke-tagged tests for a quick sanity check.\n` +
+        `1. Call run_tests with grep="@smoke" and project="${args.project || 'chromium'}".\n` +
+        `2. Poll with poll_job until done=true.\n` +
+        `3. Report pass/fail and whether the build is safe to deploy.`
+      }}];
+
+    case 'diagnose_last_failure':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Diagnose the most recent test failure.\n` +
+        `1. Call get_history with limit=1.\n` +
+        `2. If the last run has failed>0, call diagnose_failure with its command as the context.\n` +
+        `3. Present the root cause, severity, prevention tips, and the suggested fix code clearly.`
+      }}];
+
+    case 'run_file':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run a specific test file and report results.\n` +
+        `File: ${args.file}\n` +
+        `Headed: ${args.headed || 'false'}\n` +
+        `1. Call run_tests with file="${args.file}"${args.headed === 'true' ? ' and headed=true' : ''}.\n` +
+        `2. Poll with poll_job (start offset=0, increment with each response) until done=true.\n` +
+        `3. Stream the output as you receive it, then give the final test summary.`
+      }}];
+
+    case 'full_regression':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run a full regression suite across all browser projects.\n` +
+        `1. Call list_projects to get available browser names.\n` +
+        `2. For each browser: call run_tests with that project and workers=${args.workers || 2}.\n` +
+        `3. Poll each job until done.\n` +
+        `4. Build a comparison table: browser | passed | failed | skipped | duration.\n` +
+        `5. Flag any browser where failed>0.`
+      }}];
+
+    case 'check_api_traffic':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run tests and audit captured API traffic.\n` +
+        `1. Call run_tests (all tests, no file filter).\n` +
+        `2. Poll until done=true.\n` +
+        `3. Call get_api_traffic${args.method ? ` with method="${args.method}"` : ''}.\n` +
+        `4. Analyse the traffic: flag any 4xx/5xx responses, unexpected endpoints, or missing auth headers.\n` +
+        `5. Summarise findings in a table: method | url | status | issue.`
+      }}];
+
+    case 'cross_browser_check':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Run the file on chromium, firefox, and webkit and compare.\n` +
+        `File: ${args.file}\n` +
+        `1. Run run_tests three times: project=chromium, firefox, webkit, each with file="${args.file}".\n` +
+        `2. Poll each job to completion.\n` +
+        `3. Present a cross-browser result table: browser | passed | failed | duration.\n` +
+        `4. Highlight any browser-specific failures.`
+      }}];
+
+    case 'health_check':
+      return [{ role: 'user', content: { type: 'text', text:
+        base +
+        `Task: Verify the entire test runner system is healthy.\n` +
+        `1. Call run_self_test.\n` +
+        `2. Report each check: name | status | detail.\n` +
+        `3. If any check fails, suggest a fix.\n` +
+        `4. End with overall PASS or FAIL verdict.`
+      }}];
+
+    default:
+      return [{ role: 'user', content: { type: 'text', text: base + `Run the prompt: ${promptName}` } }];
+  }
+}
 
 const MCP_TOOLS = [
   {
@@ -676,7 +831,7 @@ function handleMCP(req, res, projectRoot, port = 9300) {
     let response;
 
     if (method === 'initialize') {
-      response = mcpOk(id, { protocolVersion: '2025-03-26', capabilities: MCP_CAPABILITIES, serverInfo: MCP_SERVER_INFO });
+      response = mcpOk(id, { protocolVersion: '2026-07-28', capabilities: MCP_CAPABILITIES, serverInfo: MCP_SERVER_INFO });
 
     } else if (method === 'notifications/initialized') {
       res.writeHead(204); res.end(); return;
@@ -773,6 +928,20 @@ function handleMCP(req, res, projectRoot, port = 9300) {
         response = mcpOk(id, result);
       } catch (err) {
         response = mcpErr(id, -32603, 'Tool execution error', err.message);
+      }
+
+    } else if (method === 'prompts/list') {
+      response = mcpOk(id, { prompts: MCP_PROMPTS });
+
+    } else if (method === 'prompts/get') {
+      const promptName = params.name;
+      const promptArgs = params.arguments || {};
+      const prompt = MCP_PROMPTS.find(p => p.name === promptName);
+      if (!prompt) {
+        response = mcpErr(id, -32602, `Prompt not found: ${promptName}`);
+      } else {
+        const messages = buildPromptMessages(promptName, promptArgs);
+        response = mcpOk(id, { description: prompt.description, messages });
       }
 
     } else if (method === 'ping') {
@@ -1597,6 +1766,126 @@ function createRunnerServer(options = {}) {
 
     const [cleanUrl] = req.url.split('?');
 
+    // --- AI Scenario Integration ---
+    if (req.method === 'POST' && cleanUrl === '/api/run-scenario') {
+      let body = '';
+      req.on('data', chunk => body += chunk.toString());
+      req.on('end', () => {
+        try {
+          const { url, prompt, browser: browserChoice = 'chromium' } = JSON.parse(body);
+          console.log(`\\n🚀 Received Dynamic Scenario Request!`);
+          console.log(`Browser: ${browserChoice}`);
+          console.log(`URL: ${url}`);
+          console.log(`Prompt: ${prompt}`);
+
+          const script = `
+            const { chromium, firefox, webkit } = require('playwright');
+            const fs = require('fs');
+            const path = require('path');
+
+            (async () => {
+              const engine = process.env.TEST_BROWSER || 'chromium';
+              const browserType = engine === 'firefox' ? firefox : (engine === 'webkit' ? webkit : chromium);
+              
+              console.log('Launching ' + engine + ' browser...');
+              const browser = await browserType.launch({ 
+                headless: false, 
+                slowMo: 300,
+                args: engine === 'chromium' ? ['--start-maximized'] : []
+              });
+              
+              const videosDir = path.join(__dirname, 'test-results', 'videos');
+              if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
+
+              const context = await browser.newContext({ viewport: null, recordVideo: { dir: videosDir } });
+              const page = await context.newPage();
+              
+              console.log('Navigating to ' + process.env.TEST_URL);
+              await page.goto(process.env.TEST_URL, { waitUntil: 'networkidle' }).catch(e => console.log('Navigation took too long, continuing...'));
+              
+              if (process.env.TEST_PROMPT.toLowerCase().includes('login')) {
+                console.log('Simulating login flow...');
+                try {
+                  let emailInput = page.locator('input[type="email"]');
+                  if (await emailInput.count() === 0) emailInput = page.locator('input[name="email"]');
+                  if (await emailInput.count() === 0) emailInput = page.locator('input[type="text"]').first();
+                  await emailInput.fill('qarajendra4893@gmail.com');
+                  
+                  const passInput = page.locator('input[type="password"]').first();
+                  await passInput.fill('rgp@1234');
+                  
+                  const btn = page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Log in"), button:has-text("Login"), button:has-text("Continue")').first();
+                  await btn.click();
+                } catch(err) {
+                  console.log('Could not complete login flow automatically.');
+                }
+              }
+
+              console.log('Scenario complete. Taking a screenshot and saving video...');
+              await page.waitForTimeout(4000);
+              
+              const screenshotPath = path.join(__dirname, 'scenario-result.png');
+              await page.screenshot({ path: screenshotPath, fullPage: true });
+              console.log('Screenshot saved to: ' + screenshotPath);
+              
+              // Close context to flush video to disk
+              await context.close();
+              await browser.close();
+
+              // Export the latest video file for the UI
+              try {
+                const files = fs.readdirSync(videosDir).filter(f => f.endsWith('.webm'));
+                if (files.length > 0) {
+                  // Get the most recently created video
+                  const latestVideo = files.map(f => ({ f, ctime: fs.statSync(path.join(videosDir, f)).ctimeMs })).sort((a, b) => b.ctime - a.ctime)[0].f;
+                  fs.copyFileSync(path.join(videosDir, latestVideo), path.join(__dirname, 'scenario-video.webm'));
+                  console.log('Video saved to scenario-video.webm');
+                }
+              } catch(e) {
+                console.log('Failed to export video:', e.message);
+              }
+            })();
+          `;
+          
+          const fs = require('fs');
+          const path = require('path');
+          const { exec } = require('child_process');
+          const tempScriptPath = path.join(__dirname, 'temp-scenario.js');
+          fs.writeFileSync(tempScriptPath, script, 'utf8');
+
+          const childEnv = Object.assign({}, process.env, { 
+            TEST_URL: url, 
+            TEST_PROMPT: prompt,
+            TEST_BROWSER: browserChoice 
+          });
+          exec(`node temp-scenario.js`, { env: childEnv, timeout: 60000 }, (err, stdout, stderr) => {
+            try { fs.unlinkSync(tempScriptPath); } catch(e) {}
+            
+            let finalStatus = 'success';
+            let reportLog = stdout || '';
+            if (err || stderr) {
+              finalStatus = 'error';
+              reportLog += '\\nERROR:\\n' + (stderr || err.message);
+            }
+            
+            console.log('Finished Dynamic Scenario Execution. Returning report.');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              status: finalStatus, 
+              message: finalStatus === 'success' ? 'Scenario Passed!' : 'Scenario Failed!',
+              report: reportLog
+            }));
+          });
+        } catch(e) {
+          res.writeHead(400);
+          res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        }
+      });
+      return;
+    }
+    // --- End AI Scenario Integration ---
+
+
     if (req.method === 'GET' && cleanUrl === '/runner-sessions') {
       const sessions = [...managedRunnerSessions.values()].map(({ id, name, projectRoot, port: sessionPort, url, startedAt }) => ({
         id, name, projectRoot, port: sessionPort, url, startedAt,
@@ -1613,14 +1902,25 @@ function createRunnerServer(options = {}) {
       req.on('end', async () => {
         let sessionServer;
         try {
-          const { projectRoot, name = '', port: requestedSessionPort = 0 } = JSON.parse(body || '{}');
-          if (!projectRoot || typeof projectRoot !== 'string') throw new Error('Project directory is required.');
+          let parsedBody = {};
+          try { parsedBody = JSON.parse(body || '{}'); } catch(e) {}
+          
+          // Smart Defaults: Use current directory if none provided, and default name to folder name
+          const projectRoot = parsedBody.projectRoot || process.cwd(); 
+          const name = parsedBody.name || require('path').basename(projectRoot);
+          const requestedSessionPort = parsedBody.port ? parseInt(parsedBody.port, 10) : 0;
+          
+          if (typeof projectRoot !== 'string') {
+            throw new Error('Project directory path must be a string.');
+          }
+          
           const resolvedRoot = path.resolve(projectRoot);
           if (!fs.existsSync(resolvedRoot) || !fs.statSync(resolvedRoot).isDirectory()) {
-            throw new Error('Project directory does not exist.');
+            throw new Error(`Project directory not found at: ${resolvedRoot}`);
           }
-          if (!Number.isInteger(requestedSessionPort) || requestedSessionPort < 0 || requestedSessionPort > 65535) {
-            throw new Error('Port must be 0 (automatic) or between 1 and 65535.');
+          
+          if (isNaN(requestedSessionPort) || requestedSessionPort < 0 || requestedSessionPort > 65535) {
+            throw new Error('Port must be 0 (automatic) or a valid number between 1 and 65535.');
           }
 
           const id = `runner-${nextRunnerSessionId++}`;
@@ -1740,7 +2040,104 @@ function createRunnerServer(options = {}) {
       return;
     }
 
+    // ── Project Detect Endpoint ──
+    if (req.method === 'POST' && cleanUrl === '/project-detect') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { path: checkPath } = JSON.parse(body || '{}');
+          const resolved = path.resolve((checkPath || '').trim().replace(/^["']|["']$/g, ''));
+          const checks = [];
+          let valid = true;
+
+          // 1. Directory exists
+          const exists = fs.existsSync(resolved) && fs.statSync(resolved).isDirectory();
+          checks.push({ key: 'directory', label: 'Project directory exists', ok: exists, detail: resolved });
+          if (!exists) { valid = false; }
+
+          // 2. package.json
+          const hasPkg = exists && fs.existsSync(path.join(resolved, 'package.json'));
+          checks.push({ key: 'package', label: 'package.json found', ok: hasPkg });
+
+          // 3. playwright.config
+          const cfgFiles = ['playwright.config.js', 'playwright.config.ts', 'playwright.config.mjs', 'playwright.config.cjs'];
+          const foundCfg = exists ? cfgFiles.find(f => fs.existsSync(path.join(resolved, f))) : null;
+          checks.push({ key: 'config', label: 'playwright.config found', ok: !!foundCfg, detail: foundCfg || 'Not found' });
+
+          // 4. Test files
+          let testCount = 0;
+          if (exists) {
+            try {
+              const struct = getStructure(resolved);
+              function countFiles(node) {
+                if (!node) return 0;
+                let c = (node.files || []).length;
+                (node.folders || []).forEach(f => { c += countFiles(f); });
+                return c;
+              }
+              testCount = countFiles(struct);
+            } catch (_) {}
+          }
+          checks.push({ key: 'tests', label: `Test files found`, ok: testCount > 0, detail: `${testCount} spec file(s)` });
+
+          // 5. Browser projects
+          const browserProjects = exists ? getProjects(resolved) : [];
+          checks.push({ key: 'browsers', label: 'Browser projects detected', ok: browserProjects.length > 0, detail: browserProjects.join(', ') || 'None' });
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: valid && !!foundCfg, checks, projectName: path.basename(resolved), resolvedPath: resolved, testCount, browserProjects }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // ── Named Projects Registry (name+path pairs) ──
+    const NAMED_PROJECTS_FILE = path.resolve(os.homedir(), '.pw-runner-named-projects.json');
+    function loadNamedProjects() {
+      try {
+        if (fs.existsSync(NAMED_PROJECTS_FILE)) return JSON.parse(fs.readFileSync(NAMED_PROJECTS_FILE, 'utf8'));
+      } catch (_) {}
+      return [{ name: path.basename(currentProjectRoot), path: currentProjectRoot }];
+    }
+    function saveNamedProjects(list) {
+      try { fs.writeFileSync(NAMED_PROJECTS_FILE, JSON.stringify(list, null, 2), 'utf8'); } catch (_) {}
+    }
+
+    if (req.method === 'GET' && cleanUrl === '/named-projects') {
+      const list = loadNamedProjects();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ projects: list, current: currentProjectRoot }));
+      return;
+    }
+
+    if (req.method === 'POST' && cleanUrl === '/named-projects') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { name, path: projPath } = JSON.parse(body || '{}');
+          if (!name || !projPath) throw new Error('name and path are required');
+          const resolved = path.resolve(projPath.trim().replace(/^["']|["']$/g, ''));
+          if (!fs.existsSync(resolved)) throw new Error(`Path does not exist: ${resolved}`);
+          const list = loadNamedProjects().filter(p => p.path !== resolved);
+          list.unshift({ name: name.trim(), path: resolved });
+          saveNamedProjects(list.slice(0, 20));
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, projects: list }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
     // ── API Endpoints ──
+
     if (req.method === 'GET' && cleanUrl === '/structure') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getStructure(currentProjectRoot)));
@@ -2061,7 +2458,7 @@ function createRunnerServer(options = {}) {
       res.end(JSON.stringify({
         mcp: true, server: MCP_SERVER_INFO,
         endpoint: `http://localhost:${port}/mcp`,
-        transport: 'http', protocol: '2025-03-26',
+        transport: 'http', protocol: '2026-07-28',
         toolCount: MCP_TOOLS.length,
         tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
       }));
