@@ -902,6 +902,15 @@
             <input type="text" id="customProjectPath" placeholder="e.g. e:\qaraj\best\finalAutomation"
                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:border-violet-500 focus:outline-none placeholder-slate-600 font-mono"
                    onkeydown="if(event.key==='Enter') executeProjectSwitch()">
+                   
+            <!-- Browse Button -->
+            <input type="file" id="directoryPicker" webkitdirectory directory class="hidden" 
+                   onchange="if(this.files.length > 0) { document.getElementById('customProjectPath').value = this.files[0].path ? this.files[0].path.replace(/\\[^\\]*$/, '') : this.files[0].webkitRelativePath.split('/')[0]; }">
+            <button type="button" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all shadow-md"
+                    onclick="document.getElementById('directoryPicker').click()" title="Browse for directory (Note: browsers may not provide full path)">
+              Browse
+            </button>
+
             <button type="button" class="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold transition-all shadow-md"
                     onclick="executeProjectSwitch()" id="btnConfirmSwitch">
               Switch
@@ -909,6 +918,23 @@
           </div>
           <p class="text-[10px] text-slate-500 mt-0.5">
             Target folder should contain tests (<code>tests/</code>, <code>test/</code>, <code>e2e/</code>) or <code>playwright.config.js</code>.
+          </p>
+        </div>
+
+        <!-- Clone Project -->
+        <div class="flex flex-col gap-1.5 pt-2 border-t border-slate-800/80">
+          <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Or Clone from Git Repository</label>
+          <div class="flex gap-2">
+            <input type="text" id="gitCloneUrl" placeholder="https://github.com/user/repo.git"
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:border-pink-500 focus:outline-none placeholder-slate-600 font-mono"
+                   onkeydown="if(event.key==='Enter') executeProjectClone()">
+            <button type="button" class="px-4 py-2 rounded-lg bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white font-bold transition-all shadow-md flex items-center gap-2"
+                    onclick="executeProjectClone()" id="btnConfirmClone">
+              <span>Clone</span>
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-0.5">
+            The project will be cloned into the <code>cloned-projects/</code> directory.
           </p>
         </div>
 
@@ -1306,6 +1332,39 @@
       const input = document.getElementById('customProjectPath');
       if (input && input.value.trim()) {
         switchAndReload(input.value.trim());
+      }
+    }
+
+    async function executeProjectClone() {
+      const input = document.getElementById('gitCloneUrl');
+      const btn = document.getElementById('btnConfirmClone');
+      if (!input || !input.value.trim()) return;
+      
+      const gitUrl = input.value.trim();
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<span>Cloning...</span>';
+        
+        const res = await fetch(`${APP_CONFIG.apiBaseUrl}/clone-project`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gitUrl })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to clone project');
+        
+        // Cache the new project in local storage
+        localStorage.setItem('pw_last_project_name', data.projectName);
+        localStorage.setItem('pw_project_path', data.current);
+        
+        UI.toast(`Successfully cloned and switched to ${data.projectName}!`, 'success');
+        setTimeout(() => window.location.reload(), 800);
+      } catch (err) {
+        UI.toast(err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span>Clone</span>';
       }
     }
 

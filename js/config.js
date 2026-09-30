@@ -7,7 +7,7 @@ function resolveApiBaseUrl() {
     const saved = localStorage.getItem('pw_api_url');
     // If the user manually saved a custom URL on a different host, honor it, otherwise use current origin
     if (saved && saved !== 'http://127.0.0.1:9300' && saved !== 'http://localhost:9300') {
-      return saved;
+      if (!saved.includes('google.com')) { return saved; }
     }
     return window.location.origin;
   }

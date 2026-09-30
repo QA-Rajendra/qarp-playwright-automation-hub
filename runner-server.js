@@ -2040,6 +2040,60 @@ function createRunnerServer(options = {}) {
       return;
     }
 
+    // ── Clone Project Endpoint ──
+    if (req.method === 'POST' && cleanUrl === '/clone-project') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { gitUrl } = JSON.parse(body || '{}');
+          if (!gitUrl || typeof gitUrl !== 'string') {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'gitUrl is required' }));
+          }
+
+          const repoNameMatch = gitUrl.match(/\/([^\/]+?)(\.git)?$/);
+          const repoName = repoNameMatch ? repoNameMatch[1] : `repo_${Date.now()}`;
+          const clonesDir = path.resolve(process.cwd(), 'cloned-projects');
+          if (!fs.existsSync(clonesDir)) {
+            fs.mkdirSync(clonesDir, { recursive: true });
+          }
+
+          let dest = path.join(clonesDir, repoName);
+          let counter = 1;
+          while (fs.existsSync(dest)) {
+            dest = path.join(clonesDir, `${repoName}_${counter}`);
+            counter++;
+          }
+
+          console.log(`\n📁 [Playwright Hub] Cloning ${gitUrl} into ${dest}...`);
+          execSync(`git clone "${gitUrl}" "${dest}"`, { stdio: 'inherit' });
+
+          currentProjectRoot = dest;
+          recentProjects = [dest, ...recentProjects.filter(p => p !== dest)].slice(0, 10);
+          saveRecentProjects(recentProjects);
+
+          const hasConfig = ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs'].some(f => 
+            fs.existsSync(path.resolve(currentProjectRoot, f))
+          );
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            ok: true,
+            current: currentProjectRoot,
+            projectName: path.basename(currentProjectRoot),
+            hasPlaywrightConfig: hasConfig,
+            recents: recentProjects
+          }));
+        } catch (err) {
+          console.error(err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to clone repository: ' + err.message }));
+        }
+      });
+      return;
+    }
+
     // ── Project Detect Endpoint ──
     if (req.method === 'POST' && cleanUrl === '/project-detect') {
       let body = '';

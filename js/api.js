@@ -1,3 +1,4 @@
+if (typeof AbortSignal !== 'undefined' && !AbortSignal.timeout) { AbortSignal.timeout = (ms) => { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }; }
 /**
  * API Integration Layer for Playwright Test Runner
  * Uses standard fetch() to communicate with the backend test runner API.
@@ -635,3 +636,5 @@ await expect(page.getByText(/success|saved|done/i)).toBeVisible({ timeout: 8000 
 
 // Global API instance
 const api = new PlaywrightAPI();
+
+
