@@ -509,10 +509,22 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
         <label class="ml">Project Path</label>
         <div style="display:flex;gap:6px;">
           <input type="text" id="mpPath" placeholder="e.g. E:\qa\my-playwright-project" style="flex:1" oninput="resetDetect()" />
+          <input type="file" id="mcpDirPicker" webkitdirectory directory style="display:none" onchange="if(this.files.length>0){document.getElementById('mpPath').value=this.files[0].path?this.files[0].path.replace(/\\[^\\]*$/,''):this.files[0].webkitRelativePath.split('/')[0]; resetDetect();}">
+          <button class="btn" style="padding:0 12px;background:var(--bg3);border:1px solid var(--border);" onclick="document.getElementById('mcpDirPicker').click()">Browse</button>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px;">Paste the full absolute path to your Playwright project folder</div>
       </div>
-      <button class="btn-detect" id="detectBtn" onclick="detectProject()">&#128270; Detect Playwright</button>
+      
+      <!-- Clone Project section -->
+      <div class="mf" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border)">
+        <label class="ml">Or Clone from Git URL</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mpGit" placeholder="https://github.com/user/repo.git" style="flex:1" />
+          <button class="btn" id="mcpCloneBtn" style="padding:0 12px;background:var(--accent);color:#fff;" onclick="cloneMcpProject()">Clone</button>
+        </div>
+      </div>
+
+      <button class="btn-detect" id="detectBtn" onclick="detectProject()" style="margin-top:12px;">&#128270; Detect Playwright</button>
       <div id="detectResults" style="display:none;margin-top:12px;">
         <div class="detect-list" id="detectList"></div>
       </div>
@@ -651,7 +663,7 @@ function renderProjectDropdown(){
   if(!sel)return;
   sel.innerHTML=namedProjects.map(p=>
     `<option value="${esc(p.path)}" ${p.path===currentProjPath?'selected':''}>${esc(p.name)}</option>`
-  ).join('')|'<option value="">No projects saved</option>';
+  ).join('')||'<option value="">No projects saved</option>';
 }
 
 async function selectNamedProject(projPath){
@@ -775,6 +787,39 @@ async function saveProject(){
   }catch(err){
     document.getElementById('detectError').textContent=err.message;
     document.getElementById('detectError').style.display='block';
+  }
+}
+
+async function cloneMcpProject() {
+  const gitUrl = document.getElementById('mpGit').value.trim();
+  if(!gitUrl){document.getElementById('detectError').textContent='Git URL is required';document.getElementById('detectError').style.display='block';return;}
+  const btn = document.getElementById('mcpCloneBtn');
+  
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Cloning...';
+    document.getElementById('detectError').style.display='none';
+    
+    const res = await fetch(BASE+'/clone-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gitUrl })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to clone');
+    
+    const name = data.projectName;
+    await fetch(BASE+'/named-projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,path:data.current})});
+    currentProjPath=data.current;
+    await loadNamedProjects();
+    closeAddModal();
+  } catch(err) {
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Clone';
   }
 }
 
@@ -1363,3 +1408,4 @@ function startDynamicScenario() {
 <script src="../js/theme.js"></script>
 </body>
 </html>
+
