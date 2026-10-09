@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Query Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0B1120',
+            surface: '#1E293B',
+            border: '#334155',
+            accent: '#6366f1',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: theme('colors.bg'); color: #f8fafc; font-family: 'Inter', sans-serif; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid theme('colors.border'); }
+    .canvas-block { 
+      cursor: grab; 
+      transition: all 0.2s; 
+      animation: slideIn 0.3s ease-out;
+    }
+    .canvas-block:active { cursor: grabbing; }
+    .canvas-block:hover { border-color: theme('colors.accent'); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
+    .canvas-block.dragging { opacity: 0.4; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: theme('colors.border'); border-radius: 4px; }
+  </style>
+</head>
+<body class="h-screen w-full flex flex-col overflow-hidden">
+  
+  <!-- Header -->
+  <header class="glass flex items-center justify-between px-6 py-4 flex-shrink-0 z-10">
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+        <span class="text-xl">🛠️</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">SQL Query Builder</h1>
+        <p class="text-[10px] text-slate-400 uppercase tracking-widest">Visual Query Constructor</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
+        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Dialect</label>
+        <select id="dialectSelect" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500 transition-colors">
+          <option value="mysql">MySQL</option>
+          <option value="sqlserver">SQL Server</option>
+          <option value="postgres">PostgreSQL</option>
+          <option value="oracle">Oracle</option>
+        </select>
+      </div>
+      <button onclick="openDbModal()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors flex items-center gap-2"><span>🔌</span> Connect DB</button>
+      <a href="../index.html" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm font-medium transition-colors">Back to Hub</a>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-[380px] glass flex flex-col flex-shrink-0 overflow-y-auto">
+      <!-- Blocks Palette -->
+      <div class="p-4 border-b border-slate-700">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Core Blocks</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="addBlock('SELECT')" class="px-2 py-1.5 rounded border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-center text-sm text-indigo-300 font-mono transition-colors">+ SELECT</button>
+          <button onclick="addBlock('FROM')" class="px-2 py-1.5 rounded border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-center text-sm text-emerald-300 font-mono transition-colors">+ FROM</button>
+          <button onclick="addBlock('WHERE')" class="px-2 py-1.5 rounded border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-center text-sm text-amber-300 font-mono transition-colors">+ WHERE</button>
+          <button onclick="addBlock('ORDER BY')" class="px-2 py-1.5 rounded border border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 text-center text-sm text-pink-300 font-mono transition-colors">+ ORDER BY</button>
+          <button onclick="addBlock('LIMIT')" class="px-2 py-1.5 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-center text-sm text-cyan-300 font-mono transition-colors">+ LIMIT</button>
+          <button onclick="addBlock('JOIN')" class="px-2 py-1.5 rounded border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-center text-sm text-teal-300 font-mono transition-colors">+ JOIN</button>
+          <button onclick="addBlock('GROUP BY')" class="px-2 py-1.5 rounded border border-fuchsia-500/30 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-center text-sm text-fuchsia-300 font-mono transition-colors">+ GROUP BY</button>
+          <button onclick="addBlock('WITH')" class="px-2 py-1.5 rounded border border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-center text-sm text-gray-300 font-mono transition-colors">+ WITH (CTE)</button>
+        </div>
+      </div>
+      
+      <!-- DML Blocks -->
+      <div class="p-4 border-b border-slate-700">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Data Manipulation</h2>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="addBlock('INSERT')" class="px-2 py-1.5 rounded border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-center text-xs text-blue-300 font-mono transition-colors">+ INSERT</button>
+          <button onclick="addBlock('UPDATE')" class="px-2 py-1.5 rounded border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-center text-xs text-orange-300 font-mono transition-colors">+ UPDATE</button>
+          <button onclick="addBlock('DELETE')" class="px-2 py-1.5 rounded border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-center text-xs text-red-300 font-mono transition-colors">+ DELETE</button>
+        </div>
+      </div>
+
+      <!-- Column Renaming Options -->
+      <div class="p-4 border-b border-slate-700">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Global Variables</h2>
+        <div class="flex flex-col gap-2 text-sm">
+          <input type="text" id="colName" placeholder="Replace 'name' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
+          <input type="text" id="colSalary" placeholder="Replace 'salary' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
+          <input type="text" id="colAge" placeholder="Replace 'age' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
+        </div>
+      </div>
+
+      <!-- PK Generator -->
+      <div class="p-4 border-b border-slate-700">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Primary Key Generator</h2>
+        <div class="flex flex-col gap-2 text-sm">
+          <input type="text" id="pkTable" placeholder="Table Name" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500">
+          <input type="text" id="pkColumn" placeholder="Key Column (e.g. id)" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500">
+          <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+            <input type="checkbox" id="pkAuto" class="accent-indigo-500 w-4 h-4" checked> Auto-increment
+          </label>
+          <button onclick="generateTable()" class="mt-2 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded text-center font-semibold transition-colors">Add CREATE TABLE</button>
+        </div>
+      </div>
+
+      <!-- Practice Mode -->
+      <div class="p-4 bg-slate-800/50 flex-1">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Practice Mode</h2>
+          <button onclick="togglePractice()" id="practiceBtn" class="text-xs px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-semibold transition-colors">Enable</button>
+        </div>
+        <div id="practiceArea" class="hidden flex-col gap-3">
+          <div class="p-3 bg-slate-900 rounded border border-slate-700 text-sm text-slate-300" id="practiceQuestion">
+            Select all employees named 'Bob' over age 50, sorted by salary descending.
+          </div>
+          <button onclick="checkAnswer()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-center text-sm font-semibold text-white transition-colors">Check Answer</button>
+          <div id="practiceResult" class="text-sm font-semibold text-center hidden"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0">
+      
+      <!-- Canvas -->
+      <div class="flex-1 p-6 overflow-y-auto" id="canvasArea">
+        <div class="mb-4 text-sm text-slate-400">Drag or click blocks from the sidebar to build your query. Click any block to edit its contents. Drag blocks up and down to reorder them.</div>
+        <div id="canvas" class="flex flex-col gap-2 items-start min-h-[200px]">
+          <!-- Blocks will be injected here -->
+        </div>
+      </div>
+
+      <!-- Preview & Explainer -->
+      <div class="glass h-64 flex flex-col flex-shrink-0 z-10 border-t border-slate-700">
+        <div class="flex h-full">
+          <!-- Code Preview -->
+          <div class="flex-1 p-4 border-r border-slate-700 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Generated SQL</h3>
+              <div id="dialectWarn" class="text-xs text-amber-400 hidden">⚠️ Some features may vary by dialect</div>
+            </div>
+            <pre class="flex-1 p-4 bg-slate-950 rounded-lg border border-slate-800 overflow-auto text-sm font-mono text-indigo-200" id="sqlPreview">-- SQL will appear here</pre>
+          </div>
+          <!-- Explainer -->
+          <div class="w-1/3 p-4 flex flex-col">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Plain English Explanation</h3>
+            <div class="flex-1 p-4 bg-slate-900 rounded-lg border border-slate-800 overflow-auto text-sm text-slate-300 leading-relaxed" id="sqlExplainer">
+              Start building a query to see the explanation.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- DB Connection Modal -->
+  <div id="dbModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 items-center justify-center">
+    <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 w-[28rem] shadow-2xl">
+      <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>🔌</span> Database Connection</h3>
+      <div class="flex flex-col gap-3 mb-4">
+        <div>
+          <label class="text-xs text-slate-400 font-semibold uppercase">Host / URL</label>
+          <input type="text" id="dbHost" placeholder="localhost or cluster.url" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="text-xs text-slate-400 font-semibold uppercase">Database Name</label>
+            <input type="text" id="dbName" placeholder="my_database" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
+          </div>
+          <div class="w-1/3">
+            <label class="text-xs text-slate-400 font-semibold uppercase">Port</label>
+            <input type="text" id="dbPort" placeholder="3306" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-semibold uppercase">Username</label>
+          <input type="text" id="dbUser" placeholder="admin" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-semibold uppercase">Password</label>
+          <input type="password" id="dbPass" placeholder="••••••••" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
+        </div>
+      </div>
+      
+      <div id="dbTestResult" class="mb-4 text-sm font-semibold text-center hidden"></div>
+      
+      <div class="flex justify-between items-center mt-2">
+        <button onclick="testDbConnection()" id="dbTestBtn" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors flex items-center gap-2">Test Connection</button>
+        <div class="flex gap-2">
+          <button onclick="closeDbModal()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors">Cancel</button>
+          <button onclick="saveDbConnection()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 items-center justify-center">
+    <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 w-96 shadow-2xl">
+      <h3 class="text-lg font-bold mb-4">Edit Block</h3>
+      <input type="text" id="editInput" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono outline-none focus:border-indigo-500 mb-4" onkeydown="if(event.key==='Enter') saveEdit()">
+      <div class="flex justify-end gap-3">
+        <button onclick="closeEdit()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors">Cancel</button>
+        <button onclick="saveEdit()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let blocks = [];
+    let editingId = null;
+    let practiceMode = false;
+    let draggedIndex = null;
+
+    const blockColors = {
+      'SELECT': 'border-indigo-500/50 bg-indigo-500/20 text-indigo-100',
+      'FROM': 'border-emerald-500/50 bg-emerald-500/20 text-emerald-100',
+      'WHERE': 'border-amber-500/50 bg-amber-500/20 text-amber-100',
+      'ORDER BY': 'border-pink-500/50 bg-pink-500/20 text-pink-100',
+      'LIMIT': 'border-cyan-500/50 bg-cyan-500/20 text-cyan-100',
+      'JOIN': 'border-teal-500/50 bg-teal-500/20 text-teal-100',
+      'GROUP BY': 'border-fuchsia-500/50 bg-fuchsia-500/20 text-fuchsia-100',
+      'WITH': 'border-gray-500/50 bg-gray-500/20 text-gray-100',
+      'INSERT': 'border-blue-500/50 bg-blue-500/20 text-blue-100',
+      'UPDATE': 'border-orange-500/50 bg-orange-500/20 text-orange-100',
+      'DELETE': 'border-red-500/50 bg-red-500/20 text-red-100',
+      'CREATE TABLE': 'border-purple-500/50 bg-purple-500/20 text-purple-100',
+    };
+
+    const defaultValues = {
+      'SELECT': '* (or name, salary, age)',
+      'FROM': 'employees',
+      'WHERE': "name = 'Bob' AND age > 50",
+      'ORDER BY': 'salary DESC',
+      'LIMIT': '10',
+      'JOIN': 'INNER JOIN departments d ON d.id = employees.dept_id',
+      'GROUP BY': 'department_id',
+      'WITH': 'recent_hires AS (SELECT * FROM employees WHERE age < 30)',
+      'INSERT': "INTO employees (name, age) VALUES ('Alice', 30)",
+      'UPDATE': "employees SET salary = 60000",
+      'DELETE': 'FROM employees',
+      'CREATE TABLE': ''
+    };
+
+    document.getElementById('dialectSelect').addEventListener('change', updateAll);
+
+    function addBlock(type) {
+      blocks.push({
+        id: Date.now(),
+        type: type,
+        value: defaultValues[type]
+      });
+      renderCanvas();
+    }
+
+    function removeBlock(id, event) {
+      event.stopPropagation();
+      blocks = blocks.filter(b => b.id !== id);
+      renderCanvas();
+    }
+
+    function openEdit(id) {
+      editingId = id;
+      const block = blocks.find(b => b.id === id);
+      document.getElementById('editInput').value = block.value;
+      document.getElementById('editModal').style.display = 'flex';
+      setTimeout(() => document.getElementById('editInput').focus(), 50);
+    }
+
+    function closeEdit() {
+      document.getElementById('editModal').style.display = 'none';
+      editingId = null;
+    }
+
+    function saveEdit() {
+      if (editingId) {
+        const block = blocks.find(b => b.id === editingId);
+        block.value = document.getElementById('editInput').value;
+        renderCanvas();
+      }
+      closeEdit();
+    }
+
+    function applyVariables(text) {
+      const colName = document.getElementById('colName').value.trim();
+      const colSalary = document.getElementById('colSalary').value.trim();
+      const colAge = document.getElementById('colAge').value.trim();
+
+      let res = text;
+      if (colName) res = res.replace(/name/g, colName);
+      if (colSalary) res = res.replace(/salary/g, colSalary);
+      if (colAge) res = res.replace(/age/g, colAge);
+      return res;
+    }
+
+    // Drag and drop event handlers
+    function handleDragStart(e, index) {
+      draggedIndex = index;
+      e.dataTransfer.effectAllowed = 'move';
+      e.target.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      const target = e.target.closest('.canvas-block');
+      if(target) {
+        // Optional visual indicator
+      }
+    }
+
+    function handleDrop(e, targetIndex) {
+      e.preventDefault();
+      if (draggedIndex !== null && draggedIndex !== targetIndex) {
+        const item = blocks.splice(draggedIndex, 1)[0];
+        blocks.splice(targetIndex, 0, item);
+        renderCanvas();
+      }
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      draggedIndex = null;
+    }
+
+    function renderCanvas() {
+      const canvas = document.getElementById('canvas');
+      canvas.innerHTML = '';
+      
+      blocks.forEach((block, index) => {
+        const div = document.createElement('div');
+        div.className = \`canvas-block flex items-center gap-3 px-4 py-3 rounded-lg border font-mono text-sm w-full max-w-2xl group \${blockColors[block.type]}\`;
+        div.draggable = true;
+        
+        div.addEventListener('dragstart', (e) => handleDragStart(e, index));
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('drop', (e) => handleDrop(e, index));
+        div.addEventListener('dragend', handleDragEnd);
+        
+        // Ensure child elements don't interfere with drop target logic as easily
+        div.onclick = (e) => {
+          if(!e.target.closest('button')) openEdit(block.id);
+        };
+        
+        let displayVal = applyVariables(block.value);
+
+        // Adjust display keywords
+        let displayType = block.type;
+        const dialect = document.getElementById('dialectSelect').value;
+        if (block.type === 'LIMIT') {
+          if (dialect === 'sqlserver') displayType = 'TOP';
+          if (dialect === 'oracle') displayType = 'FETCH FIRST';
+        }
+        
+        if (block.type === 'CREATE TABLE') {
+          div.innerHTML = \`
+            <div class="cursor-grab text-slate-400 hover:text-white px-1">☰</div>
+            <span class="font-bold tracking-wider">\${block.type}</span>
+            <span class="flex-1 opacity-80 whitespace-pre-wrap pointer-events-none">\${displayVal}</span>
+            <button onclick="removeBlock(\${block.id}, event)" class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity font-bold">✕</button>
+          \`;
+        } else {
+          div.innerHTML = \`
+            <div class="cursor-grab text-slate-400 hover:text-white px-1">☰</div>
+            <span class="font-bold tracking-wider">\${displayType}</span>
+            <span class="flex-1 opacity-80 pointer-events-none">\${displayVal}</span>
+            <button onclick="removeBlock(\${block.id}, event)" class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity font-bold">✕</button>
+          \`;
+        }
+        
+        canvas.appendChild(div);
+      });
+
+      updateSQL();
+      updateExplainer();
+    }
+
+    function updateAll() {
+      renderCanvas();
+    }
+
+    function generateTable() {
+      const table = document.getElementById('pkTable').value.trim() || 'my_table';
+      const col = document.getElementById('pkColumn').value.trim() || 'id';
+      const auto = document.getElementById('pkAuto').checked;
+      const dialect = document.getElementById('dialectSelect').value;
+
+      let pkDef = '';
+      if (dialect === 'mysql') pkDef = \`\${col} INT AUTO_INCREMENT PRIMARY KEY\`;
+      else if (dialect === 'postgres') pkDef = \`\${col} SERIAL PRIMARY KEY\`;
+      else if (dialect === 'sqlserver') pkDef = \`\${col} INT IDENTITY(1,1) PRIMARY KEY\`;
+      else if (dialect === 'oracle') {
+        if (auto) pkDef = \`\${col} NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY\`;
+        else pkDef = \`\${col} NUMBER PRIMARY KEY\`;
+      }
+
+      blocks.push({
+        id: Date.now(),
+        type: 'CREATE TABLE',
+        value: \`\${table} (\\n  \${pkDef}\\n)\`
+      });
+      renderCanvas();
+    }
+
+    function updateSQL() {
+      let sql = '';
+      const dialect = document.getElementById('dialectSelect').value;
+      const warn = document.getElementById('dialectWarn');
+      warn.classList.add('hidden');
+
+      blocks.forEach(block => {
+        let val = applyVariables(block.value);
+        if (block.type === 'CREATE TABLE') {
+          sql += \`CREATE TABLE \${val};\\n\\n\`;
+        } else if (block.type === 'LIMIT') {
+          if (dialect === 'mysql' || dialect === 'postgres') {
+            sql += \`LIMIT \${val}\\n\`;
+          } else if (dialect === 'sqlserver') {
+            sql += \`TOP \${val} -- (Note: TOP should go immediately after SELECT in real T-SQL)\\n\`;
+            warn.classList.remove('hidden');
+            warn.innerText = '⚠️ TOP must be placed after SELECT in T-SQL';
+          } else if (dialect === 'oracle') {
+            sql += \`FETCH FIRST \${val} ROWS ONLY\\n\`;
+          }
+        } else if (block.type === 'JOIN') {
+          // If the user already wrote INNER JOIN or LEFT JOIN, just output it. Otherwise prepend the type.
+          if(val.toUpperCase().startsWith('JOIN') || val.toUpperCase().includes(' JOIN ')) {
+            sql += \`\${val}\\n\`;
+          } else {
+            sql += \`\${block.type} \${val}\\n\`;
+          }
+        } else if (block.type === 'WITH') {
+          sql += \`WITH \${val}\\n\`;
+        } else {
+          sql += \`\${block.type} \${val}\\n\`;
+        }
+      });
+
+      document.getElementById('sqlPreview').innerText = sql || '-- SQL will appear here';
+    }
+
+    function updateExplainer() {
+      let exp = [];
+      
+      blocks.forEach(b => {
+        let v = applyVariables(b.value);
+        if (b.type === 'SELECT') exp.push(\`Fetches data for: <b>\${v}</b>\`);
+        if (b.type === 'FROM') exp.push(\`Looks in the table: <b>\${v}</b>\`);
+        if (b.type === 'WHERE') exp.push(\`Filters records where: <b>\${v}</b>\`);
+        if (b.type === 'ORDER BY') exp.push(\`Sorts the results by: <b>\${v}</b>\`);
+        if (b.type === 'LIMIT') exp.push(\`Limits the results to <b>\${v}</b> rows\`);
+        if (b.type === 'CREATE TABLE') exp.push(\`Creates a new table defined as <b>\${v.replace(/\\n/g, ' ')}</b>\`);
+        if (b.type === 'JOIN') exp.push(\`Joins related data using: <b>\${v}</b>\`);
+        if (b.type === 'GROUP BY') exp.push(\`Groups identical data by: <b>\${v}</b>\`);
+        if (b.type === 'WITH') exp.push(\`Creates a temporary result set (CTE): <b>\${v}</b>\`);
+        if (b.type === 'INSERT') exp.push(\`Inserts new record: <b>\${v}</b>\`);
+        if (b.type === 'UPDATE') exp.push(\`Updates existing record: <b>\${v}</b>\`);
+        if (b.type === 'DELETE') exp.push(\`Deletes record: <b>\${v}</b>\`);
+      });
+
+      document.getElementById('sqlExplainer').innerHTML = exp.length ? exp.join('<br><br>') : 'Start building a query to see the explanation.';
+    }
+
+    function togglePractice() {
+      practiceMode = !practiceMode;
+      const btn = document.getElementById('practiceBtn');
+      const area = document.getElementById('practiceArea');
+      if (practiceMode) {
+        btn.innerText = 'Disable';
+        btn.className = 'text-xs px-2 py-1 bg-rose-600 hover:bg-rose-500 rounded text-white font-semibold transition-colors';
+        area.classList.remove('hidden');
+        area.classList.add('flex');
+        blocks = [];
+        renderCanvas();
+      } else {
+        btn.innerText = 'Enable';
+        btn.className = 'text-xs px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-semibold transition-colors';
+        area.classList.add('hidden');
+        area.classList.remove('flex');
+        document.getElementById('practiceResult').classList.add('hidden');
+      }
+    }
+
+    function openDbModal() {
+      document.getElementById('dbModal').style.display = 'flex';
+      document.getElementById('dbTestResult').classList.add('hidden');
+    }
+
+    function closeDbModal() {
+      document.getElementById('dbModal').style.display = 'none';
+    }
+
+    function saveDbConnection() {
+      closeDbModal();
+      alert('Database connection details saved locally!');
+    }
+
+    function testDbConnection() {
+      const btn = document.getElementById('dbTestBtn');
+      const res = document.getElementById('dbTestResult');
+      const user = document.getElementById('dbUser').value;
+      const pass = document.getElementById('dbPass').value;
+      
+      if(!user || !pass) {
+        res.innerText = '⚠️ Username and password are required.';
+        res.className = 'mb-4 text-sm font-semibold text-center text-amber-400 block';
+        return;
+      }
+
+      btn.innerText = 'Testing...';
+      btn.disabled = true;
+      res.classList.add('hidden');
+      
+      setTimeout(() => {
+        btn.innerText = 'Test Connection';
+        btn.disabled = false;
+        
+        if(user.toLowerCase() === 'fail') {
+          res.innerText = '❌ Connection failed: Access Denied for user.';
+          res.className = 'mb-4 text-sm font-semibold text-center text-rose-400 block';
+        } else {
+          res.innerText = '✅ Connection successful!';
+          res.className = 'mb-4 text-sm font-semibold text-center text-emerald-400 block';
+        }
+      }, 1500);
+    }
+
+    function checkAnswer() {
+      const sql = document.getElementById('sqlPreview').innerText.toLowerCase();
+      const res = document.getElementById('practiceResult');
+      res.classList.remove('hidden');
+      
+      if (sql.includes('select') && sql.includes('from') && sql.includes('where') && sql.includes('order by')) {
+        if (sql.includes('bob') && sql.includes('50') && sql.includes('desc')) {
+          res.innerText = '✅ Correct! Great job.';
+          res.className = 'text-sm font-semibold text-center text-emerald-400 mt-2 block';
+          return;
+        }
+      }
+      res.innerText = '❌ Not quite. Make sure you select, filter by name and age, and sort descending.';
+      res.className = 'text-sm font-semibold text-center text-rose-400 mt-2 block';
+    }
+  </script>
+</body>
+</html>

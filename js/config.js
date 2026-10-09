@@ -5,9 +5,16 @@
 function resolveApiBaseUrl() {
   if (typeof window !== 'undefined' && window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.origin !== 'null') {
     const saved = localStorage.getItem('pw_api_url');
-    // If the user manually saved a custom URL on a different host, honor it, otherwise use current origin
-    if (saved && saved !== 'http://127.0.0.1:9300' && saved !== 'http://localhost:9300') {
-      if (!saved.includes('google.com')) { return saved; }
+    
+    // Always use current origin for localhost/127.0.0.1 to support multiple simultaneous ports
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocal) {
+      return window.location.origin;
+    }
+
+    // If the user manually saved a custom URL on a different host, honor it
+    if (saved && !saved.includes('google.com')) { 
+      return saved; 
     }
     return window.location.origin;
   }

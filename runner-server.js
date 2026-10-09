@@ -604,8 +604,8 @@ const MCP_PROMPTS = [
   }
 ];
 
-function buildPromptMessages(promptName, args = {}) {
-  const base = `You are an AI assistant controlling a Playwright test runner via MCP tools.\nMCP endpoint: http://localhost:9300/mcp\nAvailable tools: list_test_files, list_projects, run_tests, poll_job, cancel_job, get_history, get_api_traffic, run_self_test, diagnose_failure, clear_history.\n\n`;
+function buildPromptMessages(promptName, args = {}, port = 9300) {
+  const base = `You are an AI assistant controlling a Playwright test runner via MCP tools.\nMCP endpoint: http://localhost:${port}/mcp\nAvailable tools: list_test_files, list_projects, run_tests, poll_job, cancel_job, get_history, get_api_traffic, run_self_test, diagnose_failure, clear_history.\n\n`;
 
   switch (promptName) {
     case 'run_all_tests':
@@ -2629,6 +2629,13 @@ if (require.main === module) {
     console.log('\n=============================================================');
     console.log('  🎭 QARP Playwright Automation Hub Launcher');
     console.log('=============================================================');
+
+    // Find available port dynamically to support multiple instances
+    try {
+      cliPort = await findAvailablePort(cliPort, cliPort + 20);
+    } catch (err) {
+      console.warn(`   ⚠️ ${err.message}`);
+    }
 
     // 1. Auto-close old port process if port is occupied
     if (shouldKillOldPort) {
