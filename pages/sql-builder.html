@@ -1,559 +1,875 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SQL Query Builder</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            bg: '#0B1120',
-            surface: '#1E293B',
-            border: '#334155',
-            accent: '#6366f1',
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { background-color: theme('colors.bg'); color: #f8fafc; font-family: 'Inter', sans-serif; }
-    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid theme('colors.border'); }
-    .canvas-block { 
-      cursor: grab; 
-      transition: all 0.2s; 
-      animation: slideIn 0.3s ease-out;
-    }
-    .canvas-block:active { cursor: grabbing; }
-    .canvas-block:hover { border-color: theme('colors.accent'); box-shadow: 0 0 10px rgba(99,102,241,0.3); }
-    .canvas-block.dragging { opacity: 0.4; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: theme('colors.border'); border-radius: 4px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SQL Drag & Drop Builder</title>
+<style>
+:root{--bg:#f6f4ee;--card:#fff;--ink:#1f2430;--mut:#6b7280;--line:#e5e1d5;--acc:#4f46e5;--accbg:#eef0ff;--code:#101827;--kw:#7aa2ff;--fn:#f78fb3;--str:#9be28f;--num:#ffc66d;--cm:#7d8590;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--card:#1b1e27;--ink:#e8eaf0;--mut:#9aa1b2;--line:#2b3040;--acc:#8b93ff;--accbg:#262a45;--code:#0a0d14}}
+:root[data-theme="dark"]{--bg:#12141a;--card:#1b1e27;--ink:#e8eaf0;--mut:#9aa1b2;--line:#2b3040;--acc:#8b93ff;--accbg:#262a45;--code:#0a0d14}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 20px 8px;max-width:1440px;margin:auto;}
+h1{font-size:20px;margin:0 0 10px 0;display:flex;justify-content:space-between;align-items:center}
+h1 span{color:var(--acc)}
+.top-bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.ins{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tbl{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);padding:4px 8px;border-radius:12px}
+.tbl label{font-size:12px;color:var(--mut);font-weight:600}
+.tbl input{border:0;background:var(--accbg);color:var(--ink);font:600 13px ui-monospace,Menlo,Consolas,monospace;padding:6px 10px;border-radius:8px;width:120px;outline:2px solid transparent}
+.tbl input:focus{outline-color:var(--acc)}
+details.ins-adv{margin-top:10px;font-size:13px;}
+details.ins-adv summary{cursor:pointer;color:var(--mut);font-weight:600;margin-bottom:8px}
+.ins-grid{display:flex;flex-wrap:wrap;gap:10px;background:var(--card);padding:10px;border-radius:12px;border:1px solid var(--line)}
+select.btn{padding:5px 10px;border-radius:8px;background:var(--card);border:1px solid var(--line);color:var(--ink);font-size:12px;cursor:pointer;outline:none}
+main{max-width:1440px;margin:auto;padding:12px 20px 40px;display:grid;grid-template-columns:330px 1fr 1fr;gap:16px}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;display:flex;flex-direction:column}
+.panel h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab{border:1px solid var(--line);background:transparent;color:var(--ink);padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.pal{display:flex;flex-direction:column;gap:7px;max-height:65vh;overflow:auto;padding-right:2px}
+.blk{cursor:grab;border:1px solid var(--line);border-left:4px solid var(--c,var(--acc));background:var(--bg);border-radius:10px;padding:8px 10px;font:12.5px ui-monospace,Menlo,Consolas,monospace;display:flex;gap:8px;align-items:center;justify-content:space-between;user-select:none;white-space:pre-wrap;word-break:break-word}
+.blk:hover, .blk:focus{border-color:var(--c,var(--acc));outline:none}
+.blk:focus{box-shadow:0 0 0 2px var(--accbg)}
+.blk button{border:0;background:var(--accbg);color:var(--acc);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:16px;flex:none}
+.blk em{display:block;font:11.5px/1.35 system-ui,sans-serif;color:var(--mut);margin-top:3px;white-space:normal}
+.blk[contenteditable=true]{cursor:text;outline:2px solid var(--acc);background:var(--card)}
+.search{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:9px 12px;border-radius:10px;font-size:13px;margin-bottom:10px;outline:2px solid transparent}
+.search:focus{outline-color:var(--acc)}
+.chk{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.chk div{font-size:12.5px;padding:8px 10px;border-radius:9px;line-height:1.35}
+.chk .w{background:#fef3c7;color:#92400e}.chk .o{background:#dcfce7;color:#166534}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chk .w{background:#3b2f10;color:#fcd34d}:root:not([data-theme="light"]) .chk .o{background:#12301d;color:#86efac}}
+.blk small{font-family:system-ui;font-size:11px;color:var(--mut);display:block;pointer-events:none}
+#canvas,.zone{min-height:200px;border:2px dashed var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:7px;transition:.15s;overflow:auto;max-height:50vh}
+#canvas.over,.zone.over{border-color:var(--acc);background:var(--accbg)}
+.empty{color:var(--mut);text-align:center;padding:40px 10px;font-size:14px}
+.blk.drop{outline:2px solid var(--acc)}
+.tools{display:flex;gap:6px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 11px;border-radius:8px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0}
+.btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+pre{margin:0;background:var(--code);color:#e6edf3;border-radius:12px;padding:16px;font:13.5px/1.7 ui-monospace,Menlo,Consolas,monospace;overflow-x:auto;min-height:200px;white-space:pre}
+i{font-style:normal}.k{color:var(--kw);font-weight:600}.f{color:var(--fn)}.n{color:var(--num)}.s{color:var(--str)}.c{color:var(--cm)}
+.tpl{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;max-height:200px;overflow:auto;padding-right:4px}
+.tpl button{text-align:left;font-size:12px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;line-height:1.3}
+.tpl button:hover{border-color:var(--acc)}
+.tpl b{color:var(--acc);margin-right:4px}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.dt th,.dt td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+.dt th{background:var(--accbg);color:var(--acc)}.dt td.nl{color:var(--mut);font-style:italic}
+.dm{margin-top:12px}.dm h3{font-size:12px;margin:0;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.okm{background:#dcfce7;color:#166534;padding:8px 10px;border-radius:9px;font-size:12.5px;margin-top:6px}
+.errm{background:#fee2e2;color:#991b1b;padding:8px 10px;border-radius:9px;font-size:12.5px;margin-top:6px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .errm{background:#3f1414;color:#fca5a5}}
+details{margin-top:12px;font-size:12.5px}summary{cursor:pointer;color:var(--acc);font-weight:600}
+.rc{display:flex;flex-direction:column;gap:16px;min-width:0}
+.zone{min-height:120px}
+#tp{min-height:60px;margin-top:10px;font-size:12.5px;padding:12px}
+.mt{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:13px}
+.mt small{color:var(--mut);margin-left:6px}
+.mt .tools{flex-wrap:wrap}
+textarea.search{font:12px ui-monospace,monospace;resize:vertical}
+.hint{font-size:12px;color:var(--mut);margin:10px 2px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:100}
+.toast.on{opacity:1}
+#explainer{font-size:12.5px;color:var(--mut);padding:10px;background:var(--accbg);border-radius:10px;margin-top:10px;line-height:1.5}
+.pk-gen{background:var(--accbg);padding:10px;border-radius:10px;margin-top:10px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.pk-gen h3{margin:0;font-size:12px;text-transform:uppercase;color:var(--mut)}
+.pk-gen input, .pk-gen select{border:1px solid var(--line);padding:6px;border-radius:6px;background:var(--card);color:var(--ink);font-size:12px}
+.practice{background:#fef3c7;padding:12px;border-radius:10px;margin-top:10px;border:1px solid #fde68a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .practice{background:#3b2f10;border-color:#524016}}
+</style>
 </head>
-<body class="h-screen w-full flex flex-col overflow-hidden">
-  
-  <!-- Header -->
-  <header class="glass flex items-center justify-between px-6 py-4 flex-shrink-0 z-10">
-    <div class="flex items-center gap-4">
-      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-        <span class="text-xl">🛠️</span>
-      </div>
-      <div>
-        <h1 class="text-lg font-bold bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">SQL Query Builder</h1>
-        <p class="text-[10px] text-slate-400 uppercase tracking-widest">Visual Query Constructor</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-2">
-        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Dialect</label>
-        <select id="dialectSelect" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500 transition-colors">
-          <option value="mysql">MySQL</option>
-          <option value="sqlserver">SQL Server</option>
-          <option value="postgres">PostgreSQL</option>
-          <option value="oracle">Oracle</option>
-        </select>
-      </div>
-      <button onclick="openDbModal()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors flex items-center gap-2"><span>🔌</span> Connect DB</button>
-      <a href="../index.html" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm font-medium transition-colors">Back to Hub</a>
-    </div>
-  </header>
-
-  <div class="flex flex-1 overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-[380px] glass flex flex-col flex-shrink-0 overflow-y-auto">
-      <!-- Blocks Palette -->
-      <div class="p-4 border-b border-slate-700">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Core Blocks</h2>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="addBlock('SELECT')" class="px-2 py-1.5 rounded border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-center text-sm text-indigo-300 font-mono transition-colors">+ SELECT</button>
-          <button onclick="addBlock('FROM')" class="px-2 py-1.5 rounded border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-center text-sm text-emerald-300 font-mono transition-colors">+ FROM</button>
-          <button onclick="addBlock('WHERE')" class="px-2 py-1.5 rounded border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-center text-sm text-amber-300 font-mono transition-colors">+ WHERE</button>
-          <button onclick="addBlock('ORDER BY')" class="px-2 py-1.5 rounded border border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 text-center text-sm text-pink-300 font-mono transition-colors">+ ORDER BY</button>
-          <button onclick="addBlock('LIMIT')" class="px-2 py-1.5 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-center text-sm text-cyan-300 font-mono transition-colors">+ LIMIT</button>
-          <button onclick="addBlock('JOIN')" class="px-2 py-1.5 rounded border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-center text-sm text-teal-300 font-mono transition-colors">+ JOIN</button>
-          <button onclick="addBlock('GROUP BY')" class="px-2 py-1.5 rounded border border-fuchsia-500/30 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-center text-sm text-fuchsia-300 font-mono transition-colors">+ GROUP BY</button>
-          <button onclick="addBlock('WITH')" class="px-2 py-1.5 rounded border border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-center text-sm text-gray-300 font-mono transition-colors">+ WITH (CTE)</button>
-        </div>
-      </div>
-      
-      <!-- DML Blocks -->
-      <div class="p-4 border-b border-slate-700">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Data Manipulation</h2>
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="addBlock('INSERT')" class="px-2 py-1.5 rounded border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-center text-xs text-blue-300 font-mono transition-colors">+ INSERT</button>
-          <button onclick="addBlock('UPDATE')" class="px-2 py-1.5 rounded border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-center text-xs text-orange-300 font-mono transition-colors">+ UPDATE</button>
-          <button onclick="addBlock('DELETE')" class="px-2 py-1.5 rounded border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-center text-xs text-red-300 font-mono transition-colors">+ DELETE</button>
-        </div>
-      </div>
-
-      <!-- Column Renaming Options -->
-      <div class="p-4 border-b border-slate-700">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Global Variables</h2>
-        <div class="flex flex-col gap-2 text-sm">
-          <input type="text" id="colName" placeholder="Replace 'name' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
-          <input type="text" id="colSalary" placeholder="Replace 'salary' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
-          <input type="text" id="colAge" placeholder="Replace 'age' with..." class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500" oninput="updateAll()">
-        </div>
-      </div>
-
-      <!-- PK Generator -->
-      <div class="p-4 border-b border-slate-700">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Primary Key Generator</h2>
-        <div class="flex flex-col gap-2 text-sm">
-          <input type="text" id="pkTable" placeholder="Table Name" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500">
-          <input type="text" id="pkColumn" placeholder="Key Column (e.g. id)" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none focus:border-indigo-500">
-          <label class="flex items-center gap-2 cursor-pointer text-slate-300">
-            <input type="checkbox" id="pkAuto" class="accent-indigo-500 w-4 h-4" checked> Auto-increment
-          </label>
-          <button onclick="generateTable()" class="mt-2 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded text-center font-semibold transition-colors">Add CREATE TABLE</button>
-        </div>
-      </div>
-
-      <!-- Practice Mode -->
-      <div class="p-4 bg-slate-800/50 flex-1">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Practice Mode</h2>
-          <button onclick="togglePractice()" id="practiceBtn" class="text-xs px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-semibold transition-colors">Enable</button>
-        </div>
-        <div id="practiceArea" class="hidden flex-col gap-3">
-          <div class="p-3 bg-slate-900 rounded border border-slate-700 text-sm text-slate-300" id="practiceQuestion">
-            Select all employees named 'Bob' over age 50, sorted by salary descending.
-          </div>
-          <button onclick="checkAnswer()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-center text-sm font-semibold text-white transition-colors">Check Answer</button>
-          <div id="practiceResult" class="text-sm font-semibold text-center hidden"></div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0">
-      
-      <!-- Canvas -->
-      <div class="flex-1 p-6 overflow-y-auto" id="canvasArea">
-        <div class="mb-4 text-sm text-slate-400">Drag or click blocks from the sidebar to build your query. Click any block to edit its contents. Drag blocks up and down to reorder them.</div>
-        <div id="canvas" class="flex flex-col gap-2 items-start min-h-[200px]">
-          <!-- Blocks will be injected here -->
-        </div>
-      </div>
-
-      <!-- Preview & Explainer -->
-      <div class="glass h-64 flex flex-col flex-shrink-0 z-10 border-t border-slate-700">
-        <div class="flex h-full">
-          <!-- Code Preview -->
-          <div class="flex-1 p-4 border-r border-slate-700 flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Generated SQL</h3>
-              <div id="dialectWarn" class="text-xs text-amber-400 hidden">⚠️ Some features may vary by dialect</div>
-            </div>
-            <pre class="flex-1 p-4 bg-slate-950 rounded-lg border border-slate-800 overflow-auto text-sm font-mono text-indigo-200" id="sqlPreview">-- SQL will appear here</pre>
-          </div>
-          <!-- Explainer -->
-          <div class="w-1/3 p-4 flex flex-col">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Plain English Explanation</h3>
-            <div class="flex-1 p-4 bg-slate-900 rounded-lg border border-slate-800 overflow-auto text-sm text-slate-300 leading-relaxed" id="sqlExplainer">
-              Start building a query to see the explanation.
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- DB Connection Modal -->
-  <div id="dbModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 items-center justify-center">
-    <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 w-[28rem] shadow-2xl">
-      <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span>🔌</span> Database Connection</h3>
-      <div class="flex flex-col gap-3 mb-4">
-        <div>
-          <label class="text-xs text-slate-400 font-semibold uppercase">Host / URL</label>
-          <input type="text" id="dbHost" placeholder="localhost or cluster.url" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
-        </div>
-        <div class="flex gap-3">
-          <div class="flex-1">
-            <label class="text-xs text-slate-400 font-semibold uppercase">Database Name</label>
-            <input type="text" id="dbName" placeholder="my_database" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
-          </div>
-          <div class="w-1/3">
-            <label class="text-xs text-slate-400 font-semibold uppercase">Port</label>
-            <input type="text" id="dbPort" placeholder="3306" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
-          </div>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 font-semibold uppercase">Username</label>
-          <input type="text" id="dbUser" placeholder="admin" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 font-semibold uppercase">Password</label>
-          <input type="password" id="dbPass" placeholder="••••••••" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none">
-        </div>
-      </div>
-      
-      <div id="dbTestResult" class="mb-4 text-sm font-semibold text-center hidden"></div>
-      
-      <div class="flex justify-between items-center mt-2">
-        <button onclick="testDbConnection()" id="dbTestBtn" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors flex items-center gap-2">Test Connection</button>
-        <div class="flex gap-2">
-          <button onclick="closeDbModal()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors">Cancel</button>
-          <button onclick="saveDbConnection()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">Save</button>
-        </div>
-      </div>
+<body>
+<header>
+  <h1><span>SQL Builder</span> <select id="dialect" class="btn" title="Swaps syntax for LIMIT/TOP/FETCH"><option value="mysql">MySQL</option><option value="postgres">PostgreSQL</option><option value="sqlserver">SQL Server</option><option value="oracle">Oracle</option></select></h1>
+  <div class="top-bar">
+    <div class="ins">
+      <div class="tbl"><label for="t">{T}</label><input id="t" list="tableList" value="customers" spellcheck="false" autocomplete="off" placeholder="Table name"></div>
+      <div class="tbl" title="Used by JOIN, UNION, EXISTS blocks"><label for="t2">{T2}</label><input id="t2" list="tableList" value="orders" spellcheck="false" autocomplete="off" placeholder="2nd table"></div>
     </div>
   </div>
-
-  <!-- Edit Modal -->
-  <div id="editModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 items-center justify-center">
-    <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 w-96 shadow-2xl">
-      <h3 class="text-lg font-bold mb-4">Edit Block</h3>
-      <input type="text" id="editInput" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono outline-none focus:border-indigo-500 mb-4" onkeydown="if(event.key==='Enter') saveEdit()">
-      <div class="flex justify-end gap-3">
-        <button onclick="closeEdit()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition-colors">Cancel</button>
-        <button onclick="saveEdit()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">Save</button>
-      </div>
+  <details class="ins-adv"><summary>Columns &amp; values (click to expand)</summary>
+    <div class="ins-grid">
+      <div class="tbl"><label for="id">{ID}</label><input id="id" list="colList" value="customer_id" spellcheck="false"></div>
+      <div class="tbl"><label for="fk">{FK}</label><input id="fk" list="colList" value="customer_id" spellcheck="false"></div>
+      <div class="tbl"><label for="c1">{C1}</label><input id="c1" list="colList" value="name" spellcheck="false"></div>
+      <div class="tbl"><label for="c2">{C2}</label><input id="c2" list="colList" value="email" spellcheck="false"></div>
+      <div class="tbl"><label for="num">{NUM}</label><input id="num" list="colList" value="salary" spellcheck="false"></div>
+      <div class="tbl"><label for="date">{DATE}</label><input id="date" list="colList" value="created_at" spellcheck="false"></div>
+      <div class="tbl"><label for="grp">{GRP}</label><input id="grp" list="colList" value="department_id" spellcheck="false"></div>
+      <div class="tbl"><label for="v1">{V1}</label><input id="v1" value="'Bob'" spellcheck="false"></div>
+      <div class="tbl"><label for="v2">{V2}</label><input id="v2" value="50" spellcheck="false"></div>
     </div>
+  </details>
+  <details class="ins-adv"><summary>Schema Auto-Suggest (Paste SQL Schema)</summary>
+    <div class="ins-grid" style="flex-direction:column">
+      <textarea id="schemaInput" placeholder="Paste CREATE TABLE statements here to auto-populate the table and column dropdowns..." style="width:100%;height:80px;font:12px monospace;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);resize:vertical;"></textarea>
+      <button class="btn p" style="align-self:flex-start" onclick="parseSchema()">Parse Schema</button>
+    </div>
+  </details>
+  <datalist id="tableList"></datalist>
+  <datalist id="colList"></datalist>
+</header>
+<main>
+  <section class="panel">
+    <h2>Syntax blocks</h2>
+    <input class="search" id="q" placeholder="Search blocks..." autocomplete="off">
+    <div class="tabs" id="tabs"></div>
+    <aside class="pal" id="pal" role="listbox" aria-label="Available blocks"></aside>
+    <div class="pk-gen">
+      <h3>PK Generator</h3>
+      <input id="pkgCol" placeholder="ID Column (e.g. id)" value="id">
+      <select id="pkgAuto">
+        <option value="1">Auto-number (IDENTITY/SERIAL)</option>
+        <option value="0">Manual number</option>
+      </select>
+      <button class="btn p" onclick="genPk()">Add CREATE TABLE block</button>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Canvas <span class="tools"><button class="btn" id="pracBtn">Practice</button><button class="btn" id="undo">Undo</button><button class="btn" id="clear">Clear</button></span></h2>
+    <div class="practice" id="practice" style="display:none">
+       <div style="font-weight:600;font-size:13px;margin-bottom:6px">Task: <span id="pq"></span></div>
+       <button class="btn p" onclick="checkPrac()">Check Answer</button>
+       <span id="pres" style="font-size:13px;margin-left:10px"></span>
+    </div>
+    <div id="canvas" role="listbox" aria-label="Query Canvas"><div class="empty">Drop SQL blocks here<br>Select a block and press Enter to edit, or Delete to remove</div></div>
+    <div class="chk" id="chk"></div>
+    <p class="hint">Keyboard: Use Arrow Up/Down to reorder, Enter to add/edit, Delete to remove.</p>
+    <div class="tpl" id="tpl"></div>
+    <p class="hint">Demos (loads sample tables + shows expected output):</p>
+    <div class="tpl" id="dem"></div>
+  </section>
+  <div class="rc">
+  <section class="panel">
+    <h2>Preview <span class="tools"><button class="btn p" id="copy">Copy SQL</button></span></h2>
+    <pre><output id="out"><span class="c">-- Your SQL preview appears here</span></output></pre>
+    <div id="explainer"></div>
+    <div id="demo"></div>
+    <details><summary>Sample data used by the demos</summary><div id="data"></div></details>
+  </section>
+  <section class="panel" id="creator">
+    <h2>Template creator <span class="tools"><button class="btn" id="tcCanvas" title="Copy canvas blocks here">&larr; From canvas</button><button class="btn" id="tcClear">Clear</button></span></h2>
+    <input class="search" id="tn" placeholder="Template name, e.g. Duplicate email check" autocomplete="off">
+    <div class="zone" id="tz" role="listbox" aria-label="Template builder"><div class="empty">Drag SQL blocks here to build your template</div></div>
+    <pre id="tp"><span class="c">-- Template preview</span></pre>
+    <div class="tools" style="margin-top:10px"><button class="btn p" id="tcSave">Save template</button><button class="btn" id="tcLoad">Load to canvas</button></div>
+    <p class="hint">Templates keep placeholders dynamic and are saved in this browser.</p>
+    <h2 style="margin-top:14px">My templates <span class="tools"><button class="btn" id="tcExp">Export</button><button class="btn" id="tcImp">Import</button></span></h2>
+    <textarea class="search" id="tj" style="display:none;height:90px" placeholder="Paste exported JSON here, then press Import again"></textarea>
+    <div id="mine"><div class="hint">No saved templates yet.</div></div>
+  </section>
   </div>
+</main>
+<div class="toast" id="toast"></div>
 
-  <script>
-    let blocks = [];
-    let editingId = null;
-    let practiceMode = false;
-    let draggedIndex = null;
+<script>
+const CATS = {
+"DDL":["#dc2626",[
+["CREATE DATABASE","CREATE DATABASE {T}","Create a new database."],
+["CREATE SCHEMA","CREATE SCHEMA {C1}","Create a new schema."],
+["CREATE TABLE","CREATE TABLE {T} (\n  {ID} int,\n  {C1} varchar(255),\n  {NUM} int\n)","Create a table."],
+["CREATE TEMPORARY TABLE","CREATE TEMPORARY TABLE {T} (\n  {ID} int\n)","Create a temp table."],
+["CREATE TABLE IF NOT EXISTS","CREATE TABLE IF NOT EXISTS {T} (\n  {ID} int\n)","Create table if missing."],
+["CREATE TABLE AS SELECT","CREATE TABLE {T} AS\nSELECT * FROM {T2}","Copy table structure and data."],
+["DROP DATABASE","DROP DATABASE {T}","Delete a database."],
+["DROP TABLE","DROP TABLE {T}","Delete a table."],
+["DROP TABLE IF EXISTS","DROP TABLE IF EXISTS {T}","Delete table safely."],
+["TRUNCATE","TRUNCATE TABLE {T}","Remove all rows from table."],
+["ALTER ADD","ALTER TABLE {T}\nADD {C1} varchar(255)","Add a column."],
+["ALTER DROP COLUMN","ALTER TABLE {T}\nDROP COLUMN {C1}","Remove a column."],
+["ALTER MODIFY","ALTER TABLE {T} MODIFY {C1} VARCHAR(150)","Change column type (MySQL)."],
+["RENAME COLUMN","ALTER TABLE {T} RENAME COLUMN {C1} TO {C2}","Rename a column."],
+["RENAME TABLE","ALTER TABLE {T} RENAME TO {T2}","Rename the table."],
+["CREATE SEQUENCE","CREATE SEQUENCE seq_{T} START 1","Create sequence."],
+["CREATE TRIGGER","CREATE TRIGGER trig_{T}\nAFTER INSERT ON {T}\nFOR EACH ROW\nBEGIN\nEND","Create trigger."]
+]],
+"DML":["#059669",[
+["INSERT INTO","INSERT INTO {T} ({ID}, {C1}, {NUM})\nVALUES (1, {V1}, {V2})","Add a new row."],
+["INSERT multiple","INSERT INTO {T} ({ID}, {C1})\nVALUES\n  (2, {V1}),\n  (3, {V1})","Add several rows."],
+["INSERT DEFAULT VALUES","INSERT INTO {T} ({ID})\nDEFAULT VALUES","Insert defaults."],
+["INSERT ... SELECT","INSERT INTO {T} ({ID}, {C1})\nSELECT {ID}, {C1} FROM {T2}","Copy data."],
+["MERGE","MERGE INTO {T} AS t\nUSING {T2} AS s\nON t.{ID} = s.{ID}\nWHEN MATCHED THEN\n  UPDATE SET t.{C1} = s.{C1}\nWHEN NOT MATCHED THEN\n  INSERT ({ID}, {C1}) VALUES (s.{ID}, s.{C1})","Upsert (SQL Server/Oracle)."],
+["ON DUPLICATE KEY (MySQL)","INSERT INTO {T} ({ID}, {C1}) VALUES (1, {V1})\nON DUPLICATE KEY UPDATE {C1} = {V1}","Upsert (MySQL)."],
+["ON CONFLICT (PG)","INSERT INTO {T} ({ID}, {C1}) VALUES (1, {V1})\nON CONFLICT ({ID}) DO UPDATE SET {C1} = {V1}","Upsert (PostgreSQL)."],
+["REPLACE INTO (MySQL)","REPLACE INTO {T} ({ID}, {C1}) VALUES (1, {V1})","Replace row."],
+["UPDATE","UPDATE {T}","Start update."],
+["SET","SET {NUM} = {V2}","Update value."],
+["DELETE","DELETE FROM {T}","Remove rows."]
+]],
+"SELECT":["#4f46e5",[
+["Column","SELECT {C1}","Specific column."],
+["All columns","SELECT *","Every column."],
+["DISTINCT","SELECT DISTINCT {C1}","Unique values."],
+["TOP n (SQL Srv)","SELECT TOP {V2} *","First n rows."],
+["TOP n PERCENT","SELECT TOP {V2} PERCENT *","First n percent."],
+["INTO","SELECT * INTO {T2}\nFROM {T}","Copy to new table."],
+["AS alias","SELECT {C1} AS first_name","Alias."],
+["FROM","FROM {T}","Source table."],
+["FROM + alias","FROM {T} e","Table alias."]
+]],
+"SORT/PAGE":["#d97706",[
+["ORDER BY","ORDER BY {NUM}","Sort ascending."],
+["ORDER BY DESC","ORDER BY {NUM} DESC","Sort descending."],
+["ORDER BY NULLS FIRST","ORDER BY {NUM} ASC NULLS FIRST","Nulls first."],
+["LIMIT (MySQL/PG)","LIMIT {V2}","Max rows."],
+["OFFSET","OFFSET {V2} ROWS","Skip rows."],
+["FETCH NEXT (Oracle/SQL Srv)","FETCH NEXT {V2} ROWS ONLY","Return n rows after offset."]
+]],
+"OPERATORS":["#0891b2",[
+["WHERE =","WHERE {C1} = {V1}","Equals."],
+["AND","  AND {NUM} = {V2}","Both true."],
+["OR","  OR {NUM} = {V2}","Either true."],
+["NOT","WHERE NOT {NUM} = {V2}","Negate."],
+["BETWEEN","WHERE {NUM} BETWEEN {V2} AND {V2}","In range."],
+["LIKE","WHERE {C1} LIKE {V1}","Pattern match."],
+["ILIKE (PG)","WHERE {C1} ILIKE {V1}","Case-insensitive match."],
+["REGEXP (MySQL)","WHERE {C1} REGEXP '^A'","Regex match."],
+["IN","WHERE {C1} IN ({V1}, {V1})","In list."],
+["NOT IN","WHERE {C1} NOT IN ({V1})","Not in list."],
+["IS NULL","WHERE {C1} IS NULL","Is null."],
+["IS NOT NULL","WHERE {C1} IS NOT NULL","Is not null."],
+["EXISTS","WHERE EXISTS (\n  SELECT 1 FROM {T2} WHERE {ID} = 1\n)","Subquery returns row."],
+["ANY","WHERE {NUM} > ANY (SELECT {NUM} FROM {T2})","Greater than any."],
+["ALL","WHERE {NUM} > ALL (SELECT {NUM} FROM {T2})","Greater than all."],
+["IS DISTINCT FROM","WHERE {C1} IS DISTINCT FROM {C2}","Null-safe not equals."]
+]],
+"JOINS":["#7c3aed",[
+["INNER JOIN","INNER JOIN {T2}\nON {T}.{ID} = {T2}.{ID}","Match both."],
+["LEFT JOIN","LEFT JOIN {T2}\nON {T}.{ID} = {T2}.{ID}","All left."],
+["RIGHT JOIN","RIGHT JOIN {T2}\nON {T}.{ID} = {T2}.{ID}","All right."],
+["FULL OUTER JOIN","FULL OUTER JOIN {T2}\nON {T}.{ID} = {T2}.{ID}","Match either."],
+["CROSS JOIN","CROSS JOIN {T2}","Cartesian."],
+["NATURAL JOIN","NATURAL JOIN {T2}","Auto join."],
+["JOIN USING","JOIN {T2} USING ({ID})","Shared col name."],
+["LATERAL (PG)","LEFT JOIN LATERAL (SELECT * FROM {T2} WHERE {ID} = {T}.{ID}) t2 ON true","Lateral join."],
+["CROSS APPLY (SQL Srv)","CROSS APPLY (SELECT * FROM {T2} WHERE {ID} = {T}.{ID}) t2","Apply."],
+["Anti-join","LEFT JOIN {T2} ON {T}.{ID} = {T2}.{ID}\nWHERE {T2}.{ID} IS NULL","Missing in right."],
+["Self join","JOIN {T} m ON e.{FK} = m.{ID}","Join to self."]
+]],
+"SET OPS":["#14b8a6",[
+["UNION","SELECT {C1} FROM {T}\nUNION\nSELECT {C1} FROM {T2}","Combine unique."],
+["UNION ALL","SELECT {C1} FROM {T}\nUNION ALL\nSELECT {C1} FROM {T2}","Combine all."],
+["INTERSECT","SELECT {C1} FROM {T}\nINTERSECT\nSELECT {C1} FROM {T2}","In both."],
+["EXCEPT","SELECT {C1} FROM {T}\nEXCEPT\nSELECT {C1} FROM {T2}","In first not second."],
+["MINUS (Oracle)","SELECT {C1} FROM {T}\nMINUS\nSELECT {C1} FROM {T2}","In first not second."]
+]],
+"SUBQUERIES":["#0284c7",[
+["Scalar","WHERE {NUM} > (SELECT AVG({NUM}) FROM {T})","Calculated value."],
+["IN subquery","WHERE {ID} IN (SELECT {ID} FROM {T2} WHERE {NUM} > {V2})","List subquery."],
+["EXISTS correlated","WHERE EXISTS (\n  SELECT 1 FROM {T2} c WHERE c.{ID} = s.{ID}\n)","Correlated subquery."],
+["Derived table","FROM (\n  SELECT {ID} FROM {T}\n) AS sub","Subquery in FROM."],
+["WITH (CTE)","WITH cte AS (\n  SELECT * FROM {T}\n)","Common Table Expression."],
+["Recursive CTE","WITH RECURSIVE cnt(n) AS (\n  SELECT 1\n  UNION ALL\n  SELECT n+1 FROM cnt WHERE n < 5\n)","Recursive CTE."],
+["FROM CTE","FROM cte","Read CTE."]
+]],
+"AGGREGATE":["#db2777",[
+["COUNT(*)","SELECT COUNT(*)","Count rows."],
+["COUNT(col)","SELECT COUNT({C1})","Count non-null."],
+["COUNT(DISTINCT)","SELECT COUNT(DISTINCT {C1})","Count unique."],
+["SUM","SELECT SUM({NUM})","Total."],
+["AVG","SELECT AVG({NUM})","Average."],
+["MIN, MAX","SELECT MIN({NUM}), MAX({NUM})","Min and Max."],
+["GROUP_CONCAT (MySQL)","SELECT GROUP_CONCAT({C1})","Join strings."],
+["STRING_AGG (PG)","SELECT STRING_AGG({C1}, ',')","Join strings."],
+["LISTAGG (Oracle)","SELECT LISTAGG({C1}, ',') WITHIN GROUP (ORDER BY {C1})","Join strings."],
+["ARRAY_AGG","SELECT ARRAY_AGG({C1})","Array."],
+["STDDEV, VARIANCE","SELECT STDDEV({NUM}), VARIANCE({NUM})","Stats."],
+["FILTER (PG)","SELECT SUM({NUM}) FILTER (WHERE {NUM} > {V2})","Filtered aggregate."],
+["GROUP BY","GROUP BY {GRP}","Group rows."],
+["GROUP BY ROLLUP","GROUP BY ROLLUP({GRP}, {C1})","Rollup."],
+["GROUP BY CUBE","GROUP BY CUBE({GRP}, {C1})","Cube."],
+["GROUPING SETS","GROUP BY GROUPING SETS(({GRP}), ({C1}))","Grouping sets."],
+["HAVING","HAVING COUNT({ID}) > {V2}","Filter groups."]
+]],
+"WINDOW":["#6366f1",[
+["ROW_NUMBER","ROW_NUMBER() OVER (PARTITION BY {GRP} ORDER BY {NUM} DESC)","Number rows."],
+["RANK","RANK() OVER (ORDER BY {NUM} DESC)","Rank (with gaps)."],
+["DENSE_RANK","DENSE_RANK() OVER (ORDER BY {NUM} DESC)","Rank (no gaps)."],
+["NTILE","NTILE(4) OVER (ORDER BY {NUM})","Percentiles."],
+["LAG","LAG({NUM}, 1) OVER (ORDER BY {DATE})","Prev row."],
+["LEAD","LEAD({NUM}, 1) OVER (ORDER BY {DATE})","Next row."],
+["FIRST_VALUE","FIRST_VALUE({C1}) OVER (PARTITION BY {GRP} ORDER BY {DATE})","First."],
+["LAST_VALUE","LAST_VALUE({C1}) OVER (PARTITION BY {GRP} ORDER BY {DATE} ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)","Last."],
+["SUM OVER","SUM({NUM}) OVER (PARTITION BY {GRP} ORDER BY {DATE})","Running total."],
+["AVG OVER","AVG({NUM}) OVER (PARTITION BY {GRP})","Group average."],
+["ROWS BETWEEN","ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING","Window frame."],
+["RANGE BETWEEN","RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW","Logical frame."],
+["WINDOW","WINDOW w AS (PARTITION BY {GRP} ORDER BY {NUM})","Named window."]
+]],
+"STRING":["#ec4899",[
+["CONCAT","CONCAT({C1}, ' ', {C2})","Join."],
+["CONCAT_WS","CONCAT_WS(', ', {C1}, {C2})","Join with separator."],
+["||","{C1} || ' ' || {C2}","Concat operator."],
+["LENGTH / LEN","LENGTH({C1})","Length."],
+["UPPER, LOWER","UPPER({C1}), LOWER({C1})","Case."],
+["TRIM","TRIM({C1})","Trim spaces."],
+["SUBSTRING","SUBSTRING({C1} FROM 1 FOR 3)","Substring."],
+["LEFT, RIGHT","LEFT({C1}, 3), RIGHT({C1}, 3)","Left/right."],
+["REPLACE","REPLACE({C1}, 'a', 'b')","Replace."],
+["REVERSE","REVERSE({C1})","Reverse."],
+["POSITION / CHARINDEX","POSITION('a' IN {C1})","Find."],
+["LPAD, RPAD","LPAD({C1}, 5, '0')","Pad."],
+["SPLIT_PART (PG)","SPLIT_PART({C1}, ',', 1)","Split."]
+]],
+"MATH":["#f59e0b",[
+["ROUND","ROUND({NUM}, 2)","Round."],
+["CEIL, FLOOR","CEIL({NUM}), FLOOR({NUM})","Ceil/Floor."],
+["ABS, MOD","ABS({NUM}), MOD({NUM}, 2)","Abs/Mod."],
+["POWER, SQRT","POWER({NUM}, 2), SQRT({NUM})","Power/Sqrt."],
+["GREATEST, LEAST","GREATEST({NUM}, {V2}), LEAST({NUM}, {V2})","Greatest/Least."],
+["RAND / RANDOM","RAND()","Random."]
+]],
+"DATE":["#10b981",[
+["CURRENT_DATE","CURRENT_DATE","Today."],
+["CURRENT_TIMESTAMP","CURRENT_TIMESTAMP","Now."],
+["NOW(), GETDATE()","NOW()","Now function."],
+["YEAR, MONTH, DAY","YEAR({DATE}), MONTH({DATE})","Extract parts."],
+["EXTRACT","EXTRACT(MONTH FROM {DATE})","Extract."],
+["DATE_TRUNC (PG)","DATE_TRUNC('month', {DATE})","Truncate."],
+["DATE_ADD (MySQL)","DATE_ADD({DATE}, INTERVAL 1 DAY)","Add interval."],
+["DATEADD (SQL Srv)","DATEADD(day, 1, {DATE})","Add interval."],
+["DATEDIFF","DATEDIFF({DATE}, CURRENT_DATE)","Diff."],
+["INTERVAL","{DATE} + INTERVAL '1 day'","Interval arithmetic."],
+["DATE_FORMAT (MySQL)","DATE_FORMAT({DATE}, '%Y-%m-%d')","Format."],
+["TO_CHAR (PG/Oracle)","TO_CHAR({DATE}, 'YYYY-MM-DD')","Format string."],
+["TO_DATE","TO_DATE({V1}, 'YYYY-MM-DD')","Parse."],
+["AGE (PG)","AGE(CURRENT_DATE, {DATE})","Age interval."]
+]],
+"CONV/NULL":["#8b5cf6",[
+["CAST","CAST({NUM} AS VARCHAR)","Cast type."],
+["CONVERT (SQL Srv)","CONVERT(VARCHAR, {DATE}, 120)","Convert."],
+["TRY_CAST (SQL Srv)","TRY_CAST({V1} AS INT)","Try cast."],
+["COALESCE","COALESCE({C2}, 'N/A')","First non-null."],
+["NULLIF","NULLIF({NUM}, 0)","Null if equal."],
+["IFNULL / NVL","IFNULL({C2}, 'N/A')","If null."],
+["IIF (SQL Srv)","IIF({NUM} > {V2}, 'High', 'Low')","Inline if."],
+["CASE (Searched)","CASE\n  WHEN {NUM} > {V2} THEN 'High'\n  ELSE 'Low'\nEND","Case when."],
+["CASE (Simple)","CASE {GRP}\n  WHEN 1 THEN 'A'\n  ELSE 'B'\nEND","Switch."],
+["DECODE (Oracle)","DECODE({GRP}, 1, 'A', 'B')","Decode."]
+]],
+"CONSTRAINTS":["#65a30d",[
+["Full example","CREATE TABLE {T} (\n  {ID} INT PRIMARY KEY,\n  {C1} VARCHAR(100) NOT NULL,\n  {C2} VARCHAR(100) UNIQUE,\n  {NUM} INT CHECK ({NUM} >= 18),\n  {GRP} INT,\n  FOREIGN KEY ({GRP}) REFERENCES deps(id)\n)","Example."],
+["PRIMARY KEY","  {ID} INT PRIMARY KEY,","PK."],
+["FOREIGN KEY","  FOREIGN KEY ({GRP}) REFERENCES deps(id)","FK."],
+["ON DELETE CASCADE","  ON DELETE CASCADE","Cascade delete."],
+["ON UPDATE SET NULL","  ON UPDATE SET NULL","Set null on update."],
+["UNIQUE","  {C2} VARCHAR(100) UNIQUE,","Unique."],
+["NOT NULL","  {C1} VARCHAR(100) NOT NULL,","Not null."],
+["CHECK","  {NUM} INT CHECK ({NUM} >= 18),","Check condition."],
+["DEFAULT","  salary DECIMAL(10,2) DEFAULT 0,","Default value."],
+["ADD CONSTRAINT","ALTER TABLE {T} ADD CONSTRAINT pk_{T} PRIMARY KEY ({ID})","Add constraint."],
+["DROP CONSTRAINT","ALTER TABLE {T} DROP CONSTRAINT pk_{T}","Drop constraint."]
+]],
+"DATA TYPES":["#a855f7",[
+["INT, BIGINT","{NUM} INT","Integers."],
+["DECIMAL, FLOAT","{NUM} DECIMAL(10, 2)","Numbers."],
+["BOOLEAN","is_active BOOLEAN","Boolean."],
+["CHAR, VARCHAR","{C1} VARCHAR(255)","Strings."],
+["TEXT","description TEXT","Long string."],
+["DATE, DATETIME","{DATE} DATETIME","Date/Time."],
+["JSON","data JSON","JSON format."],
+["UUID","id UUID","UUID."],
+["ENUM","status ENUM('active', 'inactive')","Enum."]
+]],
+"INDEXES":["#ef4444",[
+["CREATE INDEX","CREATE INDEX idx_name ON {T}({C1})","Create index."],
+["CREATE UNIQUE INDEX","CREATE UNIQUE INDEX idx_uniq ON {T}({C2})","Unique index."],
+["DROP INDEX","DROP INDEX idx_name","Drop index."],
+["EXPLAIN","EXPLAIN SELECT * FROM {T}","Explain plan."],
+["EXPLAIN ANALYZE","EXPLAIN ANALYZE SELECT * FROM {T}","Execute and explain."],
+["SHOW INDEX (MySQL)","SHOW INDEX FROM {T}","List indexes."]
+]],
+"VIEWS":["#0ea5e9",[
+["CREATE VIEW","CREATE VIEW v_name AS\nSELECT * FROM {T}","Create view."],
+["CREATE OR REPLACE VIEW","CREATE OR REPLACE VIEW v_name AS\nSELECT * FROM {T}","Replace view."],
+["ALTER VIEW","ALTER VIEW v_name AS\nSELECT * FROM {T}","Alter view."],
+["DROP VIEW","DROP VIEW v_name","Drop view."],
+["CREATE MAT VIEW","CREATE MATERIALIZED VIEW mv_name AS\nSELECT * FROM {T}","Materialized view."],
+["REFRESH MAT VIEW","REFRESH MATERIALIZED VIEW mv_name","Refresh data."]
+]],
+"ACCESS/TX":["#475569",[
+["START TRANSACTION","START TRANSACTION;","Start TX (MySQL)."],
+["BEGIN","BEGIN;","Begin TX."],
+["COMMIT","COMMIT;","Commit."],
+["ROLLBACK","ROLLBACK;","Rollback."],
+["SAVEPOINT","SAVEPOINT sp1;","Savepoint."],
+["ROLLBACK TO","ROLLBACK TO sp1;","Rollback to savepoint."],
+["RELEASE SAVEPOINT","RELEASE SAVEPOINT sp1;","Release savepoint."],
+["SET ISOLATION LEVEL","SET TRANSACTION ISOLATION LEVEL READ COMMITTED;","Isolation."],
+["LOCK TABLE","LOCK TABLE {T} IN SHARE MODE;","Lock."],
+["FOR UPDATE","SELECT * FROM {T} FOR UPDATE;","Row lock."]
+]],
+"SECURITY":["#84cc16",[
+["CREATE USER","CREATE USER 'usr'@'localhost' IDENTIFIED BY 'pass'","Create user."],
+["ALTER USER","ALTER USER 'usr' IDENTIFIED BY 'newpass'","Alter user."],
+["DROP USER","DROP USER 'usr'","Drop user."],
+["GRANT","GRANT SELECT, INSERT ON {T} TO 'usr'","Grant perms."],
+["GRANT ALL","GRANT ALL PRIVILEGES ON {T} TO 'usr'","Grant all."],
+["WITH GRANT OPTION","GRANT SELECT ON {T} TO 'usr' WITH GRANT OPTION","Grant option."],
+["REVOKE","REVOKE SELECT ON {T} FROM 'usr'","Revoke."],
+["CREATE ROLE","CREATE ROLE 'my_role'","Create role."],
+["SHOW GRANTS","SHOW GRANTS FOR 'usr'","Show grants."]
+]],
+"PROGRAMMING":["#64748b",[
+["PROCEDURE","CREATE PROCEDURE proc()\nBEGIN\nEND","Proc."],
+["FUNCTION","CREATE FUNCTION func() RETURNS INT\nBEGIN\n  RETURN 1;\nEND","Func."],
+["TRIGGER","CREATE TRIGGER trig\nAFTER INSERT ON {T}\nFOR EACH ROW\nBEGIN\nEND","Trigger."],
+["DECLARE","DECLARE @var INT;","Declare var."],
+["SET variable","SET @var = {V2};","Set var."],
+["IF / ELSE","IF @var > 0\n  PRINT 'Pos'\nELSE\n  PRINT 'Neg'","If block."],
+["WHILE","WHILE @var < 10\nBEGIN\n  SET @var = @var + 1;\nEND","Loop."],
+["CURSOR","DECLARE cur CURSOR FOR SELECT {ID} FROM {T};\nOPEN cur;\nFETCH NEXT FROM cur INTO @id;\nCLOSE cur;","Cursor."],
+["TRY/CATCH (SQL Srv)","BEGIN TRY\nEND TRY\nBEGIN CATCH\nEND CATCH","Error block."],
+["RAISE / THROW","THROW 51000, 'Error', 1;","Throw error."],
+["Dynamic SQL","EXEC('SELECT * FROM ' + @tableName);","Dynamic."]
+]],
+"METADATA":["#737373",[
+["SHOW DATABASES","SHOW DATABASES","Show DBs."],
+["SHOW TABLES","SHOW TABLES","Show tables."],
+["SHOW COLUMNS","SHOW COLUMNS FROM {T}","Show columns."],
+["DESCRIBE","DESCRIBE {T}","Describe table."],
+["INFO SCHEMA","SELECT * FROM INFORMATION_SCHEMA.TABLES","Info schema."],
+["USE","USE my_db","Use DB."],
+["VERSION","SELECT VERSION()","Version."]
+]],
+"QA/QUALITY":["#0369a1",[
+["Find duplicates","SELECT {C2}, COUNT(*)\nFROM {T}\nGROUP BY {C2}\nHAVING COUNT(*) > 1","Duplicates."],
+["Delete duplicates","WITH cte AS (\n  SELECT {ID}, ROW_NUMBER() OVER(PARTITION BY {C2} ORDER BY {ID}) AS rn\n  FROM {T}\n)\nDELETE FROM {T} WHERE {ID} IN (SELECT {ID} FROM cte WHERE rn > 1)","Delete duplicates."],
+["NULL check","SELECT * FROM {T} WHERE {C2} IS NULL","Find nulls."],
+["Orphan check","SELECT t1.* FROM {T2} t1\nLEFT JOIN {T} t2 ON t1.{FK} = t2.{ID}\nWHERE t2.{ID} IS NULL","Orphans."],
+["Row count diff","SELECT (SELECT COUNT(*) FROM {T}) AS cnt1, (SELECT COUNT(*) FROM {T2}) AS cnt2","Compare row counts."],
+["Data in A not B","SELECT {ID} FROM {T}\nEXCEPT\nSELECT {ID} FROM {T2}","A minus B."],
+["Min/Max/Avg","SELECT MIN({NUM}), AVG({NUM}), MAX({NUM}) FROM {T}","Stat check."],
+["Date range","SELECT MIN({DATE}), MAX({DATE}) FROM {T}","Date range."],
+["Gaps in IDs","SELECT a.{ID}+1 AS gap_start, MIN(b.{ID})-1 AS gap_end\nFROM {T} a\nLEFT JOIN {T} b ON a.{ID} < b.{ID}\nGROUP BY a.{ID}\nHAVING a.{ID}+1 < MIN(b.{ID})","Find gaps."],
+["Top-N per group","WITH cte AS (\n  SELECT *, ROW_NUMBER() OVER(PARTITION BY {GRP} ORDER BY {NUM} DESC) AS rn\n  FROM {T}\n)\nSELECT * FROM cte WHERE rn <= 3","Top N."],
+["Nth highest","SELECT MAX({NUM}) FROM {T} WHERE {NUM} < (SELECT MAX({NUM}) FROM {T})","Nth highest."],
+["Running total","SELECT {ID}, {NUM}, SUM({NUM}) OVER(ORDER BY {ID}) AS total\nFROM {T}","Running sum."],
+["Pivot with CASE","SELECT {GRP},\n  SUM(CASE WHEN {C1}='A' THEN 1 ELSE 0 END) AS cnt_a\nFROM {T} GROUP BY {GRP}","Pivot."],
+["Unpivot","SELECT {ID}, 'C1' AS col, {C1} AS val FROM {T}\nUNION ALL\nSELECT {ID}, 'C2', {C2} FROM {T}","Unpivot."],
+["Pagination","SELECT * FROM {T} ORDER BY {ID} OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY","Pagination."]
+]],
+"JSON/TEXT":["#0f766e",[
+["JSON_EXTRACT","JSON_EXTRACT(jcol, '$.key')","Extract JSON."],
+["JSON ->","jcol->'$.key'","Extract JSON (arrow)."],
+["JSON ->> (PG)","jcol->>'key'","Extract JSON text."],
+["JSON_VALUE","JSON_VALUE(jcol, '$.key')","JSON value."],
+["MATCH AGAINST","MATCH({C1}) AGAINST({V1})","Match against."],
+["CONTAINS","CONTAINS({C1}, {V1})","Contains."],
+["to_tsvector (PG)","to_tsvector({C1}) @@ plainto_tsquery({V1})","Full text search."]
+]]
+};
 
-    const blockColors = {
-      'SELECT': 'border-indigo-500/50 bg-indigo-500/20 text-indigo-100',
-      'FROM': 'border-emerald-500/50 bg-emerald-500/20 text-emerald-100',
-      'WHERE': 'border-amber-500/50 bg-amber-500/20 text-amber-100',
-      'ORDER BY': 'border-pink-500/50 bg-pink-500/20 text-pink-100',
-      'LIMIT': 'border-cyan-500/50 bg-cyan-500/20 text-cyan-100',
-      'JOIN': 'border-teal-500/50 bg-teal-500/20 text-teal-100',
-      'GROUP BY': 'border-fuchsia-500/50 bg-fuchsia-500/20 text-fuchsia-100',
-      'WITH': 'border-gray-500/50 bg-gray-500/20 text-gray-100',
-      'INSERT': 'border-blue-500/50 bg-blue-500/20 text-blue-100',
-      'UPDATE': 'border-orange-500/50 bg-orange-500/20 text-orange-100',
-      'DELETE': 'border-red-500/50 bg-red-500/20 text-red-100',
-      'CREATE TABLE': 'border-purple-500/50 bg-purple-500/20 text-purple-100',
+const TPL = [
+  ["SELECT + WHERE + AND", ["SELECT {C1}", "FROM {T}", "WHERE {C1} = {V1}", "  AND {NUM} = {V2}"]],
+  ["Group + HAVING", ["SELECT COUNT({ID}), {GRP}", "FROM {T}", "GROUP BY {GRP}", "HAVING COUNT({ID}) > 2"]],
+  ["Pagination", ["SELECT {C1}", "FROM {T}", "ORDER BY {NUM}", "OFFSET 10 ROWS", "FETCH NEXT 10 ROWS ONLY"]],
+  ["INNER JOIN", ["SELECT {C1}", "FROM {T}", "INNER JOIN {T2}\nON {T}.{ID} = {T2}.{ID}"]],
+  ["CASE WHEN", ["SELECT {C1},\n  CASE WHEN {NUM} > {V2} THEN 'High'\n       ELSE 'Low'\n  END AS grp", "FROM {T}"]],
+  ["CTE (WITH)", ["WITH cte AS (\n  SELECT *\n  FROM {T}\n  WHERE {NUM} > {V2}\n)", "SELECT *", "FROM cte", "ORDER BY {NUM} DESC"]],
+  ["ROUND average", ["SELECT ROUND(AVG({NUM}), 2) AS avg_val", "FROM {T}"]],
+  ["Create table", ["CREATE TABLE {T} (\n  {ID} int,\n  {C1} varchar(255),\n  {NUM} int\n)"]],
+  ["Update row", ["UPDATE {T}", "SET {NUM} = {V2}", "WHERE {C1} = {V1}"]],
+  ["Duplicate emails", ["SELECT {C2}, COUNT(*) AS total_count", "FROM {T}", "GROUP BY {C2}", "HAVING COUNT(*) > 1"]]
+];
+
+const $ = id => document.getElementById(id);
+let items = [], hist = [], cat = "SELECT";
+const DESC = {}; Object.values(CATS).forEach(([c, l]) => l.forEach(([a, b, d]) => DESC[b] = d));
+
+const RANKS = [
+  [/^WITH/, 0, "WITH"],
+  [/^SELECT/, 1, "SELECT"], [/^UPDATE/, 1, "UPDATE"], [/^INSERT/, 1, "INSERT"], [/^DELETE/, 1, "DELETE"],
+  [/^SET/, 2, "SET"],
+  [/^FROM/, 3, "FROM"],
+  [/^((INNER|LEFT|RIGHT|CROSS|FULL OUTER|NATURAL)s+)?JOIN/, 4, "JOIN"],
+  [/^WHERE/, 5, "WHERE"],
+  [/^GROUP BY/, 6, "GROUP BY"],
+  [/^HAVING/, 7, "HAVING"],
+  [/^ORDER BY/, 8, "ORDER BY"],
+  [/^(LIMIT|OFFSET|FETCH)/, 9, "LIMIT/OFFSET/FETCH"]
+];
+
+function checkOrder() {
+  const w = []; let prev = -1, pn = "", depth = 0;
+  items.forEach(it => {
+    let sql = (it.custom !== null) ? it.custom : it.sql;
+    if (depth > 0 || /^\s/.test(sql) || sql.startsWith(")")) {
+      depth += (sql.match(/\(/g) || []).length - (sql.match(/\)/g) || []).length;
+      return;
+    }
+    const r = RANKS.find(x => x[0].test(sql));
+    if (!r) {
+      prev = -1; pn = "";
+      depth += (sql.match(/\(/g) || []).length - (sql.match(/\)/g) || []).length;
+      return;
+    }
+    if (r[1] < prev) w.push(`${r[2]} should come before ${pn}.`);
+    else { prev = r[1]; pn = r[2]; }
+    depth += (sql.match(/\(/g) || []).length - (sql.match(/\)/g) || []).length;
+  });
+  if (!$("t").value.trim() && items.some(i => i.sql.includes("{T}"))) w.push("Type a table name at the top to replace <table_name>.");
+  const has = re => items.some(i => re.test((i.custom !== null) ? i.custom : i.sql));
+  if (has(/^HAVING\b/) && !has(/GROUP BY/)) w.push("HAVING needs a GROUP BY.");
+  if (has(/^SET\b/) && !has(/^UPDATE\b/)) w.push("SET only works after UPDATE.");
+  if (has(/^(UPDATE|DELETE)\b/) && !has(/WHERE/)) w.push("UPDATE/DELETE without WHERE changes EVERY row.");
+  if (has(/^(OFFSET|FETCH)\b/) && !has(/^ORDER BY/)) w.push("OFFSET/FETCH needs an ORDER BY.");
+  if (has(/^SELECT .*\b(COUNT|SUM|AVG|MIN|MAX)\(/) && has(/^SELECT [a-z_]+,/) && !has(/GROUP BY/) && !has(/OVER/)) w.push("Mixing a column with an aggregate usually needs GROUP BY.");
+  if (has(/^CREATE TABLE/) && !items.map(i => (i.custom!==null?i.custom:i.sql)).join("\n").includes("PRIMARY KEY")) w.push("CREATE TABLE has no PRIMARY KEY.");
+  $("chk").innerHTML = !items.length ? "" : w.length ? [...new Set(w)].map(x => `<div class="w">⚠ ${esc(x)}</div>`).join("") : '<div class="o">✓ Clause order looks good</div>';
+}
+
+const KWL = "AUTO_INCREMENT|IDENTITY|SERIAL|CONSTRAINT|CASCADE|GENERATED|ALWAYS|PRIMARY KEY|FOREIGN KEY|NOT NULL|START TRANSACTION|SET TRANSACTION|SHOW DATABASES|SHOW TABLES|RENAME COLUMN|MERGE|USING|MATCHED|USE|DESCRIBE|MODIFY|RENAME|REFERENCES|UNIQUE|CHECK|DEFAULT|NOT|INT|VARCHAR|DECIMAL|DATABASES|CASE|WHEN|THEN|ELSE|END|WITH|CROSS|GROUP BY|ORDER BY|PARTITION BY|IS NOT NULL|IS NULL|FULL OUTER|UNION ALL|SELECT|DISTINCT|TOP|PERCENT|INTO|FROM|WHERE|AND|OR|BETWEEN|LIKE|IN|EXISTS|CREATE|DATABASE|TABLE|INDEX|VIEW|DROP|UPDATE|SET|DELETE|ALTER|ADD|COLUMN|HAVING|DESC|ASC|OFFSET|ROWS|FETCH|NEXT|ONLY|INNER|LEFT|RIGHT|JOIN|ON|UNION|GRANT|REVOKE|TO|SAVEPOINT|COMMIT|ROLLBACK|TRUNCATE|AS|OVER|LIMIT|INSERT|VALUES|SCHEMA|TEMPORARY|IF|SEQUENCE|TRIGGER|EXCEPT|INTERSECT|MINUS|ANY|ALL|ILIKE|REGEXP|SIMILAR|LATERAL|APPLY|ROLLUP|CUBE|WINDOW|BOOLEAN|TEXT|DATE|DATETIME|TIMESTAMP|JSON|UUID|ENUM|EXPLAIN|ANALYZE|ROLE|PRIVILEGES|PROCEDURE|FUNCTION|DECLARE|WHILE|CURSOR|FETCH|CLOSE|TRY|CATCH|THROW|EXEC|REPLACE";
+const RX = new RegExp("('[^']*')|\\b(\\d+)\\b|\\b(ROUND|COUNT|AVG|SUM|MAX|MIN|MONTH|YEAR|LEFT|RIGHT|ROW_NUMBER|RANK|DENSE_RANK|NTILE|LAG|LEAD|FIRST_VALUE|LAST_VALUE|CONCAT|LENGTH|UPPER|LOWER|TRIM|SUBSTRING|POSITION|COALESCE|CAST|CONVERT|JSON_EXTRACT|MATCH)(?=\\()|\\b(" + KWL + ")\\b", "gi");
+const hl = sql => esc(sql).replace(RX, (m, s, n, f, k) => s ? `<i class="s">${m}</i>` : n ? `<i class="n">${m}</i>` : f ? `<i class="f">${m}</i>` : `<i class="k">${m}</i>`);
+
+const phKeys = ["{T2}", "{T}", "{ID}", "{FK}", "{C1}", "{C2}", "{NUM}", "{DATE}", "{GRP}", "{V1}", "{V2}"];
+let ph = {}, missing = [];
+function updatePh() {
+  missing = [];
+  const get = (id, def, isId) => {
+    let v = $(id).value.trim();
+    if (!v) { missing.push(id); return `<${def}>`; }
+    return isId ? v.replace(/[^\w.]/g, "") : v;
+  };
+  ph = {
+    "{T2}": get("t2", "2nd_table", true),
+    "{T}": get("t", "table_name", true),
+    "{ID}": get("id", "id_col", true),
+    "{FK}": get("fk", "fk_col", true),
+    "{C1}": get("c1", "col1", true),
+    "{C2}": get("c2", "col2", true),
+    "{NUM}": get("num", "num_col", true),
+    "{DATE}": get("date", "date_col", true),
+    "{GRP}": get("grp", "grp_col", true),
+    "{V1}": get("v1", "text_val", false),
+    "{V2}": get("v2", "num_val", false)
+  };
+}
+
+function sub(sql) {
+  let s = sql;
+  for (let k of phKeys) s = s.replaceAll(k, ph[k]);
+  const d = $("dialect").value;
+  if (d === "sqlserver" && /^LIMIT\b/i.test(s)) s = s.replace(/^LIMIT\b/i, "TOP");
+  if (d === "oracle" && /^LIMIT\b/i.test(s)) s = s.replace(/^LIMIT\b/i, "FETCH FIRST") + " ROWS ONLY";
+  return s;
+}
+
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function build() {
+  if (!items.length) return "";
+  let s = items.map(i => (i.custom !== null) ? i.custom : sub(i.sql)).join("\n").replace(/\s+$/, "");
+  // Dynamic Beautifier: Ensure logical operators align properly
+  s = s.replace(/\n(AND|OR)\s/gi, "\n  $1 ");
+  return s.endsWith(";") ? s : s + ";";
+}
+
+function save() { demoOut = null; onEdit(); hist.push(JSON.stringify(items)); if (hist.length > 50) hist.shift(); }
+
+function makeBlk(i, idx) {
+  const d = document.createElement("div"); d.className = "blk"; d.draggable = true;
+  d.tabIndex = 0; d.setAttribute("role", "option"); d.setAttribute("aria-grabbed", "false");
+  let txt = (i.custom !== null) ? i.custom : sub(i.sql);
+  d.innerHTML = `<span>${esc(txt)}</span>`;
+  const b = document.createElement("button"); b.textContent = "×"; b.title = "Remove"; b.tabIndex = -1;
+  b.onclick = (e) => { e.stopPropagation(); save(); items.splice(idx, 1); render(); }; 
+  d.appendChild(b);
+  d.onclick = () => {
+    d.contentEditable = true; d.focus();
+    const sel = window.getSelection(); sel.selectAllChildren(d.firstChild);
+    d.onblur = () => {
+      d.contentEditable = false;
+      const nt = d.firstChild.textContent.trim();
+      if (nt !== txt) { save(); items[idx].custom = nt; render(); }
     };
-
-    const defaultValues = {
-      'SELECT': '* (or name, salary, age)',
-      'FROM': 'employees',
-      'WHERE': "name = 'Bob' AND age > 50",
-      'ORDER BY': 'salary DESC',
-      'LIMIT': '10',
-      'JOIN': 'INNER JOIN departments d ON d.id = employees.dept_id',
-      'GROUP BY': 'department_id',
-      'WITH': 'recent_hires AS (SELECT * FROM employees WHERE age < 30)',
-      'INSERT': "INTO employees (name, age) VALUES ('Alice', 30)",
-      'UPDATE': "employees SET salary = 60000",
-      'DELETE': 'FROM employees',
-      'CREATE TABLE': ''
-    };
-
-    document.getElementById('dialectSelect').addEventListener('change', updateAll);
-
-    function addBlock(type) {
-      blocks.push({
-        id: Date.now(),
-        type: type,
-        value: defaultValues[type]
-      });
-      renderCanvas();
+  };
+  d.onkeydown = e => {
+    if (d.isContentEditable) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); d.blur(); }
+      return;
     }
-
-    function removeBlock(id, event) {
-      event.stopPropagation();
-      blocks = blocks.filter(b => b.id !== id);
-      renderCanvas();
+    if (e.key === "Enter") {
+       e.preventDefault();
+       if (idx == null) {
+          save(); items.push({ sql: i.sql, custom: null }); render(); toast("Added to canvas");
+       } else {
+          d.click();
+       }
     }
-
-    function openEdit(id) {
-      editingId = id;
-      const block = blocks.find(b => b.id === id);
-      document.getElementById('editInput').value = block.value;
-      document.getElementById('editModal').style.display = 'flex';
-      setTimeout(() => document.getElementById('editInput').focus(), 50);
-    }
-
-    function closeEdit() {
-      document.getElementById('editModal').style.display = 'none';
-      editingId = null;
-    }
-
-    function saveEdit() {
-      if (editingId) {
-        const block = blocks.find(b => b.id === editingId);
-        block.value = document.getElementById('editInput').value;
-        renderCanvas();
+    if (idx != null) {
+      if (e.key === "Delete" || e.key === "Backspace") {
+         e.preventDefault(); save(); items.splice(idx, 1); render(); toast("Removed");
       }
-      closeEdit();
-    }
-
-    function applyVariables(text) {
-      const colName = document.getElementById('colName').value.trim();
-      const colSalary = document.getElementById('colSalary').value.trim();
-      const colAge = document.getElementById('colAge').value.trim();
-
-      let res = text;
-      if (colName) res = res.replace(/name/g, colName);
-      if (colSalary) res = res.replace(/salary/g, colSalary);
-      if (colAge) res = res.replace(/age/g, colAge);
-      return res;
-    }
-
-    // Drag and drop event handlers
-    function handleDragStart(e, index) {
-      draggedIndex = index;
-      e.dataTransfer.effectAllowed = 'move';
-      e.target.classList.add('dragging');
-    }
-
-    function handleDragOver(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      
-      const target = e.target.closest('.canvas-block');
-      if(target) {
-        // Optional visual indicator
+      if (e.key === "ArrowUp" && idx > 0) {
+         e.preventDefault(); save();
+         const temp = items[idx-1]; items[idx-1] = items[idx]; items[idx] = temp; render(); toast("Moved up");
+      }
+      if (e.key === "ArrowDown" && idx < items.length - 1) {
+         e.preventDefault(); save();
+         const temp = items[idx+1]; items[idx+1] = items[idx]; items[idx] = temp; render(); toast("Moved down");
       }
     }
+  };
+  d.ondragstart = e => { e.dataTransfer.setData("text/plain", JSON.stringify({ from: idx == null ? "pal" : "cv", i: idx, sql: i.sql })); e.dataTransfer.effectAllowed = idx == null ? "copy" : "move"; };
+  d.ondragover = e => { e.preventDefault(); d.classList.add("drop"); };
+  d.ondragleave = () => d.classList.remove("drop");
+  d.ondrop = e => { e.preventDefault(); e.stopPropagation(); d.classList.remove("drop"); handleDrop(e, idx); };
+  return d;
+}
 
-    function handleDrop(e, targetIndex) {
-      e.preventDefault();
-      if (draggedIndex !== null && draggedIndex !== targetIndex) {
-        const item = blocks.splice(draggedIndex, 1)[0];
-        blocks.splice(targetIndex, 0, item);
-        renderCanvas();
-      }
-    }
+function render() {
+  updatePh();
+  const c = $("canvas"); c.innerHTML = "";
+  if (!items.length) c.innerHTML = '<div class="empty">Drop SQL blocks here<br>Select a block and press Enter to edit, or Delete to remove</div>';
+  items.forEach((item, i) => c.appendChild(makeBlk(item, i)));
+  checkOrder();
+  const o = build();
+  $("out").innerHTML = o ? hl(o) : '<span class="c">-- Your SQL preview appears here</span>';
+  explain(o);
+}
 
-    function handleDragEnd(e) {
-      e.target.classList.remove('dragging');
-      draggedIndex = null;
-    }
+function drop(e, at, tag) {
+  let data; try { data = JSON.parse(e.dataTransfer.getData("text/plain")); } catch { return; }
+  const list = tag === "cv" ? items : tpl;
+  if (tag === "cv") save();
+  if (data.from === tag) {
+    const [m] = list.splice(data.i, 1);
+    let idx = at == null ? list.length : at;
+    if (at != null && data.i < at) idx = at - 1;
+    list.splice(Math.max(0, Math.min(idx, list.length)), 0, m);
+  } else {
+    const sql = data.from === "pal" ? data.sql : (data.from === "cv" ? items : tpl)[data.i].sql;
+    if (sql == null) return;
+    list.splice(at == null ? list.length : at, 0, tag === "cv" ? { sql, custom: null } : { sql, custom: null });
+  }
+  tag === "cv" ? render() : renderTc();
+}
 
-    function renderCanvas() {
-      const canvas = document.getElementById('canvas');
-      canvas.innerHTML = '';
-      
-      blocks.forEach((block, index) => {
-        const div = document.createElement('div');
-        div.className = \`canvas-block flex items-center gap-3 px-4 py-3 rounded-lg border font-mono text-sm w-full max-w-2xl group \${blockColors[block.type]}\`;
-        div.draggable = true;
-        
-        div.addEventListener('dragstart', (e) => handleDragStart(e, index));
-        div.addEventListener('dragover', handleDragOver);
-        div.addEventListener('drop', (e) => handleDrop(e, index));
-        div.addEventListener('dragend', handleDragEnd);
-        
-        // Ensure child elements don't interfere with drop target logic as easily
-        div.onclick = (e) => {
-          if(!e.target.closest('button')) openEdit(block.id);
-        };
-        
-        let displayVal = applyVariables(block.value);
+function handleDrop(e, at) { drop(e, at, "cv"); }
+const cv = $("canvas");
+cv.ondragover = e => { e.preventDefault(); cv.classList.add("over"); };
+cv.ondragleave = () => cv.classList.remove("over");
+cv.ondrop = e => { e.preventDefault(); cv.classList.remove("over"); handleDrop(e, null); };
 
-        // Adjust display keywords
-        let displayType = block.type;
-        const dialect = document.getElementById('dialectSelect').value;
-        if (block.type === 'LIMIT') {
-          if (dialect === 'sqlserver') displayType = 'TOP';
-          if (dialect === 'oracle') displayType = 'FETCH FIRST';
-        }
-        
-        if (block.type === 'CREATE TABLE') {
-          div.innerHTML = \`
-            <div class="cursor-grab text-slate-400 hover:text-white px-1">☰</div>
-            <span class="font-bold tracking-wider">\${block.type}</span>
-            <span class="flex-1 opacity-80 whitespace-pre-wrap pointer-events-none">\${displayVal}</span>
-            <button onclick="removeBlock(\${block.id}, event)" class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity font-bold">✕</button>
-          \`;
-        } else {
-          div.innerHTML = \`
-            <div class="cursor-grab text-slate-400 hover:text-white px-1">☰</div>
-            <span class="font-bold tracking-wider">\${displayType}</span>
-            <span class="flex-1 opacity-80 pointer-events-none">\${displayVal}</span>
-            <button onclick="removeBlock(\${block.id}, event)" class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity font-bold">✕</button>
-          \`;
-        }
-        
-        canvas.appendChild(div);
-      });
+function palette() {
+  const q = $("q").value.trim().toLowerCase();
+  $("tabs").innerHTML = "";
+  if (!q) Object.keys(CATS).forEach(k => {
+    const b = document.createElement("button"); b.className = "tab" + (k === cat ? " on" : ""); b.textContent = k;
+    b.onclick = () => { cat = k; palette(); }; $("tabs").appendChild(b);
+  });
+  const p = $("pal"); p.innerHTML = ""; let n = 0;
+  Object.entries(CATS).forEach(([k, [col, list]]) => {
+    if (!q && k !== cat) return;
+    list.forEach(([label, sql, desc]) => {
+      if (q && !(label + sql + desc + k).toLowerCase().includes(q)) return; n++;
+      p.appendChild(makeBlk({sql, custom: null}, null));
+      const el = p.lastChild;
+      el.style.setProperty("--c", col);
+      el.firstChild.innerHTML = `<small>${esc(label)}${q ? " · " + k : ""}</small>${esc(sub(sql))}<em>${esc(desc)}</em>`;
+      el.onclick = null; 
+      el.ondblclick = () => { save(); items.push({ sql, custom: null }); render(); toast("Added to canvas"); };
+    });
+  });
+  if (q && !n) p.innerHTML = '<div class="empty">No blocks match "' + esc(q) + '"</div>';
+}
 
-      updateSQL();
-      updateExplainer();
-    }
+TPL.forEach(([name, lines], i) => {
+  const b = document.createElement("button"); b.innerHTML = `<b>${i + 1}.</b>${esc(name)}`;
+  b.onclick = () => { save(); items = lines.map(l => ({ sql: l, custom: null })); render(); }; $("tpl").appendChild(b);
+});
 
-    function updateAll() {
-      renderCanvas();
-    }
+$("q").oninput = palette;
+["t", "t2", "id", "fk", "c1", "c2", "num", "date", "grp", "v1", "v2", "dialect"].forEach(id => {
+  $(id).addEventListener('input', () => { updatePh(); palette(); render(); if (typeof renderTc === "function") renderTc(); });
+});
+$("undo").onclick = () => { if (hist.length) { items = JSON.parse(hist.pop()); render(); } };
+$("clear").onclick = () => { if (items.length) { save(); items = []; render(); } };
 
-    function generateTable() {
-      const table = document.getElementById('pkTable').value.trim() || 'my_table';
-      const col = document.getElementById('pkColumn').value.trim() || 'id';
-      const auto = document.getElementById('pkAuto').checked;
-      const dialect = document.getElementById('dialectSelect').value;
+function toast(m) { const t = $("toast"); t.textContent = m; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 1500); }
+$("copy").onclick = async () => {
+  const o = build(); if (!o) { toast("Nothing to copy yet"); return; }
+  try { await navigator.clipboard.writeText(o); toast("SQL copied"); }
+  catch { const r = document.createRange(); r.selectNodeContents($("out")); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); toast("Press Ctrl/Cmd+C to copy"); }
+};
 
-      let pkDef = '';
-      if (dialect === 'mysql') pkDef = \`\${col} INT AUTO_INCREMENT PRIMARY KEY\`;
-      else if (dialect === 'postgres') pkDef = \`\${col} SERIAL PRIMARY KEY\`;
-      else if (dialect === 'sqlserver') pkDef = \`\${col} INT IDENTITY(1,1) PRIMARY KEY\`;
-      else if (dialect === 'oracle') {
-        if (auto) pkDef = \`\${col} NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY\`;
-        else pkDef = \`\${col} NUMBER PRIMARY KEY\`;
-      }
+let savedInputs = null;
+function onEdit() {
+  if (savedInputs) {
+    phKeys.forEach((k, i) => $(k.replace(/[{}]/g, '').toLowerCase()).value = savedInputs[i]);
+    savedInputs = null;
+    updatePh(); palette();
+  }
+  demoOut = null; showDemo();
+}
 
-      blocks.push({
-        id: Date.now(),
-        type: 'CREATE TABLE',
-        value: \`\${table} (\\n  \${pkDef}\\n)\`
-      });
-      renderCanvas();
-    }
+function playDemo(lines, out) {
+  if (!savedInputs) savedInputs = phKeys.map(k => $(k.replace(/[{}]/g, '').toLowerCase()).value);
+  $("t").value = "Students"; $("t2").value = "Courses"; $("id").value = "StudentID"; $("fk").value = "StudentID";
+  $("c1").value = "StudentName"; $("c2").value = "Email"; $("num").value = "Age"; $("grp").value = "Age";
+  $("v1").value = "'Rahul'"; $("v2").value = "20";
+  updatePh(); palette();
+  items = lines.map(l => ({ sql: l, custom: null }));
+  render();
+  demoOut = out; showDemo();
+}
 
-    function updateSQL() {
-      let sql = '';
-      const dialect = document.getElementById('dialectSelect').value;
-      const warn = document.getElementById('dialectWarn');
-      warn.classList.add('hidden');
+const SD = [["StudentID", "StudentName", "Age", "Email", "AdmissionStatus"], [[1, "Rahul", 20, "rahul@example.com", "Admitted"], [2, "Priya", 21, "priya@example.com", "Admitted"], [3, "Amit", 19, "amit@example.com", "Pending"], [4, "Anita", 22, null, "Admitted"], [5, "Karan", 21, "priya@example.com", "Pending"]]];
+const DATA = { Students: SD, Courses: [["StudentID", "CourseName"], [[1, "SQL"], [2, "Python"], [2, "Testing"], [4, "Java"]]], Payments: [["StudentID", "PaymentStatus"], [[1, "Paid"], [2, "Paid"], [3, "Pending"]]] };
+const OK = "Statement executed. No rows returned.";
+const DEMOS = [
+  ["CREATE TABLE", ["CREATE TABLE {T} (\n  {ID} int,\n  {C1} varchar(255),\n  {NUM} int\n)"], OK],
+  ["INSERT", ["INSERT INTO {T} ({ID}, {C1}, {NUM})\nVALUES (1, {V1}, {V2})"], OK],
+  ["UPDATE", ["UPDATE {T}", "SET {NUM} = {V2}", "WHERE {ID} = 1"], OK],
+  ["SELECT *", ["SELECT *", "FROM {T}"], SD],
+  ["Filter (WHERE)", ["SELECT *", "FROM {T}", "WHERE {NUM} > {V2}"], [SD[0], SD[1].filter(r => r[2] > 20)]],
+  ["JOIN", ["SELECT {C1}", "FROM {T}", "INNER JOIN {T2}\nON {T}.{ID} = {T2}.{ID}"], [["StudentName"], [["Rahul"], ["Priya"], ["Priya"], ["Anita"]]]],
+  ["GROUP BY", ["SELECT {GRP}, COUNT(*)", "FROM {T}", "GROUP BY {GRP}"], [["Age", "COUNT(*)"], [[20, 1], [21, 2], [19, 1], [22, 1]]]],
+  ["Duplicate Key Error", ["INSERT INTO {T} ({ID}, {C1})\nVALUES (1, 'Test')"], { err: "Duplicate entry '1' for key 'PRIMARY'" }]
+];
 
-      blocks.forEach(block => {
-        let val = applyVariables(block.value);
-        if (block.type === 'CREATE TABLE') {
-          sql += \`CREATE TABLE \${val};\\n\\n\`;
-        } else if (block.type === 'LIMIT') {
-          if (dialect === 'mysql' || dialect === 'postgres') {
-            sql += \`LIMIT \${val}\\n\`;
-          } else if (dialect === 'sqlserver') {
-            sql += \`TOP \${val} -- (Note: TOP should go immediately after SELECT in real T-SQL)\\n\`;
-            warn.classList.remove('hidden');
-            warn.innerText = '⚠️ TOP must be placed after SELECT in T-SQL';
-          } else if (dialect === 'oracle') {
-            sql += \`FETCH FIRST \${val} ROWS ONLY\\n\`;
-          }
-        } else if (block.type === 'JOIN') {
-          // If the user already wrote INNER JOIN or LEFT JOIN, just output it. Otherwise prepend the type.
-          if(val.toUpperCase().startsWith('JOIN') || val.toUpperCase().includes(' JOIN ')) {
-            sql += \`\${val}\\n\`;
-          } else {
-            sql += \`\${block.type} \${val}\\n\`;
-          }
-        } else if (block.type === 'WITH') {
-          sql += \`WITH \${val}\\n\`;
-        } else {
-          sql += \`\${block.type} \${val}\\n\`;
-        }
-      });
+let demoOut = null;
+const tbl = ([c, r]) => `<table class="dt"><tr>${c.map(x => `<th>${esc(x)}</th>`).join("")}</tr>${r.map(row => `<tr>${row.map(v => v == null ? '<td class="nl">NULL</td>' : `<td>${esc(String(v))}</td>`).join("")}</tr>`).join("")}</table>`;
+function showDemo() {
+  $("demo").innerHTML = demoOut == null ? "" : `<div class="dm"><h3>Demo output</h3>${typeof demoOut === "string" ? `<div class="okm">✓ ${esc(demoOut)}</div>` : demoOut.err ? `<div class="errm">✗ Error: ${esc(demoOut.err)}</div>` : tbl(demoOut)}</div>`;
+}
+$("data").innerHTML = Object.entries(DATA).map(([k, v]) => `<div class="dm"><h3>${k}</h3>${tbl(v)}</div>`).join("");
+DEMOS.forEach(([name, lines, out], i) => {
+  const b = document.createElement("button"); b.innerHTML = `<b>${i + 1}.</b>${esc(name)}`;
+  b.onclick = () => { save(); playDemo(lines, out); }; $("dem").appendChild(b);
+});
 
-      document.getElementById('sqlPreview').innerText = sql || '-- SQL will appear here';
-    }
+let tpl = [], mine = [];
+try { mine = JSON.parse(localStorage.getItem("sqlb_tpl") || "[]") } catch { }
+const persist = () => { try { localStorage.setItem("sqlb_tpl", JSON.stringify(mine)) } catch { toast("Browser storage is blocked, templates won't persist") } };
+const full = l => { const q = l.map(i => i.custom !== null ? i.custom : sub(i.sql)).join("\n").replace(/\s+$/, ""); return q ? (q.endsWith(";") ? q : q + ";") : "" };
 
-    function updateExplainer() {
-      let exp = [];
-      
-      blocks.forEach(b => {
-        let v = applyVariables(b.value);
-        if (b.type === 'SELECT') exp.push(\`Fetches data for: <b>\${v}</b>\`);
-        if (b.type === 'FROM') exp.push(\`Looks in the table: <b>\${v}</b>\`);
-        if (b.type === 'WHERE') exp.push(\`Filters records where: <b>\${v}</b>\`);
-        if (b.type === 'ORDER BY') exp.push(\`Sorts the results by: <b>\${v}</b>\`);
-        if (b.type === 'LIMIT') exp.push(\`Limits the results to <b>\${v}</b> rows\`);
-        if (b.type === 'CREATE TABLE') exp.push(\`Creates a new table defined as <b>\${v.replace(/\\n/g, ' ')}</b>\`);
-        if (b.type === 'JOIN') exp.push(\`Joins related data using: <b>\${v}</b>\`);
-        if (b.type === 'GROUP BY') exp.push(\`Groups identical data by: <b>\${v}</b>\`);
-        if (b.type === 'WITH') exp.push(\`Creates a temporary result set (CTE): <b>\${v}</b>\`);
-        if (b.type === 'INSERT') exp.push(\`Inserts new record: <b>\${v}</b>\`);
-        if (b.type === 'UPDATE') exp.push(\`Updates existing record: <b>\${v}</b>\`);
-        if (b.type === 'DELETE') exp.push(\`Deletes record: <b>\${v}</b>\`);
-      });
+function renderTc() {
+  const z = $("tz"); z.innerHTML = "";
+  if (!tpl.length) z.innerHTML = '<div class="empty">Drag SQL blocks here to build your template</div>';
+  tpl.forEach((item, i) => {
+    const d = document.createElement("div"); d.className = "blk"; d.draggable = true;
+    d.tabIndex = 0; d.setAttribute("role", "option");
+    d.innerHTML = `<span>${esc(item.custom !== null ? item.custom : sub(item.sql))}</span>`;
+    const b = document.createElement("button"); b.textContent = "×"; b.onclick = () => { tpl.splice(i, 1); renderTc(); }; d.appendChild(b);
+    d.ondragstart = e => { e.dataTransfer.setData("text/plain", JSON.stringify({ from: "tc", i })); e.dataTransfer.effectAllowed = "move"; };
+    d.ondragover = e => { e.preventDefault(); d.classList.add("drop"); };
+    d.ondragleave = () => d.classList.remove("drop");
+    d.ondrop = e => { e.preventDefault(); e.stopPropagation(); d.classList.remove("drop"); drop(e, i, "tc"); };
+    d.onkeydown = e => { if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); tpl.splice(i, 1); renderTc(); } };
+    z.appendChild(d);
+  });
+  const f = full(tpl); $("tp").innerHTML = f ? hl(f) : '<span class="c">-- Template preview</span>';
+  const m = $("mine"); m.innerHTML = "";
+  if (!mine.length) m.innerHTML = '<div class="hint">No saved templates yet.</div>';
+  mine.forEach((t, i) => {
+    const r = document.createElement("div"); r.className = "mt";
+    r.innerHTML = `<span><b>${esc(t.name)}</b><small>${t.lines.length} blocks</small></span>`;
+    const tl = document.createElement("span"); tl.className = "tools";
+    [["Load", () => { save(); items = [...t.lines]; render(); }], ["+ Add", () => { save(); items.push(...t.lines); render(); }], ["Edit", () => { tpl = [...t.lines]; $("tn").value = t.name; renderTc(); }], ["Delete", () => { mine.splice(i, 1); persist(); renderTc(); }]].forEach(([n, f]) => {
+      const b = document.createElement("button"); b.className = "btn"; b.textContent = n; b.onclick = f; tl.appendChild(b);
+    });
+    r.appendChild(tl); m.appendChild(r);
+  });
+}
+const tz = $("tz");
+tz.ondragover = e => { e.preventDefault(); tz.classList.add("over"); };
+tz.ondragleave = () => tz.classList.remove("over");
+tz.ondrop = e => { e.preventDefault(); tz.classList.remove("over"); drop(e, null, "tc"); };
+$("tcCanvas").onclick = () => { if (!items.length) { toast("Canvas is empty"); return; } tpl = JSON.parse(JSON.stringify(items)); renderTc(); };
+$("tcClear").onclick = () => { tpl = []; $("tn").value = ""; renderTc(); };
+$("tcLoad").onclick = () => { if (!tpl.length) { toast("Template is empty"); return; } save(); items = JSON.parse(JSON.stringify(tpl)); render(); };
+$("tcSave").onclick = () => {
+  if (!tpl.length) { toast("Add some blocks first"); return; }
+  const name = $("tn").value.trim() || "My template " + (mine.length + 1);
+  const k = mine.findIndex(t => t.name === name), o = { name, lines: JSON.parse(JSON.stringify(tpl)) };
+  if (k >= 0) mine[k] = o; else mine.unshift(o);
+  persist(); renderTc(); toast(k >= 0 ? "Template updated" : "Template saved");
+};
+$("tcExp").onclick = async () => {
+  if (!mine.length) { toast("Nothing to export"); return; }
+  const j = JSON.stringify(mine, null, 1);
+  try { await navigator.clipboard.writeText(j); toast("Templates copied as JSON"); } catch { $("tj").style.display = "block"; $("tj").value = j; toast("Copy the JSON from the box"); }
+};
+$("tcImp").onclick = () => {
+  const t = $("tj");
+  if (t.style.display === "none") { t.style.display = "block"; t.value = ""; t.focus(); return; }
+  try {
+    const a = JSON.parse(t.value); if (!Array.isArray(a)) throw 0;
+    a.filter(x => x && x.name && Array.isArray(x.lines)).forEach(x => { const k = mine.findIndex(m => m.name === x.name); if (k >= 0) mine[k] = x; else mine.push(x); });
+    persist(); renderTc(); t.style.display = "none"; toast("Imported");
+  } catch { toast("Invalid JSON"); }
+};
 
-      document.getElementById('sqlExplainer').innerHTML = exp.length ? exp.join('<br><br>') : 'Start building a query to see the explanation.';
-    }
+function explain(sql) {
+  if (!sql) { $("explainer").innerHTML = ""; return; }
+  const e = [];
+  if (sql.includes("SELECT")) e.push("Retrieves data from the database.");
+  if (sql.includes("FROM")) e.push(`Reads from the table <b>${ph["{T}"]}</b>.`);
+  if (sql.includes("JOIN")) e.push("Combines rows from two or more tables based on a related column.");
+  if (sql.includes("WHERE")) e.push("Filters records to include only those that fulfill a specified condition.");
+  if (sql.includes("GROUP BY")) e.push("Groups rows that have the same values into summary rows.");
+  if (sql.includes("ORDER BY")) e.push("Sorts the result set.");
+  $("explainer").innerHTML = e.length ? e.join(" ") : "Custom query.";
+}
 
-    function togglePractice() {
-      practiceMode = !practiceMode;
-      const btn = document.getElementById('practiceBtn');
-      const area = document.getElementById('practiceArea');
-      if (practiceMode) {
-        btn.innerText = 'Disable';
-        btn.className = 'text-xs px-2 py-1 bg-rose-600 hover:bg-rose-500 rounded text-white font-semibold transition-colors';
-        area.classList.remove('hidden');
-        area.classList.add('flex');
-        blocks = [];
-        renderCanvas();
-      } else {
-        btn.innerText = 'Enable';
-        btn.className = 'text-xs px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-semibold transition-colors';
-        area.classList.add('hidden');
-        area.classList.remove('flex');
-        document.getElementById('practiceResult').classList.add('hidden');
-      }
-    }
+function genPk() {
+  const col = $("pkgCol").value.trim() || "id";
+  const auto = $("pkgAuto").value === "1";
+  const d = $("dialect").value;
+  let t = `${col} INT PRIMARY KEY`;
+  if (auto) {
+    if (d === "mysql") t = `${col} INT PRIMARY KEY AUTO_INCREMENT`;
+    if (d === "postgres") t = `${col} SERIAL PRIMARY KEY`;
+    if (d === "sqlserver") t = `${col} INT IDENTITY(1,1) PRIMARY KEY`;
+    if (d === "oracle") t = `${col} NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY`;
+  }
+  save();
+  items.push({ sql: `CREATE TABLE {T} (\n  ${t}\n)`, custom: null });
+  render();
+}
 
-    function openDbModal() {
-      document.getElementById('dbModal').style.display = 'flex';
-      document.getElementById('dbTestResult').classList.add('hidden');
-    }
+let pMode = false;
+$("pracBtn").onclick = () => {
+  pMode = !pMode;
+  $("pracBtn").textContent = pMode ? "Exit Practice" : "Practice";
+  $("practice").style.display = pMode ? "block" : "none";
+  if (pMode) {
+    save(); items = []; render();
+    $("pq").textContent = `Select all columns from '${ph["{T}"]}' where '${ph["{NUM}"]}' is greater than ${ph["{V2}"]}.`;
+  }
+};
+function checkPrac() {
+  const sql = build().toUpperCase();
+  if (sql.includes("SELECT *") && sql.includes("FROM") && sql.includes("WHERE") && sql.includes(">")) {
+    $("pres").innerHTML = "<span style='color:#166534'>✓ Correct!</span>";
+  } else {
+    $("pres").innerHTML = "<span style='color:#991b1b'>✗ Try again. Make sure you SELECT *, FROM, and use WHERE with >.</span>";
+  }
+}
 
-    function closeDbModal() {
-      document.getElementById('dbModal').style.display = 'none';
-    }
+function parseSchema() {
+  const sql = $("schemaInput").value;
+  const tRe = /CREATE\s+TABLE\s+([a-zA-Z0-9_.]+)/gi;
+  let m; const scTabs = [], scCols = [];
+  while ((m = tRe.exec(sql)) !== null) { if (!scTabs.includes(m[1])) scTabs.push(m[1]); }
+  const cRe = /^\s*([a-zA-Z0-9_]+)\s+(INT|VARCHAR|TEXT|DATE|BOOLEAN|DECIMAL|NUMERIC|FLOAT|DOUBLE)/gim;
+  while ((m = cRe.exec(sql)) !== null) { if (!scCols.includes(m[1])) scCols.push(m[1]); }
+  $("tableList").innerHTML = scTabs.map(t => `<option value="${esc(t)}">`).join("");
+  $("colList").innerHTML = scCols.map(c => `<option value="${esc(c)}">`).join("");
+  toast(`Schema parsed: ${scTabs.length} tables, ${scCols.length} columns`);
+}
 
-    function saveDbConnection() {
-      closeDbModal();
-      alert('Database connection details saved locally!');
-    }
-
-    function testDbConnection() {
-      const btn = document.getElementById('dbTestBtn');
-      const res = document.getElementById('dbTestResult');
-      const user = document.getElementById('dbUser').value;
-      const pass = document.getElementById('dbPass').value;
-      
-      if(!user || !pass) {
-        res.innerText = '⚠️ Username and password are required.';
-        res.className = 'mb-4 text-sm font-semibold text-center text-amber-400 block';
-        return;
-      }
-
-      btn.innerText = 'Testing...';
-      btn.disabled = true;
-      res.classList.add('hidden');
-      
-      setTimeout(() => {
-        btn.innerText = 'Test Connection';
-        btn.disabled = false;
-        
-        if(user.toLowerCase() === 'fail') {
-          res.innerText = '❌ Connection failed: Access Denied for user.';
-          res.className = 'mb-4 text-sm font-semibold text-center text-rose-400 block';
-        } else {
-          res.innerText = '✅ Connection successful!';
-          res.className = 'mb-4 text-sm font-semibold text-center text-emerald-400 block';
-        }
-      }, 1500);
-    }
-
-    function checkAnswer() {
-      const sql = document.getElementById('sqlPreview').innerText.toLowerCase();
-      const res = document.getElementById('practiceResult');
-      res.classList.remove('hidden');
-      
-      if (sql.includes('select') && sql.includes('from') && sql.includes('where') && sql.includes('order by')) {
-        if (sql.includes('bob') && sql.includes('50') && sql.includes('desc')) {
-          res.innerText = '✅ Correct! Great job.';
-          res.className = 'text-sm font-semibold text-center text-emerald-400 mt-2 block';
-          return;
-        }
-      }
-      res.innerText = '❌ Not quite. Make sure you select, filter by name and age, and sort descending.';
-      res.className = 'text-sm font-semibold text-center text-rose-400 mt-2 block';
-    }
-  </script>
+renderTc(); palette(); render();
+</script>
 </body>
 </html>
