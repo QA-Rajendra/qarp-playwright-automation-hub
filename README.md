@@ -152,6 +152,15 @@ npm start
 
 Open **Walkthrough Recorder** in the QARP sidebar, enter a URL, pick headful or headless mode, and start a session. Use the DOM tools to inspect or interact with elements, then download a screenshot/PDF or generate a Markdown walkthrough.
 
+## Run QARP validation
+
+```bash
+npm run test:unit
+npm run test:e2e -- --project=chromium
+```
+
+`npm run test:unit` runs the deterministic Node.js unit and runner-middleware tests. `npm run test:e2e` runs the local QARP browser flows using `playwright.e2e.config.js`; it requires the matching Playwright browser binaries. The E2E suite uses an ephemeral loopback runner and local scenario fixture, with no public-site dependency. Run all configured browser projects with `npm run test:e2e`; `npm test` runs both the unit and cross-browser E2E suites.
+
 ## Inspect and Compare Test Runs
 
 QARP records structured per-test results for runs started from its dashboard or MCP tools when the active project has a Playwright config and does not specify a custom `--config` command option. The Results page shows each test's project, file, status, duration, retry outcome, and redacted failure message. Select failed tests from one browser project to preview and rerun them; reruns are validated against the active project and configured browser projects.

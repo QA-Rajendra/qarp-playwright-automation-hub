@@ -1299,7 +1299,7 @@
         quickLinksArrow.textContent = expanded ? '▲' : '▼';
         quickLinksPanel.hidden = !expanded;
       };
-      setQuickLinksExpanded(true);
+      setQuickLinksExpanded(false);
       quickLinksToggle.addEventListener('click', () => {
         const expanded = quickLinksToggle.getAttribute('aria-expanded') === 'true';
         setQuickLinksExpanded(!expanded);

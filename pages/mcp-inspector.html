@@ -161,11 +161,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
 .prompt-msg{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);max-height:260px;overflow-y:auto;position:relative;margin-top:12px;}
 .prompt-msg-copy{position:absolute;top:8px;right:8px;background:var(--surface3);border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s;}
 .prompt-msg-copy:hover{color:var(--text);border-color:var(--border2);}
-[data-theme="blue"] .sb-tab,[data-theme="blue-erp"] .sb-tab{background:#112842 !important;border-color:#1F4268 !important;color:#93C5FD !important;}
-[data-theme="blue"] .sb-tab.active,[data-theme="blue-erp"] .sb-tab.active{background:#1976D2 !important;color:#FFFFFF !important;}
-[data-theme="blue"] .prompt-item,[data-theme="blue-erp"] .prompt-item{color:#E2E8F0 !important;}
-[data-theme="blue"] .prompt-item.active,[data-theme="blue-erp"] .prompt-item.active{background:rgba(25,118,210,0.15) !important;border-color:rgba(25,118,210,0.4) !important;}
-
 /* ── Project Selector ──────────────────────────────────────────────────── */
 .proj-section{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .proj-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
@@ -208,10 +203,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
 .btn-save{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:8px 20px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(124,106,247,.3);}
 .btn-save:hover:not(:disabled){transform:translateY(-1px);}
 .btn-save:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-[data-theme="blue"] .proj-selector select,[data-theme="blue-erp"] .proj-selector select{background:#071F36 !important;border-color:#1A4773 !important;color:#CBD5E1 !important;}
-[data-theme="blue"] .modal-box,[data-theme="blue-erp"] .modal-box{background:#0B2D4D !important;border-color:#16426C !important;}
-[data-theme="blue"] .check-row,[data-theme="blue-erp"] .check-row{background:#071F36 !important;border-color:#1A4773 !important;}
-
 /* ── Protocol Traffic Monitor Sidebar ──────────────────────────────────── */
 
 .mon-sidebar{display:none;flex-direction:column;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);}
@@ -231,9 +222,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
 .mon-body{padding:8px 10px;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all;line-height:1.5;color:var(--text2);max-height:150px;overflow-y:auto;display:none;}
 .mon-body.open{display:block;}
 .mon-empty{padding:24px;text-align:center;color:var(--text3);font-size:12px;}
-[data-theme="blue"] .mon-sidebar,[data-theme="blue-erp"] .mon-sidebar{background:#0B2D4D !important;border-color:#16426C !important;}
-[data-theme="blue"] .mon-entry,[data-theme="blue-erp"] .mon-entry{background:#071F36 !important;border-color:#1A4773 !important;}
-[data-theme="blue"] .mon-body,[data-theme="blue-erp"] .mon-body{color:#CBD5E1 !important;}
 </style>
 </head>
 <body>
@@ -256,8 +244,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
         <span style="display:flex;align-items:center;gap:6px;"><span>🌙</span> <b>Default</b></span>
         <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
       </button>
-      <button type="button" class="theme-opt" data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
-        <span style="display:flex;align-items:center;gap:6px;"><span>🔷</span> <b>Blue</b></span>
+      <button type="button" class="theme-opt" data-theme="sage" onclick="changeTheme('sage'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
+        <span style="display:flex;align-items:center;gap:6px;"><span>🌿</span> <b>Sage Slate</b></span>
         <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
       </button>
     </div>
@@ -383,7 +371,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
           <label class="ml">Additional notes (Optional)</label>
           <textarea id="aiScenarioDesc" placeholder="Context for this evidence capture; not executed as browser actions" rows="3" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box;"></textarea>
         </div>
-        <p style="font-size:11px;color:var(--text3);margin-top:10px;">This captures a page load, screenshot, and video. Notes are saved with the local run but are not interpreted by an AI agent or turned into interactions/assertions.</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px;">This captures a page load, screenshot, and video. Notes are not stored or interpreted as browser actions or assertions.</p>
         <button class="btn-detect" id="runScenarioBtn" style="margin-top: 16px; width: 100%; background: #4a5568;" onclick="startDynamicScenario()">&#9654; Capture Evidence</button>
       </div>
 

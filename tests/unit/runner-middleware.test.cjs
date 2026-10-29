@@ -83,4 +83,11 @@ test('middleware serves runner APIs and injects its mount path into HTML', async
     body: JSON.stringify({ url: 'javascript:alert(1)', prompt: 'capture' })
   });
   assert.equal(invalidScenario.statusCode, 400);
+
+  const missingScenario = await request(
+    port,
+    '/test-runner/api/scenarios/00000000-0000-4000-8000-000000000000'
+  );
+  assert.equal(missingScenario.statusCode, 404);
+  assert.match(missingScenario.body, /Scenario run not found/);
 });

@@ -30,9 +30,11 @@ The review findings below describe the original static-review baseline. The foll
 - Express/Connect middleware now proxies the complete runner UI and API under the mount path, adjusts same-origin fetches for that prefix, and exposes a `close()` method.
 - The CLI and standalone server default to loopback. LAN binding requires an explicit opt-in and warning; there is no LAN authentication, so LAN mode is for trusted networks only. CORS is same-origin by default with an exact-origin allowlist option.
 - Package name, CLI alias, README install command, lockfile root metadata, and the canonical repository are aligned; the erroneous self-dependency is removed.
-- Snippets now has an actual Sage palette and offers Sage Slate instead of Blue. MCP Inspector and Snippets no longer contain Blue-specific overrides. Legacy Blue preference values still migrate to Sage for compatibility.
+- Snippets now has an actual Sage palette and offers Sage Slate instead of Blue. MCP Inspector and Snippets no longer offer Blue as a selectable theme. Legacy Blue preference values still migrate to Sage for compatibility.
+- Added an isolated Playwright E2E configuration and three local browser flows for dashboard navigation, Sage theme persistence, and MCP Inspector scenario evidence (including rejected input, status polling, and artifact reads). Added `npm run test:e2e` and the combined `npm test` command.
+- The new browser test caught and fixed the dashboard expanding Quick Links on startup despite its collapsed markup. All three Chromium E2E flows pass via the VS Code test runner. The Node unit test files are not discovered by that runner, so `npm run test:unit` remains unverified. See [runtime-validation-report.md](./runtime-validation-report.md).
 
-Still outstanding: API mock/offline state can be misleading, theme behavior is not yet unified across every standalone page, broader route/browser coverage and clean package-install checks remain, and the large runner module has not been split. The Windows BaseContainer sandbox prevented terminal test execution; browser smoke testing could not launch because the Playwright browser binary is not installed.
+Still outstanding: API mock/offline state can be misleading, theme behavior is not yet unified across every standalone page, broader route/browser coverage, clean package-install checks, and Git-status state coverage remain, and the large runner module has not been split. The Windows BaseContainer sandbox prevented terminal test execution; Firefox and WebKit validation also remain outstanding.
 
 ## Page and integration map
 
@@ -122,6 +124,69 @@ This workflow should be unified under one supported start/run model and one resp
 5. Record browser-binary/environment prerequisites separately from code failures.
 
 **Exit criteria:** the documented install/start path and every primary page flow pass automated checks in a clean environment.
+
+### Validation closeout plan
+
+The local Playwright scaffold and Chromium flows have been implemented; the VS Code test runner reported 3 passed and 0 failed. This does not complete the gates: the Node unit command, install/package/CLI checks, and Firefox/WebKit runs remain unverified. See [runtime-validation-report.md](./runtime-validation-report.md). Run the remaining steps in order in a terminal-enabled environment and record exact commands, exit codes, counts, and blocker output.
+
+#### Gate 1 — Verify prerequisites and install reproducibly
+
+1. In PowerShell, record `node --version` and `npm --version`. The package requires Node.js `>=22.12.0`; resolve a version mismatch before running tests.
+2. Run `npm ci` from the repository root and record its exit code. This verifies the committed lockfile rather than relying on a developer's existing `node_modules`.
+3. Record `npx playwright --version`, then independently attempt `npx playwright install chromium`, `npx playwright install firefox`, and `npx playwright install webkit`. Do not treat a failed engine installation as a test failure; record the exact engine, command, and error, and mark browser coverage for that engine unverified.
+4. Docker is not a prerequisite for the current project: the runner and UI have no container-managed database, message broker, or other infrastructure dependency. Node.js and the Playwright browser binaries are independent prerequisites.
+
+**Gate passes when:** clean dependency installation succeeds and the required Node version is active. Browser installation outcomes are recorded separately by engine.
+
+#### Gate 2 — Run the canonical unit suite
+
+Run `npm run test:unit` after the clean install. It explicitly covers the run-insights reporter, Git status parser, scenario input/artifact handling, and runner middleware/network behavior.
+
+Capture the command's process exit code and the reported passed/failed/skipped counts. A nonzero exit code is a failure even if some tests pass; investigate and fix test-code or environment issues, then rerun the same command. Do not report the earlier VS Code test discovery that executed zero tests as a pass.
+
+**Gate passes when:** `npm run test:unit` exits `0`, with no unexplained failures or skips.
+
+#### Gate 3 — Add and run deterministic runner integration checks
+
+Before calling the API integration tier complete, extend automated coverage for the changed runner contract using temporary project/output directories and loopback-only servers:
+
+- Exercise a valid scenario submission, its `202` job response, status polling through a terminal state, and retrieval of generated screenshot/video artifacts; assert artifact content type and that the files remain inside the run directory.
+- Cover malformed payloads, unsupported browser names, cross-origin rejection, missing/unknown job IDs, missing artifacts, and cleanup/error behavior. The product has no user login/authentication flow; test the implemented local-request and Origin boundaries instead of asserting a nonexistent login.
+- Exercise the middleware at its mounted base path, including UI HTML, a runner API request, the mount-prefix fetch bootstrap, cross-origin rejection, and clean shutdown. Keep the existing middleware test as part of this suite.
+- Use a local test page/server as the scenario target. Do not make scenario acceptance depend on a public website or persist test artifacts in the repository.
+
+Run the integration tests through the canonical `npm run test:unit` command (or wire any separately named integration command into the documented CI command). Record exact counts and exit code.
+
+**Gate passes when:** the scenario lifecycle and middleware behavior above are covered by runnable tests and the canonical command exits `0`.
+
+#### Gate 4 — Configure and execute QARP browser smoke tests
+
+The current Playwright config points at `./tests`, which also contains Node built-in unit tests. Separate browser-test discovery from `tests/unit` before running Playwright (for example, scope the browser config to a dedicated `tests/e2e` directory). Keep `npm run test:unit` as the Node test runner's independent command.
+
+Add at least three deterministic, multi-step Playwright smoke tests using only the local runner and local fixtures:
+
+1. **Dashboard and navigation:** start QARP, load the dashboard, visit every linked local tool page, verify successful local navigation and no uncaught page errors, and return to the dashboard.
+2. **Theme and page behavior:** verify Sage is the default where specified, exercise the supported theme controls, and check key loading/empty/error states on representative standalone pages.
+3. **Scenario capture flow:** submit a local fixture URL from MCP Inspector, verify validation and job status progression, then retrieve and validate the run artifact. Include a rejected invalid request and verify its visible error state.
+
+Run the app smoke suite first against Chromium with `npx playwright test --project=chromium` using the dedicated browser-test config. Then run the same suite against Firefox and WebKit where their browser installs succeeded. Keep the existing `tests/QAtest` example.com and JSONPlaceholder tests classified as network-dependent demos; they do not prove QARP UI or runner integration and are not substitutes for these smoke tests.
+
+**Gate passes when:** the new QARP flows pass in Chromium and all additional installed browser projects, with any unavailable engine explicitly marked unverified rather than silently skipped.
+
+#### Gate 5 — Startup, package, and Git-status regressions
+
+- Start the runner using the documented `npm start` command, wait for the local UI/readiness response, and verify a representative API response. Capture startup time, readiness signal, and shutdown result.
+- Run `npm pack --dry-run` and inspect the package file list for the runner, scenario runner, UI pages, assets, and documentation. Where a clean temporary install is possible, install the generated package into a temporary consumer and verify its documented startup/middleware entry points.
+- Exercise Git Workflow against a normal repository, a non-repository directory, an empty/unborn repository, staged plus unstaged changes, no upstream, and a missing Git executable. Verify the page reports unknown/unavailable states honestly and remains read-only.
+- Confirm generated reports, HARs, traces, screenshots, videos, and temporary package files are not accidentally committed; remove only test outputs created by this validation run.
+
+**Gate passes when:** startup, package-content checks, supported public entry points, and the listed Git states behave as documented with successful exit codes.
+
+#### Evidence and final acceptance
+
+Produce a `runtime-validation-report.md` with the execution date, Node/npm versions, browser installation results per engine, commands and exit codes, test counts, startup/readiness evidence, package check result, failures/fixes, and remaining gaps. Use `UNVERIFIED` for a tier that could not be attempted or completed; do not convert sandbox or missing-browser blockers into a pass.
+
+Final validation is complete only when Gates 1–5 have the evidence above, all executed required commands exit `0`, and no required flow is silently skipped. If the Windows sandbox blocks command execution, record the precise blocked command and environment limitation, leave the affected gates `UNVERIFIED`, and resume the same plan in an environment that permits Node/npm and browser execution.
 
 ## Suggested order
 
