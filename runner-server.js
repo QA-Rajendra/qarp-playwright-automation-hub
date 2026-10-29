@@ -19,6 +19,7 @@ const crypto = require('crypto');
 const { spawn, execSync, execFileSync } = require('child_process');
 const puppeteer = require('puppeteer');
 const { getGitStatus } = require('./qarp-git-status.cjs');
+const { readRoadmap, validateRoadmap, writeRoadmap } = require('./qarp-roadmap-store.cjs');
 const {
   getScenarioArtifact,
   startScenario,
@@ -2592,6 +2593,37 @@ function createRunnerServer(options = {}) {
     }
 
     const [cleanUrl] = req.url.split('?');
+
+    if (cleanUrl === '/api/qa-roadmap' && ['GET', 'PUT'].includes(req.method)) {
+      if (!isLocalWalkthroughRequest(req)) {
+        res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ error: 'The QA roadmap is available only from the local QARP dashboard.' }));
+        return;
+      }
+
+      if (req.method === 'GET') {
+        try {
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          res.end(JSON.stringify(readRoadmap()));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          res.end(JSON.stringify({ error: error.message || 'Could not load the QA roadmap.' }));
+        }
+        return;
+      }
+
+      try {
+        const body = await readWalkthroughBody(req, 1024 * 1024);
+        const roadmap = writeRoadmap(validateRoadmap(body));
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ok: true, roadmap }));
+      } catch (error) {
+        const statusCode = error.statusCode || 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ error: error.message || 'Could not save the QA roadmap.' }));
+      }
+      return;
+    }
 
     if (req.method === 'POST' && cleanUrl === '/api/run-scenario') {
       if (!isLocalWalkthroughRequest(req)) {

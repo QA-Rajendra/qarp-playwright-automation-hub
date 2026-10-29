@@ -161,6 +161,10 @@ npm run test:e2e -- --project=chromium
 
 `npm run test:unit` runs the deterministic Node.js unit and runner-middleware tests. `npm run test:e2e` runs the local QARP browser flows using `playwright.e2e.config.js`; it requires the matching Playwright browser binaries. The E2E suite uses an ephemeral loopback runner and local scenario fixture, with no public-site dependency. Run all configured browser projects with `npm run test:e2e`; `npm test` runs both the unit and cross-browser E2E suites.
 
+## Plan QA maturity
+
+Open **QA Level 0–8 Roadmap** from the dashboard's Quick Links. Add, edit, search, filter, assign, and track roadmap actions in the page, then select **Save roadmap** to update `data/qa-roadmap.json`. The page supports JSON export and reload, including changes made directly in the JSON file. The starter levels are an editable general baseline, not a copy of any external roadmap document. Roadmap read/write requests are restricted to the local QARP dashboard.
+
 ## Inspect and Compare Test Runs
 
 QARP records structured per-test results for runs started from its dashboard or MCP tools when the active project has a Playwright config and does not specify a custom `--config` command option. The Results page shows each test's project, file, status, duration, retry outcome, and redacted failure message. Select failed tests from one browser project to preview and rerun them; reruns are validated against the active project and configured browser projects.

@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "title": "QA Maturity Roadmap",
+  "levels": [
+    {
+      "id": "level-0",
+      "title": "Level 0 — Ad hoc",
+      "description": "Understand the current quality process and make testing visible.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l0-baseline",
+          "title": "Record the current testing baseline",
+          "description": "List existing test types, tools, ownership, and known gaps.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        },
+        {
+          "id": "l0-critical-flows",
+          "title": "Identify critical user journeys",
+          "description": "Agree on the user flows that must not break.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-1",
+      "title": "Level 1 — Repeatable",
+      "description": "Make essential checks repeatable and easy for the team to run.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l1-smoke",
+          "title": "Create a reliable smoke suite",
+          "description": "Cover the highest-priority happy paths with clear results.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-2",
+      "title": "Level 2 — Managed",
+      "description": "Add ownership, test data discipline, and predictable defect triage.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l2-data",
+          "title": "Standardize test data and environments",
+          "description": "Use isolated, documented test data and define cleanup expectations.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-3",
+      "title": "Level 3 — Defined",
+      "description": "Document quality standards and make testing part of normal delivery.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l3-standards",
+          "title": "Define test and review standards",
+          "description": "Document naming, review, coverage, and failure-triage conventions.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-4",
+      "title": "Level 4 — Measured",
+      "description": "Use stable, actionable measures to find quality bottlenecks.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l4-metrics",
+          "title": "Track actionable quality metrics",
+          "description": "Review failure rate, escaped defects, flaky tests, and feedback time.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-5",
+      "title": "Level 5 — Optimized",
+      "description": "Reduce waste and improve test speed and reliability using evidence.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l5-flaky",
+          "title": "Reduce flaky and redundant checks",
+          "description": "Prioritize recurring failures and remove duplicated low-value coverage.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-6",
+      "title": "Level 6 — Continuous",
+      "description": "Automate fast feedback and quality signals across the delivery lifecycle.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l6-pipeline",
+          "title": "Automate quality gates in CI",
+          "description": "Run the right checks at pull request and release stages.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-7",
+      "title": "Level 7 — Predictive",
+      "description": "Use trends and risk signals to focus verification where change is most likely to cause harm.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l7-risk",
+          "title": "Introduce risk-based test selection",
+          "description": "Prioritize checks using change impact and past defect evidence.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    },
+    {
+      "id": "level-8",
+      "title": "Level 8 — Adaptive",
+      "description": "Continuously evolve quality practices from production learning and measured outcomes.",
+      "status": "not-started",
+      "items": [
+        {
+          "id": "l8-learning",
+          "title": "Close the production feedback loop",
+          "description": "Feed incidents and user-impact findings into priorities and regression coverage.",
+          "status": "not-started",
+          "owner": "",
+          "targetDate": ""
+        }
+      ]
+    }
+  ]
+}

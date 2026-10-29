@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-theme="sage">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plan and track QA maturity across nine editable roadmap levels.">
+  <title>QA Roadmap — QARP</title>
+  <link rel="stylesheet" href="../assets/css/custom.css">
+  <link rel="stylesheet" href="../assets/css/qa-roadmap.css">
+</head>
+<body>
+  <main class="roadmap-shell">
+    <header class="roadmap-header">
+      <div>
+        <a class="back-link" href="../index.html">← Back to QARP</a>
+        <p class="eyebrow">QUALITY MATURITY · LEVEL 0–8</p>
+        <h1 id="roadmapTitle">QA Maturity Roadmap</h1>
+        <p class="intro">A practical, editable starter outline for your quality journey. Add actions, assign owners, and adapt each level to your team's maturity model.</p>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="button secondary" type="button" aria-label="Toggle theme">🌿 Theme</button>
+        <a class="button secondary" href="../data/qa-roadmap.json" target="_blank" rel="noopener">View JSON</a>
+        <button id="exportButton" class="button secondary" type="button">Export JSON</button>
+        <button id="reloadButton" class="button secondary" type="button">Reload JSON</button>
+        <button id="discardButton" class="button secondary" type="button" disabled>Discard changes</button>
+        <button id="saveButton" class="button primary" type="button" disabled>Save roadmap</button>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="Roadmap summary">
+      <article class="summary-card"><span>Levels</span><strong id="levelCount">—</strong></article>
+      <article class="summary-card"><span>Actions</span><strong id="itemCount">—</strong></article>
+      <article class="summary-card"><span>Completed</span><strong id="completedCount">—</strong></article>
+      <article class="summary-card progress-card">
+        <div class="progress-label"><span>Overall progress</span><strong id="progressPercent">—</strong></div>
+        <progress id="overallProgress" max="100" value="0">0%</progress>
+      </article>
+    </section>
+
+    <section class="toolbar" aria-label="Roadmap controls">
+      <label class="search-control">
+        <span class="sr-only">Search roadmap</span>
+        <input id="searchInput" type="search" placeholder="Search levels, actions, owners…" autocomplete="off">
+      </label>
+      <label class="filter-control">
+        <span class="sr-only">Filter roadmap actions</span>
+        <select id="statusFilter">
+          <option value="all">All actions</option>
+          <option value="not-started">Not started</option>
+          <option value="in-progress">In progress</option>
+          <option value="blocked">Blocked</option>
+          <option value="complete">Complete</option>
+        </select>
+      </label>
+      <button id="addItemButton" class="button primary" type="button">＋ Add action</button>
+    </section>
+
+    <div id="statusMessage" class="status-message" role="status" aria-live="polite">Loading roadmap…</div>
+    <section id="roadmapLevels" class="levels-grid" aria-label="Roadmap levels"></section>
+
+    <details class="json-help">
+      <summary>Prefer editing JSON directly?</summary>
+      <p>Edit <code>data/qa-roadmap.json</code> in the QARP project, then select <strong>Reload JSON</strong> to see those changes here. The page validates the Level 0–8 structure when saving.</p>
+    </details>
+
+    <dialog id="itemDialog" class="item-dialog">
+      <form id="itemForm" method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">ROADMAP ACTION</p>
+            <h2 id="dialogTitle">Add an action</h2>
+          </div>
+          <button id="closeDialogButton" class="icon-button" type="button" aria-label="Close editor">×</button>
+        </div>
+        <input id="itemId" type="hidden">
+        <label>Roadmap level
+          <select id="itemLevel" required></select>
+        </label>
+        <label>Action title
+          <input id="itemTitle" type="text" maxlength="160" required placeholder="e.g. Add critical checkout smoke coverage">
+        </label>
+        <label>What does done look like?
+          <textarea id="itemDescription" maxlength="1000" rows="3" placeholder="Describe the outcome or acceptance criteria."></textarea>
+        </label>
+        <div class="form-row">
+          <label>Status
+            <select id="itemStatus">
+              <option value="not-started">Not started</option>
+              <option value="in-progress">In progress</option>
+              <option value="blocked">Blocked</option>
+              <option value="complete">Complete</option>
+            </select>
+          </label>
+          <label>Owner
+            <input id="itemOwner" type="text" maxlength="80" placeholder="Name (optional)">
+          </label>
+        </div>
+        <label>Target date
+          <input id="itemTargetDate" type="date">
+        </label>
+        <div class="dialog-actions">
+          <button id="cancelDialogButton" class="button secondary" type="button">Cancel</button>
+          <button class="button primary" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+  </main>
+  <script src="../js/theme.js"></script>
+  <script src="../js/qa-roadmap.js"></script>
+</body>
+</html>

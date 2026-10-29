@@ -90,4 +90,18 @@ test('middleware serves runner APIs and injects its mount path into HTML', async
   );
   assert.equal(missingScenario.statusCode, 404);
   assert.match(missingScenario.body, /Scenario run not found/);
+
+  const roadmapResponse = await request(port, '/test-runner/api/qa-roadmap');
+  assert.equal(roadmapResponse.statusCode, 200);
+  const roadmap = JSON.parse(roadmapResponse.body);
+  assert.equal(roadmap.levels.length, 9);
+  assert.equal(roadmap.levels[0].id, 'level-0');
+  assert.equal(roadmap.levels[8].id, 'level-8');
+
+  const invalidRoadmap = await request(port, '/test-runner/api/qa-roadmap', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ version: 1, title: 'Bad roadmap', levels: [] })
+  });
+  assert.equal(invalidRoadmap.statusCode, 400);
 });

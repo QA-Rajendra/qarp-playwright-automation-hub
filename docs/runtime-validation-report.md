@@ -3,9 +3,9 @@
 **Generated:** 2026-10-29  
 **Target:** QARP Playwright Automation Hub repository
 
-## Latest test attempt
+## Terminal test command attempt
 
-On 2026-10-29, attempted `npm run test:unit`, `npm run test:e2e -- --project=chromium`, and `node --version; npm --version; npx playwright --version` in parallel. PowerShell could not start any command because the Windows sandbox reported: `Sandboxing is enabled but not supported on this platform: Windows sandboxing requires BaseContainer.` The tool wrapper exited with code `1`; this is an environment startup failure, not the exit code of npm or a test result. No test counts were produced by these command attempts.
+On 2026-10-29, attempted `npm run test:unit`, `npm run test:e2e -- --project=chromium`, and `node --version; npm --version; npx playwright --version` in parallel. PowerShell could not start any command because the Windows sandbox reported: `Sandboxing is enabled but not supported on this platform: Windows sandboxing requires BaseContainer.` The tool wrapper exited with code `1`; this is an environment startup failure, not the exit code of npm or a test result. No test counts were produced by those command attempts. Subsequent VS Code browser-test runs passed, as detailed below.
 
 ## Summary
 
@@ -13,7 +13,7 @@ On 2026-10-29, attempted `npm run test:unit`, `npm run test:e2e -- --project=chr
 |---|---|---:|---|
 | Startup | PARTIAL | n/a | Playwright worker started the runner via `createRunnerServer` on an ephemeral loopback port and loaded its pages. The documented `npm start` CLI smoke test was not run. |
 | Unit Tests | UNVERIFIED | n/a | VS Code test discovery found the selected Node test files but executed zero tests. `npm run test:unit` was not run. |
-| Browser E2E | PASS (test-runner result) | Not exposed | Chromium: 3 passed, 0 failed. Result reported by the VS Code test runner; it did not provide a process exit code. Firefox and WebKit were not run. |
+| Browser E2E | PASS (test-runner result) | Not exposed | Chromium: 4 passed, 0 failed, including roadmap add/save/read-back/delete. Result reported by the VS Code test runner; it did not provide a process exit code. Firefox and WebKit were not run. |
 | Clean Install / Package | UNVERIFIED | n/a | `npm ci`, `npm pack --dry-run`, and clean consumer install were not run. |
 
 **Overall:** NEEDS_SIGNOFF — Chromium browser flows passed, but the canonical Node unit command, command exit codes, clean install/package checks, CLI startup, and Firefox/WebKit coverage remain unverified.
@@ -28,19 +28,21 @@ On 2026-10-29, attempted `npm run test:unit`, `npm run test:e2e -- --project=chr
 
 ## Test Evidence
 
-The following three Playwright tests passed on Chromium through the VS Code test runner:
+The following four Playwright tests passed on Chromium through the VS Code test runner:
 
 1. Dashboard navigation visits every packaged local HTML page and exercises the collapsed-by-default Quick Links.
 2. Sage is selected on a clean profile, a supported theme selection persists, and MCP Inspector offers Sage rather than Blue.
 3. MCP Inspector rejects an invalid scenario URL, submits a local scenario, observes completion, and retrieves screenshot and video artifacts.
+4. The QA roadmap editor creates an action, saves and reads it back from `data/qa-roadmap.json`, then deletes it and confirms the JSON is clean.
 
-The run did not expose a process exit code. The Node-based unit suite was explicitly attempted through VS Code test discovery and reported zero tests executed; this is not a pass. The configured `npm run test:unit` command still needs to be run in a terminal-enabled environment.
+The run did not expose a process exit code. The Node-based unit suite was explicitly attempted through VS Code test discovery and reported zero tests executed; this is not a pass. The new roadmap store unit test is also configured but not executed by VS Code test discovery. The configured `npm run test:unit` command still needs to be run in a terminal-enabled environment.
 
 ## Issues Found and Changes Made
 
 - The dashboard initialized Quick Links as expanded even though the control markup declares the collapsed state. Changed startup initialization to collapsed and added E2E coverage.
 - MCP Inspector described scenario notes as saved although the runner does not persist them. Corrected the UI copy.
 - Added local-only browser smoke tests and separate Playwright discovery so the browser suite does not collect Node unit files.
+- Added the Level 0–8 QA roadmap UI, local validated JSON read/write API, starter data, and dashboard Quick Link.
 
 ## Remaining Validation
 
