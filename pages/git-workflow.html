@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en" data-theme="sage">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Workflow — QARP</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#202734] text-[#E0F8C7]">
+  <main class="mx-auto flex w-full max-w-6xl flex-col gap-5 p-5 sm:p-8">
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <a href="../index.html" class="text-xs text-[#B7D894] hover:text-[#E0F8C7]">← Back to QARP</a>
+        <h1 class="mt-2 text-2xl font-bold">Git Workflow</h1>
+        <p class="mt-1 text-sm text-slate-300">Read-only Git status for the active QARP project.</p>
+      </div>
+      <button id="refreshButton" type="button"
+              class="rounded-lg border border-[#B7D894]/60 bg-[#36415A] px-4 py-2 text-sm font-bold text-[#E0F8C7] hover:border-[#B7D894] disabled:cursor-wait disabled:opacity-60">
+        Refresh status
+      </button>
+    </header>
+
+    <div id="status" class="rounded-lg border border-[#36415A] bg-[#36415A]/70 p-3 text-sm text-slate-200" role="status" aria-live="polite">
+      Loading Git status…
+    </div>
+
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Project and branch status">
+      <article class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-[#B7D894]">Active project</h2>
+        <p id="projectName" class="mt-2 break-words text-sm font-bold">—</p>
+        <p id="projectPath" class="mt-1 break-all font-mono text-[10px] text-slate-300">—</p>
+        <p id="repositoryRoot" class="mt-1 break-all font-mono text-[10px] text-slate-400"></p>
+      </article>
+      <article class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-[#B7D894]">Branch</h2>
+        <p id="branchName" class="mt-2 break-words text-sm font-bold">—</p>
+        <p id="upstream" class="mt-1 break-words text-xs text-slate-300">—</p>
+        <p id="divergence" class="mt-1 text-[10px] text-slate-400"></p>
+      </article>
+    </section>
+
+    <section id="notRepository" class="hidden rounded-xl border border-amber-700/70 bg-amber-950/30 p-5">
+      <h2 class="text-sm font-bold text-amber-200">This project is not inside a Git repository</h2>
+      <p class="mt-2 text-xs text-amber-100/80">Switch QARP to a project folder that belongs to a Git worktree, then refresh this page.</p>
+    </section>
+
+    <section id="repositoryDetails" class="hidden flex flex-col gap-5">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <section class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-4">
+          <h2 class="text-xs font-bold text-[#E0F8C7]">Staged changes <span id="stagedCount" class="ml-1 text-[#B7D894]"></span></h2>
+          <ul id="stagedList" class="mt-3 space-y-2" aria-label="Staged file changes"></ul>
+        </section>
+        <section class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-4">
+          <h2 class="text-xs font-bold text-[#E0F8C7]">Unstaged changes <span id="unstagedCount" class="ml-1 text-[#B7D894]"></span></h2>
+          <ul id="unstagedList" class="mt-3 space-y-2" aria-label="Unstaged file changes"></ul>
+        </section>
+        <section class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-4">
+          <h2 class="text-xs font-bold text-[#E0F8C7]">Untracked files <span id="untrackedCount" class="ml-1 text-[#B7D894]"></span></h2>
+          <ul id="untrackedList" class="mt-3 space-y-2" aria-label="Untracked files"></ul>
+        </section>
+      </div>
+
+      <div id="truncatedNotice" class="hidden rounded-lg border border-amber-800/70 bg-amber-950/20 p-3 text-xs text-amber-200">
+        The file list is limited to the first 300 changed files.
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-5">
+          <h2 class="text-sm font-bold">Recent commits</h2>
+          <ol id="commitList" class="mt-3 space-y-3"></ol>
+        </section>
+        <section class="rounded-xl border border-[#36415A] bg-[#36415A]/70 p-5">
+          <h2 class="text-sm font-bold">Recent stashes <span id="stashCount" class="ml-1 text-[#B7D894]"></span></h2>
+          <ol id="stashList" class="mt-3 space-y-3"></ol>
+          <p id="stashMore" class="hidden mt-3 text-[10px] text-slate-400">Showing the latest five stashes; more exist.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-[#36415A] bg-[#36415A]/50 p-4" aria-label="Git workflow explanation">
+      <h2 class="text-xs font-bold text-[#B7D894]">How to read this page</h2>
+      <p class="mt-2 text-xs leading-relaxed text-slate-300">
+        Working files can be staged for a future commit. Commits are local history; an upstream shows the locally known relationship with a remote branch. Ahead/behind counts use existing local tracking data and may be stale until fetched elsewhere.
+        This page only reads local Git status. It never stages, commits, fetches, pulls, pushes, switches branches, or changes files.
+      </p>
+      <p id="checkedAt" class="mt-3 text-[10px] text-slate-500"></p>
+    </section>
+  </main>
+
+  <script>
+    const byId = id => document.getElementById(id);
+
+    function appendText(parent, text, className = '') {
+      const element = document.createElement('span');
+      element.textContent = text;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function setStatus(message, tone = 'normal') {
+      const colors = {
+        normal: 'border-[#36415A] bg-[#36415A]/70 text-slate-200',
+        success: 'border-emerald-800/70 bg-emerald-950/20 text-emerald-200',
+        error: 'border-rose-900/70 bg-rose-950/20 text-rose-200',
+        warning: 'border-amber-800/70 bg-amber-950/20 text-amber-200'
+      };
+      byId('status').className = `rounded-lg border p-3 text-sm ${colors[tone]}`;
+      byId('status').textContent = message;
+    }
+
+    function renderChangeList(listId, countId, changes, emptyMessage) {
+      const list = byId(listId);
+      list.replaceChildren();
+      byId(countId).textContent = `(${changes.length})`;
+      if (changes.length === 0) {
+        const item = document.createElement('li');
+        item.className = 'text-xs text-slate-400';
+        item.textContent = emptyMessage;
+        list.appendChild(item);
+        return;
+      }
+
+      changes.forEach(change => {
+        const item = document.createElement('li');
+        item.className = 'rounded border border-slate-600/70 bg-[#202734]/70 px-2.5 py-2';
+        appendText(item, change.path, 'block break-all font-mono text-[11px] text-slate-200');
+        appendText(item, `${change.type} · ${change.status}`, 'mt-1 block text-[10px] text-[#B7D894]');
+        list.appendChild(item);
+      });
+    }
+
+    function renderCommits(commits) {
+      const list = byId('commitList');
+      list.replaceChildren();
+      if (commits.length === 0) {
+        appendText(list, 'No commits yet.', 'text-xs text-slate-400');
+        return;
+      }
+      commits.forEach(commit => {
+        const item = document.createElement('li');
+        item.className = 'border-b border-slate-600/60 pb-2 last:border-0';
+        appendText(item, commit.subject || '(no subject)', 'block break-words text-xs font-semibold text-slate-200');
+        appendText(item, `${commit.hash.slice(0, 8)} · ${commit.author} · ${formatDate(commit.date)}`, 'mt-1 block break-words text-[10px] text-slate-400');
+        list.appendChild(item);
+      });
+    }
+
+    function renderStashes(stashes, truncated) {
+      const list = byId('stashList');
+      list.replaceChildren();
+      byId('stashCount').textContent = `(${truncated ? `${stashes.length}+` : stashes.length})`;
+      if (stashes.length === 0) {
+        appendText(list, 'No stashes found.', 'text-xs text-slate-400');
+      } else {
+        stashes.forEach(stash => {
+          const item = document.createElement('li');
+          item.className = 'border-b border-slate-600/60 pb-2 last:border-0';
+          appendText(item, `${stash.reference} · ${stash.subject || '(no message)'}`, 'block break-words text-xs font-semibold text-slate-200');
+          appendText(item, formatDate(stash.date), 'mt-1 block text-[10px] text-slate-400');
+          list.appendChild(item);
+        });
+      }
+      byId('stashMore').classList.toggle('hidden', !truncated);
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function renderStatus(data) {
+      byId('projectName').textContent = data.activeProject.split(/[\\/]/).filter(Boolean).pop() || data.activeProject;
+      byId('projectPath').textContent = data.activeProject;
+      byId('repositoryRoot').textContent = data.repositoryRoot ? `Repository root: ${data.repositoryRoot}` : '';
+      byId('checkedAt').textContent = `Last checked: ${formatDate(data.checkedAt)}`;
+      byId('notRepository').classList.toggle('hidden', data.repository);
+      byId('repositoryDetails').classList.toggle('hidden', !data.repository);
+
+      if (!data.repository) {
+        byId('branchName').textContent = 'Not available';
+        byId('upstream').textContent = 'No Git repository detected';
+        byId('divergence').textContent = '';
+        setStatus('Active project is not inside a Git repository.', 'warning');
+        return;
+      }
+
+      byId('branchName').textContent = data.detached ? `Detached HEAD at ${data.head}` : data.branch;
+      byId('upstream').textContent = data.upstream ? `Upstream: ${data.upstream}` : 'No upstream branch configured';
+      byId('divergence').textContent = data.divergence
+        ? `${data.divergence.ahead} ahead · ${data.divergence.behind} behind (locally known; may be stale)`
+        : 'No locally known upstream comparison';
+
+      const changes = data.changes || { staged: [], unstaged: [], untracked: [], truncated: false };
+      renderChangeList('stagedList', 'stagedCount', changes.staged || [], 'No staged changes.');
+      renderChangeList('unstagedList', 'unstagedCount', changes.unstaged || [], 'No unstaged changes.');
+      renderChangeList('untrackedList', 'untrackedCount', changes.untracked || [], 'No untracked files.');
+      byId('truncatedNotice').classList.toggle('hidden', !changes.truncated);
+      renderCommits(data.commits || []);
+      renderStashes(data.stashes || [], data.stashesTruncated);
+      const changed = changes.totalFiles > 0;
+      setStatus(changed ? `${changes.totalFiles} changed file(s) detected.` : 'Working tree is clean.', 'success');
+    }
+
+    async function refreshStatus() {
+      const button = byId('refreshButton');
+      button.disabled = true;
+      button.textContent = 'Checking…';
+      setStatus('Reading local Git status…');
+      try {
+        const response = await fetch(`${window.location.origin}/git-status`, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(15000)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Server returned HTTP ${response.status}`);
+        renderStatus(data);
+      } catch (error) {
+        byId('repositoryDetails').classList.add('hidden');
+        byId('notRepository').classList.add('hidden');
+        byId('projectName').textContent = 'Unavailable';
+        byId('projectPath').textContent = '';
+        byId('repositoryRoot').textContent = '';
+        byId('branchName').textContent = 'Unavailable';
+        byId('upstream').textContent = '';
+        byId('divergence').textContent = '';
+        byId('checkedAt').textContent = '';
+        setStatus(`Git status could not be loaded: ${error.message}`, 'error');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Refresh status';
+      }
+    }
+
+    byId('refreshButton').addEventListener('click', refreshStatus);
+    refreshStatus();
+  </script>
+</body>
+</html>

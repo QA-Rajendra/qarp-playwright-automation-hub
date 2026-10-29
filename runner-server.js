@@ -18,6 +18,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { spawn, execSync, execFileSync } = require('child_process');
 const puppeteer = require('puppeteer');
+const { getGitStatus } = require('./qarp-git-status.cjs');
 
 const STATIC_ROOT = __dirname; // Current directory containing index.html, js/, assets/, pages/
 
@@ -2972,6 +2973,36 @@ function createRunnerServer(options = {}) {
     }
 
     // ── API Endpoints ──
+
+    if (req.method === 'GET' && cleanUrl === '/git-status') {
+      if (!isLocalWalkthroughRequest(req)) {
+        res.writeHead(403, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+        res.end(JSON.stringify({ error: 'Git status is available only from the local QARP dashboard.' }));
+        return;
+      }
+      try {
+        const gitStatus = await getGitStatus(currentProjectRoot);
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+        res.end(JSON.stringify(gitStatus));
+      } catch (error) {
+        const statusCode = error.code === 'GIT_UNAVAILABLE' ? 503 : 500;
+        res.writeHead(statusCode, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+        res.end(JSON.stringify({
+          error: error.message || 'Could not inspect Git status.',
+          code: error.code || 'GIT_STATUS_FAILED'
+        }));
+      }
+      return;
+    }
 
     if (cleanUrl.startsWith('/walkthrough/')) {
       if (!isLocalWalkthroughRequest(req)) {

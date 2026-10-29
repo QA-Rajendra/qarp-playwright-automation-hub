@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="960" viewBox="0 0 1000 960" role="img" aria-labelledby="title description">
+  <title id="title">Git Workflow status page flow</title>
+  <desc id="description">A flow from QARP dashboard to a read-only Git status page, including non-repository and error states, refresh, and the displayed repository information.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box { fill: #fff; stroke: #36415a; stroke-width: 2; rx: 12; }
+      .success { fill: #f5faef; stroke: #6f8f55; }
+      .warning { fill: #fffaf0; stroke: #c28a36; }
+      .error { fill: #fff5f5; stroke: #c56b6b; }
+      .line { fill: none; stroke: #64748b; stroke-width: 2.5; marker-end: url(#arrow); }
+      .return { fill: none; stroke: #6f8f55; stroke-width: 2.5; marker-end: url(#arrow); }
+      .label { font: 600 20px Arial, sans-serif; fill: #202734; text-anchor: middle; }
+      .small { font: 16px Arial, sans-serif; fill: #36415a; text-anchor: middle; }
+      .tag { font: 600 14px Arial, sans-serif; fill: #526047; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect x="260" y="24" width="480" height="70" class="box"/>
+  <text x="500" y="67" class="label">QARP Dashboard</text>
+
+  <path d="M500 94 V126" class="line"/>
+  <rect x="260" y="132" width="480" height="70" class="box"/>
+  <text x="500" y="174" class="label">Select "Git Workflow"</text>
+
+  <path d="M500 202 V234" class="line"/>
+  <rect x="260" y="240" width="480" height="70" class="box"/>
+  <text x="500" y="282" class="label">Git Workflow Page</text>
+
+  <path d="M500 310 V342" class="line"/>
+  <rect x="260" y="348" width="480" height="76" class="box"/>
+  <text x="500" y="380" class="label">Request status for active project</text>
+  <text x="500" y="405" class="small">Page sends request to the QARP server</text>
+
+  <path d="M500 424 V456" class="line"/>
+  <rect x="260" y="462" width="480" height="76" class="box"/>
+  <text x="500" y="494" class="label">Check active project directory</text>
+  <text x="500" y="519" class="small">Server verifies Git worktree and reads status</text>
+
+  <path d="M500 538 V574" class="line"/>
+  <path d="M500 574 H175 V610" class="line"/>
+  <path d="M500 574 V610" class="line"/>
+  <path d="M500 574 H825 V610" class="line"/>
+
+  <rect x="25" y="616" width="300" height="100" class="box warning"/>
+  <text x="175" y="654" class="label">Not a Git repository</text>
+  <text x="175" y="682" class="small">Show explanation and next step</text>
+
+  <rect x="350" y="616" width="300" height="100" class="box success"/>
+  <text x="500" y="654" class="label">Git worktree found</text>
+  <text x="500" y="682" class="small">Read-only local status</text>
+
+  <rect x="675" y="616" width="300" height="100" class="box error"/>
+  <text x="825" y="654" class="label">Git unavailable or error</text>
+  <text x="825" y="682" class="small">Show clear error and retry</text>
+
+  <path d="M500 716 V750" class="line"/>
+  <rect x="260" y="756" width="480" height="112" class="box success"/>
+  <text x="500" y="789" class="label">Display repository status</text>
+  <text x="500" y="819" class="small">Branch · staged / unstaged files · upstream</text>
+  <text x="500" y="844" class="small">Recent commits · stashes · last checked</text>
+
+  <path d="M740 812 H900 V500 H746" class="return"/>
+  <rect x="790" y="740" width="160" height="42" fill="#fff" stroke="none"/>
+  <text x="870" y="767" class="tag">Refresh</text>
+
+  <text x="500" y="922" class="tag">No Git changes are made by the MVP</text>
+</svg>

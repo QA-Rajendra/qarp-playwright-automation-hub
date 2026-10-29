@@ -115,6 +115,10 @@ npx puppeteer browsers install chrome
 
 The theme picker provides **Default** and **Sage Slate**, with Sage Slate selected by default. Sage Slate uses `#202734` and `#36415A` for its slate surfaces, with `#B7D894` and `#E0F8C7` as the green accent and highlight colors. Previously saved Default and Blue theme preferences are migrated to Sage Slate once; future theme choices are remembered.
 
+### Git Workflow
+
+Select **Git Workflow** in the dashboard's Quick Links to inspect the active project's current branch, staged and unstaged changes, untracked files, locally known upstream divergence, recent commits, and recent stashes. The page is read-only: it does not fetch, stage, commit, pull, push, switch branches, or modify files. Ahead/behind counts use local tracking data and may be stale until fetched outside the page.
+
 ### Quick start
 
 ```bash

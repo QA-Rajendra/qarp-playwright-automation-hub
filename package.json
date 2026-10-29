@@ -18,10 +18,11 @@
   "scripts": {
     "start": "node runner-server.js",
     "test:ui": "node runner-server.js",
-    "test:unit": "node --test tests/unit/run-insights.test.cjs"
+    "test:unit": "node --test tests/unit/run-insights.test.cjs tests/unit/git-status.test.cjs"
   },
   "files": [
     "runner-server.js",
+    "qarp-git-status.cjs",
     "qarp-json-reporter.cjs",
     "index.html",
     "pages",
