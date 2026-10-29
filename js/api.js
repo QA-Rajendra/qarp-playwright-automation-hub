@@ -71,7 +71,7 @@ class PlaywrightAPI {
     const projectName = this._projectCtx?.projectName
       || localStorage.getItem('pw_last_project_name')
       || 'Project';
-    return { tree: [], folders: [], totalTests: 0, gitBranch: 'main', projectName, projectRoot: '' };
+    return { tree: [], folders: [], totalTests: 0, gitBranch: 'unknown', projectName, projectRoot: '' };
   }
 
   /**

@@ -11,221 +11,6 @@
 <style>
 :root{--bg:#0a0b0f;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252a38;--border2:#2e3548;--accent:#7c6af7;--accent2:#5b4ef0;--accent-glow:rgba(124,106,247,0.18);--green:#34d399;--green-dim:rgba(52,211,153,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;--radius:12px;--radius-sm:8px}
 
-[data-theme="blue"],
-[data-theme="blue-erp"] {
-  --bg: #F5F9FF;
-  --surface: #FFFFFF;
-  --surface2: #EDF4FC;
-  --surface3: #E1ECF9;
-  --border: #D9E5F2;
-  --border2: #B8D2EB;
-  --accent: #1976D2;
-  --accent2: #1565C0;
-  --accent-glow: rgba(25, 118, 210, 0.15);
-  --green: #16A34A;
-  --green-dim: rgba(22, 163, 74, 0.12);
-  --red: #DC2626;
-  --red-dim: rgba(220, 38, 38, 0.12);
-  --text: #172B4D;
-  --text2: #334155;
-  --text3: #64748B;
-}
-
-[data-theme="blue"] .header,
-[data-theme="blue-erp"] .header {
-  background: #00264B !important;
-  border-bottom: 1px solid #0B2D4D !important;
-}
-
-[data-theme="blue"] .header-logo h1,
-[data-theme="blue-erp"] .header-logo h1 {
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  color: #FFFFFF !important;
-}
-
-[data-theme="blue"] .header-btn,
-[data-theme="blue-erp"] .header-btn {
-  background: rgba(255,255,255,0.12) !important;
-  border-color: rgba(255,255,255,0.2) !important;
-  color: #FFFFFF !important;
-}
-[data-theme="blue"] .header-btn:hover,
-[data-theme="blue-erp"] .header-btn:hover {
-  background: rgba(255,255,255,0.22) !important;
-}
-
-[data-theme="blue"] .status-pill,
-[data-theme="blue-erp"] .status-pill {
-  background: rgba(255,255,255,0.1) !important;
-  border-color: rgba(255,255,255,0.2) !important;
-  color: #E2E8F0 !important;
-}
-
-[data-theme="blue"] .sidebar,
-[data-theme="blue-erp"] .sidebar {
-  background: #0B2D4D !important;
-  border-right: 1px solid #16426C !important;
-}
-
-[data-theme="blue"] .sidebar-title,
-[data-theme="blue-erp"] .sidebar-title,
-[data-theme="blue"] .section-strip,
-[data-theme="blue-erp"] .section-strip {
-  color: #93C5FD !important;
-}
-
-[data-theme="blue"] .server-info,
-[data-theme="blue-erp"] .server-info {
-  background: #071F36 !important;
-  border-color: #1A4773 !important;
-  color: #CBD5E1 !important;
-}
-
-[data-theme="blue"] .endpoint,
-[data-theme="blue-erp"] .endpoint {
-  color: #60A5FA !important;
-}
-
-[data-theme="blue"] .tool-item,
-[data-theme="blue-erp"] .tool-item {
-  color: #E2E8F0 !important;
-}
-
-[data-theme="blue"] .tool-item:hover,
-[data-theme="blue-erp"] .tool-item:hover {
-  background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.15) !important;
-}
-
-[data-theme="blue"] .tool-item.active,
-[data-theme="blue-erp"] .tool-item.active {
-  background: #1976D2 !important;
-  border-color: #60A5FA !important;
-}
-
-[data-theme="blue"] .tool-name,
-[data-theme="blue-erp"] .tool-name {
-  color: #F8FAFC !important;
-}
-
-[data-theme="blue"] .tool-desc,
-[data-theme="blue-erp"] .tool-desc {
-  color: #94A3B8 !important;
-}
-
-[data-theme="blue"] .tool-item.active .tool-name,
-[data-theme="blue-erp"] .tool-item.active .tool-name {
-  color: #FFFFFF !important;
-}
-
-[data-theme="blue"] .tool-item.active .tool-desc,
-[data-theme="blue-erp"] .tool-item.active .tool-desc {
-  color: #E0E7FF !important;
-}
-
-[data-theme="blue"] .panel-header,
-[data-theme="blue-erp"] .panel-header {
-  background: #FFFFFF !important;
-  border-bottom-color: #D9E5F2 !important;
-}
-
-[data-theme="blue"] .tool-body,
-[data-theme="blue-erp"] .tool-body {
-  background: #FFFFFF !important;
-}
-
-[data-theme="blue"] .resp-panel,
-[data-theme="blue-erp"] .resp-panel {
-  background: #F8FAFC !important;
-}
-
-[data-theme="blue"] .tab,
-[data-theme="blue-erp"] .tab {
-  color: #64748B !important;
-}
-
-[data-theme="blue"] .tab:hover,
-[data-theme="blue-erp"] .tab:hover {
-  color: #172B4D !important;
-  background: #EDF4FC !important;
-}
-
-[data-theme="blue"] .tab.active,
-[data-theme="blue-erp"] .tab.active {
-  color: #1976D2 !important;
-  background: #FFFFFF !important;
-  border-color: #D9E5F2 !important;
-  border-bottom-color: #FFFFFF !important;
-}
-
-[data-theme="blue"] .jv,
-[data-theme="blue-erp"] .jv {
-  background: #07192C !important;
-  border-color: #1B3552 !important;
-  color: #F1F5F9 !important;
-}
-
-[data-theme="blue"] .ci,
-[data-theme="blue-erp"] .ci {
-  background: #112842 !important;
-  border-color: #1F4268 !important;
-  color: #93C5FD !important;
-}
-
-[data-theme="blue"] .rc,
-[data-theme="blue-erp"] .rc {
-  background: #FFFFFF !important;
-  border-color: #D9E5F2 !important;
-}
-
-[data-theme="blue"] .rch,
-[data-theme="blue-erp"] .rch {
-  background: #EDF4FC !important;
-  border-bottom-color: #D9E5F2 !important;
-}
-
-[data-theme="blue"] .rcb,
-[data-theme="blue-erp"] .rcb {
-  background: #07192C !important;
-  color: #E2E8F0 !important;
-}
-
-[data-theme="blue"] input[type=text],
-[data-theme="blue"] input[type=number],
-[data-theme="blue-erp"] input[type=text],
-[data-theme="blue-erp"] input[type=number] {
-  background: #FFFFFF !important;
-  border-color: #CBD5E1 !important;
-  color: #172B4D !important;
-}
-
-[data-theme="blue"] .cbrow,
-[data-theme="blue-erp"] .cbrow {
-  background: #EDF4FC !important;
-  border-color: #D9E5F2 !important;
-}
-
-[data-theme="blue"] .noargs,
-[data-theme="blue-erp"] .noargs {
-  background: #EDF4FC !important;
-  border-color: #D9E5F2 !important;
-  color: #64748B !important;
-}
-
-[data-theme="blue"] .he,
-[data-theme="blue-erp"] .he {
-  background: #FFFFFF !important;
-  border-color: #D9E5F2 !important;
-}
-
-[data-theme="blue"] .he:hover,
-[data-theme="blue-erp"] .he:hover {
-  border-color: #1976D2 !important;
-  background: #EDF4FC !important;
-}
-
 [data-theme="sage"] {
   --bg: #202734;
   --surface: #36415A;
@@ -500,7 +285,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
         <option value="">Loading projects...</option>
       </select>
       <button class="proj-add-btn" onclick="openAddModal()" title="Add Playwright Project">+</button>
-      <button class="proj-add-btn" style="margin-left:8px;" onclick="openAiScenarioModal()" title="Dynamic AI Scenario Check">&#129302;</button>
+      <button class="proj-add-btn" style="margin-left:8px;" onclick="openAiScenarioModal()" title="Capture Browser Scenario Evidence">&#127919;</button>
     </div>
     <div class="proj-path" id="projPath">...</div>
     <div class="proj-status" id="projStatus">
@@ -567,11 +352,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
   </div>
 </div>
 
-<!-- Add AI Scenario Check Modal -->
+<!-- Browser Scenario Evidence Modal -->
 <div id="aiScenarioModal" class="modal-backdrop" style="display:none;" onclick="closeAiScenarioModal(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <span class="modal-title">&#129302; Add Dynamic AI Scenario Check</span>
+      <span class="modal-title">&#127919; Browser Scenario Evidence</span>
       <button class="modal-close" onclick="closeAiScenarioModal()">&times;</button>
     </div>
     
@@ -591,24 +376,23 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:po
           </select>
         </div>
         <div class="mf" style="margin-top: 12px;">
-          <label class="ml">Scenario Prompt</label>
-          <textarea id="aiScenarioPrompt" placeholder="e.g. Test the login flow and verify the dashboard loads" rows="4" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box; resize: vertical;"></textarea>
+          <label class="ml">Scenario notes</label>
+          <textarea id="aiScenarioPrompt" placeholder="Describe the scenario you intend to verify manually" rows="4" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box; resize: vertical;"></textarea>
         </div>
         <div class="mf" style="margin-top: 12px;">
-          <label class="ml">Description (Optional)</label>
-          <textarea id="aiScenarioDesc" placeholder="Any specific assertions or data to use..." rows="3" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box;"></textarea>
+          <label class="ml">Additional notes (Optional)</label>
+          <textarea id="aiScenarioDesc" placeholder="Context for this evidence capture; not executed as browser actions" rows="3" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box;"></textarea>
         </div>
-        <button class="btn-detect" style="margin-top: 16px; width: 100%; background: #4a5568;" onclick="startDynamicScenario()">&#9654; Run Dynamic Scenario</button>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px;">This captures a page load, screenshot, and video. Notes are saved with the local run but are not interpreted by an AI agent or turned into interactions/assertions.</p>
+        <button class="btn-detect" id="runScenarioBtn" style="margin-top: 16px; width: 100%; background: #4a5568;" onclick="startDynamicScenario()">&#9654; Capture Evidence</button>
       </div>
 
       <!-- Live Progress Flow Tracker -->
       <div id="aiScenarioProgress" style="display:none; margin-top: 16px;">
-        <h4 style="color: var(--text1); margin-bottom: 12px;">Live Execution Progress:</h4>
+        <h4 style="color: var(--text1); margin-bottom: 12px;">Browser evidence capture:</h4>
         <ul id="progressList" style="list-style: none; padding: 0; color: var(--text2); font-size: 14px; line-height: 1.8;">
         </ul>
-        <div id="scenarioResult" style="display:none; margin-top: 16px; padding: 12px; border-radius: 6px; background: rgba(72, 187, 120, 0.1); color: #48bb78; border: 1px solid #48bb78;">
-          &#9989; <strong>Scenario Passed!</strong> All dynamic assertions verified successfully.
-        </div>
+        <div id="scenarioResult" style="display:none; margin-top: 16px; padding: 12px; border-radius: 6px;"></div>
       </div>
     </div>
   </div>
@@ -1315,7 +1099,7 @@ init().then(() => {
   }
 });
 
-// --- AI Dynamic Scenario Controller ---
+// --- Browser Scenario Evidence Controller ---
 function openAiScenarioModal() {
   document.getElementById('aiScenarioModal').style.display = 'flex';
   document.getElementById('aiScenarioForm').style.display = 'block';
@@ -1330,108 +1114,114 @@ function closeAiScenarioModal(event) {
 }
 
 function startDynamicScenario() {
-  const url = document.getElementById('aiScenarioUrl').value;
-  const prompt = document.getElementById('aiScenarioPrompt').value;
+  const url = document.getElementById('aiScenarioUrl').value.trim();
+  const prompt = [
+    document.getElementById('aiScenarioPrompt').value.trim(),
+    document.getElementById('aiScenarioDesc').value.trim()
+  ].filter(Boolean).join('\n\n');
   const browserEngine = document.getElementById('aiScenarioBrowser').value;
   
   if (!url || !prompt) {
-    alert("Please enter both a URL and a Scenario Prompt.");
+    alert('Please enter a target URL and scenario notes.');
     return;
   }
 
-  let domain = url;
-  try { domain = new URL(url).hostname; } catch(e) {}
-
-  document.getElementById('aiScenarioForm').style.display = 'none';
-  document.getElementById('aiScenarioProgress').style.display = 'block';
-  
+  const button = document.getElementById('runScenarioBtn');
   const progressList = document.getElementById('progressList');
-  const steps = [
-    `&#9203; Initializing AI browser agent for <strong>${domain}</strong>...`,
-    `&#9203; Analyzing DOM and mapping UI elements...`,
-    `&#9203; Executing prompt: <em>"${prompt}"</em>...`,
-    `&#9203; Performing dynamic interactions and assertions...`,
-    `&#9989; Execution complete. Gathering results.`
-  ];
+  const result = document.getElementById('scenarioResult');
+  const form = document.getElementById('aiScenarioForm');
+  const progress = document.getElementById('aiScenarioProgress');
+  const addProgress = message => {
+    const item = document.createElement('li');
+    item.textContent = message;
+    progressList.appendChild(item);
+  };
 
-  // Add a hidden system prompt to the user prompt for robust checks
-  const systemPrompt = `\\n[SYSTEM PROMPT]: You are an expert QA tester. Analyze the UI for any visual bugs, console errors, and broken links across all test cases.`;
-  const fullPrompt = prompt + systemPrompt;
+  form.style.display = 'none';
+  progress.style.display = 'block';
+  result.style.display = 'none';
+  progressList.replaceChildren();
+  button.disabled = true;
+  addProgress('Starting a local browser evidence capture...');
 
-  // Send request to our merged AI Scenario Backend on port 9300
-  fetch('http://localhost:9300/api/run-scenario', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, prompt: fullPrompt, browser: browserEngine })
-  })
-  .then(res => res.json())
-  .then(data => {
-    clearInterval(interval);
-    
-    // Complete the UI steps visually
-    while(currentStep < steps.length) {
-      if(currentStep > 0) {
-        const prevLi = progressList.children[currentStep - 1];
-        if(prevLi) {
-          prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
-          prevLi.style.color = '#48bb78';
-        }
+  (async () => {
+    try {
+      const startResponse = await fetch(`${BASE}/api/run-scenario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, prompt, browser: browserEngine })
+      });
+      const startData = await startResponse.json();
+      if (!startResponse.ok) throw new Error(startData.error || `Server returned ${startResponse.status}`);
+
+      addProgress(`Run ${startData.id} started with ${browserEngine}.`);
+      let run;
+      const deadline = Date.now() + 100000;
+      do {
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        const statusResponse = await fetch(`${BASE}/api/scenarios/${encodeURIComponent(startData.id)}`);
+        const statusData = await statusResponse.json();
+        if (!statusResponse.ok) throw new Error(statusData.error || `Server returned ${statusResponse.status}`);
+        run = statusData;
+      } while (run.status === 'running' && Date.now() < deadline);
+      if (run.status === 'running') throw new Error('Timed out waiting for the scenario result. The run may still be active.');
+
+      addProgress(run.status === 'completed' ? 'Browser capture finished.' : 'Browser capture failed.');
+      result.replaceChildren();
+      result.style.display = 'block';
+      result.style.color = run.status === 'completed' ? 'var(--green)' : 'var(--red)';
+      result.style.border = `1px solid ${run.status === 'completed' ? 'var(--green)' : 'var(--red)'}`;
+      result.style.background = 'var(--bg3)';
+
+      const summary = document.createElement('p');
+      summary.textContent = run.status === 'completed'
+        ? 'Evidence captured. Scenario notes were not executed as interactions or assertions.'
+        : run.error || 'The browser capture did not complete.';
+      result.appendChild(summary);
+
+      if (run.report) {
+        const details = document.createElement('p');
+        details.textContent = `Page title: ${run.report.title || '(untitled)'} | Final URL: ${run.report.finalUrl || url}`;
+        result.appendChild(details);
+
+        const errors = document.createElement('pre');
+        errors.textContent = run.report.pageErrors && run.report.pageErrors.length
+          ? `Page errors (${run.report.pageErrors.length}):\n${run.report.pageErrors.join('\n')}`
+          : 'No uncaught page errors were observed during navigation.';
+        result.appendChild(errors);
       }
-      const li = document.createElement('li');
-      li.innerHTML = steps[currentStep];
-      if (currentStep === steps.length - 1) {
-         li.innerHTML = li.innerHTML.replace('&#9203;', '&#9989;');
-         li.style.color = '#48bb78';
+
+      const artifactBase = `${BASE}/api/scenarios/${encodeURIComponent(startData.id)}/artifacts`;
+      if (run.artifacts && run.artifacts.screenshot) {
+        const label = document.createElement('p');
+        label.textContent = 'Screenshot';
+        const image = document.createElement('img');
+        image.src = `${artifactBase}/screenshot`;
+        image.alt = 'Captured page screenshot';
+        image.loading = 'lazy';
+        image.style.cssText = 'max-width:100%;border-radius:4px;margin-top:8px;';
+        result.append(label, image);
       }
-      progressList.appendChild(li);
-      currentStep++;
-    }
-
-    setTimeout(() => {
-      const resDiv = document.getElementById('scenarioResult');
-      resDiv.style.display = 'block';
-      const color = data.status === 'success' ? '#48bb78' : '#e53e3e';
-      const icon = data.status === 'success' ? '&#9989;' : '&#10060;';
-      
-      resDiv.innerHTML = `
-        ${icon} <strong style="color:${color}">${data.message}</strong><br/><br/>
-        <strong>Console Report:</strong>
-        <pre style="background:var(--bg1); padding:8px; border-radius:4px; font-size:11px; white-space:pre-wrap; max-height:150px; overflow-y:auto; border:1px solid var(--border);">${data.report}</pre>
-        <strong>Final Screenshot Report:</strong><br/>
-        <img src="../scenario-result.png?t=${new Date().getTime()}" loading="lazy" style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};" alt="Scenario Report Screenshot" />
-        <br/><br/>
-        <strong>Execution Video Replay:</strong><br/>
-        <video controls autoplay muted style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};">
-          <source src="../scenario-video.webm?t=${new Date().getTime()}" type="video/webm">
-          Your browser does not support the video tag.
-        </video>
-      `;
-    }, 500);
-  })
-  .catch(err => {
-    clearInterval(interval);
-    const li = document.createElement('li');
-    li.innerHTML = `<span style="color:#e53e3e;">&#10060; Could not connect to AI Scenario Server.</span>`;
-    progressList.appendChild(li);
-  });
-
-  let currentStep = 0;
-  const interval = setInterval(() => {
-    if (currentStep > 0) {
-      const prevLi = progressList.children[currentStep - 1];
-      if(prevLi) {
-        prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
-        prevLi.style.color = '#48bb78';
+      if (run.artifacts && run.artifacts.video) {
+        const label = document.createElement('p');
+        label.textContent = 'Video recording';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.muted = true;
+        video.style.cssText = 'max-width:100%;border-radius:4px;margin-top:8px;';
+        const source = document.createElement('source');
+        source.src = `${artifactBase}/video`;
+        source.type = 'video/webm';
+        video.appendChild(source);
+        result.append(label, video);
       }
+    } catch (error) {
+      addProgress(error.message || 'Could not start the browser evidence capture.');
+      form.style.display = 'block';
+    } finally {
+      button.disabled = false;
     }
-
-    if (currentStep < steps.length - 1) {
-      const li = document.createElement('li');
-      li.innerHTML = steps[currentStep];
-      progressList.appendChild(li);
-      currentStep++;
-    }
-  }, 1500);
+  })();
 }
 
 </script>

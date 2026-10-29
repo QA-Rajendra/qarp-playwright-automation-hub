@@ -25,19 +25,18 @@
       --amb: #fbbf24;
     }
 
-    [data-theme="blue"],
-    [data-theme="blue-erp"] {
-      --bg: #F5F9FF;
-      --card: #FFFFFF;
-      --code: #07192C;
-      --bdr: #D9E5F2;
-      --muted: #64748B;
-      --text: #172B4D;
-      --pur: #1976D2;
-      --cyn: #0284C7;
-      --grn: #16A34A;
-      --red: #DC2626;
-      --amb: #D97706;
+    [data-theme="sage"] {
+      --bg: #202734;
+      --card: #36415A;
+      --code: #263043;
+      --bdr: #4B5872;
+      --muted: #B6C5A3;
+      --text: #E0F8C7;
+      --pur: #B7D894;
+      --cyn: #E0F8C7;
+      --grn: #B7D894;
+      --red: #F28B82;
+      --amb: #F2C879;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -83,82 +82,21 @@
     .chip { font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid var(--bdr); color: var(--muted); }
     .lnum { display: inline-block; user-select: none; color: #475569; margin-right: 0.75rem; min-width: 1.5rem; text-align: right; }
 
-    /* Blue Theme Specific Overrides for Snippets Page */
-    [data-theme="blue"] .topbar,
-    [data-theme="blue-erp"] .topbar {
-      background: #00264B !important;
-      border-bottom-color: rgba(217, 229, 242, 0.2) !important;
-      color: #FFFFFF !important;
-    }
-    [data-theme="blue"] .topbar a,
-    [data-theme="blue"] .topbar span,
-    [data-theme="blue-erp"] .topbar a,
-    [data-theme="blue-erp"] .topbar span {
-      color: #D9E5F2 !important;
-    }
-    [data-theme="blue"] .catbar,
-    [data-theme="blue-erp"] .catbar {
-      background: #FFFFFF !important;
-      border-bottom-color: #D9E5F2 !important;
-    }
-    [data-theme="blue"] .scard,
-    [data-theme="blue-erp"] .scard {
-      background: #FFFFFF !important;
-      border-color: #D9E5F2 !important;
-      color: #172B4D !important;
-      box-shadow: 0 2px 8px rgba(11, 45, 77, 0.06) !important;
-    }
-    [data-theme="blue"] .sch,
-    [data-theme="blue-erp"] .sch {
-      background: #F8FAFD !important;
-      border-bottom-color: #D9E5F2 !important;
-      color: #172B4D !important;
-    }
-    [data-theme="blue"] .stitle,
-    [data-theme="blue-erp"] .stitle {
-      color: #172B4D !important;
-    }
-    [data-theme="blue"] .scf,
-    [data-theme="blue-erp"] .scf {
-      background: #FAFCFE !important;
-      border-top-color: #D9E5F2 !important;
-      color: #64748B !important;
-    }
-    [data-theme="blue"] .stag,
-    [data-theme="blue-erp"] .stag {
-      background: #EDF4FC !important;
-      border-color: #D9E5F2 !important;
-      color: #1976D2 !important;
-    }
-    [data-theme="blue"] .srch,
-    [data-theme="blue-erp"] .srch {
-      background: #FFFFFF !important;
-      border-color: #D9E5F2 !important;
-      color: #172B4D !important;
-    }
-    [data-theme="blue"] .tab,
-    [data-theme="blue-erp"] .tab {
-      background: #FFFFFF !important;
-      border-color: #D9E5F2 !important;
-      color: #64748B !important;
-    }
-    [data-theme="blue"] .tab.on,
-    [data-theme="blue-erp"] .tab.on {
-      background: #1976D2 !important;
-      color: #FFFFFF !important;
-      border-color: #1976D2 !important;
-    }
-    [data-theme="blue"] .cpbtn,
-    [data-theme="blue-erp"] .cpbtn {
-      background: #EDF4FC !important;
-      border-color: #D9E5F2 !important;
-      color: #1976D2 !important;
-    }
-    [data-theme="blue"] .cpbtn:hover,
-    [data-theme="blue-erp"] .cpbtn:hover {
-      background: #1976D2 !important;
-      color: #FFFFFF !important;
-    }
+    [data-theme="sage"] .topbar { background: rgba(32, 39, 52, 0.96); }
+    [data-theme="sage"] .catbar { background: rgba(54, 65, 90, 0.94); }
+    [data-theme="sage"] .topbar a,
+    [data-theme="sage"] .topbar span,
+    [data-theme="sage"] .topbar h1 { color: var(--text); }
+    [data-theme="sage"] .tab.on { color: #202734; box-shadow: 0 4px 12px rgba(183, 216, 148, 0.22); }
+    [data-theme="sage"] .scb { background: #263043; }
+    [data-theme="sage"] pre code { color: #E0F8C7; }
+    [data-theme="sage"] .cm { color: #B6C5A3; }
+    [data-theme="sage"] .st { color: #B7D894; }
+    [data-theme="sage"] .kw { color: #D9C7F5; }
+    [data-theme="sage"] .fn { color: #C2D9F0; }
+    [data-theme="sage"] .nm { color: #F2C879; }
+    [data-theme="sage"] .hl { background: rgba(183, 216, 148, 0.25); color: #E0F8C7; }
+
   </style>
 </head>
 <body>
@@ -191,9 +129,9 @@
               <span class="theme-check font-bold text-xs text-purple-400"></span>
             </button>
             <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-slate-800 text-left transition-all"
-                    data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);">
-              <span class="flex items-center gap-2"><span>🔷</span> <b>Blue</b></span>
-              <span class="theme-check font-bold text-xs text-blue-400"></span>
+                    data-theme="sage" onclick="changeTheme('sage'); theme.toggleThemeMenu(event);">
+              <span class="flex items-center gap-2"><span>🌿</span> <b>Sage Slate</b></span>
+              <span class="theme-check font-bold text-xs text-lime-200"></span>
             </button>
           </div>
         </div>

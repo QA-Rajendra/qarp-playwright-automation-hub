@@ -3,7 +3,7 @@
 /**
  * Playwright Automation Hub - Node.js Server & Middleware Module
  * 
- * ZERO external dependencies: uses only built-in Node.js modules (http, fs, path, os, child_process).
+ * Uses Node.js built-ins plus the installed Puppeteer and project Playwright packages for browser features.
  * 
  * Can be used in 3 ways:
  * 1. CLI / Globally: playwright-hub (or npx / node runner-server.js)
@@ -19,6 +19,11 @@ const crypto = require('crypto');
 const { spawn, execSync, execFileSync } = require('child_process');
 const puppeteer = require('puppeteer');
 const { getGitStatus } = require('./qarp-git-status.cjs');
+const {
+  getScenarioArtifact,
+  startScenario,
+  validateScenarioInput
+} = require('./qarp-scenario-runner.cjs');
 
 const STATIC_ROOT = __dirname; // Current directory containing index.html, js/, assets/, pages/
 
@@ -31,6 +36,10 @@ const MIME_TYPES = {
   '.svg':  'image/svg+xml',
   '.json': 'application/json; charset=UTF-8',
   '.png':  'image/png',
+  '.webm': 'video/webm',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.pdf': 'application/pdf',
   '.ico':  'image/x-icon'
 };
 
@@ -2440,10 +2449,18 @@ function formatWalkthroughMarkdown(session) {
 }
 
 // ── Create Standalone HTTP Server ──────────────────────────────────────────
+function isLoopbackHost(host) {
+  const normalizedHost = String(host || '').replace(/^\[|\]$/g, '').toLowerCase();
+  return normalizedHost === 'localhost' || normalizedHost === '::1' || normalizedHost.startsWith('127.');
+}
+
 function createRunnerServer(options = {}) {
   const requestedPort = Number.isInteger(options.port) ? options.port : 9300;
   let port = requestedPort;
   const host = options.host || '127.0.0.1';
+  if (!isLoopbackHost(host) && options.allowLan !== true) {
+    throw new Error('Binding QARP to a network interface requires allowLan: true.');
+  }
   let currentProjectRoot = path.resolve(options.projectRoot || process.cwd());
   let reportPort = port ? port + 20 : 0;
   let allurePort = port ? port + 35 : 0;
@@ -2487,6 +2504,19 @@ function createRunnerServer(options = {}) {
   let reportProc = null;
   let allureProc = null;
   const walkthroughSessions = new Map();
+  const scenarioJobs = new Map();
+  const allowedCorsOrigins = new Set();
+  for (const configuredOrigin of Array.isArray(options.corsOrigins) ? options.corsOrigins : []) {
+    try {
+      const parsedOrigin = new URL(configuredOrigin);
+      if (!['http:', 'https:'].includes(parsedOrigin.protocol) || parsedOrigin.origin !== configuredOrigin) {
+        throw new Error('Origin must be an HTTP(S) origin without a path.');
+      }
+      allowedCorsOrigins.add(parsedOrigin.origin);
+    } catch (error) {
+      throw new Error(`Invalid CORS origin "${configuredOrigin}": ${error.message}`);
+    }
+  }
 
   function isLocalWalkthroughRequest(req) {
     const remoteAddress = req.socket.remoteAddress || '';
@@ -2535,12 +2565,27 @@ function createRunnerServer(options = {}) {
   }
 
   const server = http.createServer(async (req, res) => {
-    // CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    const requestOrigin = req.headers.origin;
+    const expectedOrigin = `${req.socket.encrypted ? 'https' : 'http'}://${req.headers.host}`;
+    const originAllowed = !requestOrigin || requestOrigin === expectedOrigin || allowedCorsOrigins.has(requestOrigin);
+    if (!originAllowed) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Vary': 'Origin' });
+      res.end(JSON.stringify({ error: 'This origin is not allowed to access the QARP server.' }));
+      return;
+    }
+    if (requestOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    }
 
     if (req.method === 'OPTIONS') {
+      if (!requestOrigin) {
+        res.writeHead(403);
+        res.end();
+        return;
+      }
       res.writeHead(204);
       res.end();
       return;
@@ -2548,125 +2593,110 @@ function createRunnerServer(options = {}) {
 
     const [cleanUrl] = req.url.split('?');
 
-    // --- AI Scenario Integration ---
     if (req.method === 'POST' && cleanUrl === '/api/run-scenario') {
-      let body = '';
-      req.on('data', chunk => body += chunk.toString());
-      req.on('end', () => {
-        try {
-          const { url, prompt, browser: browserChoice = 'chromium' } = JSON.parse(body);
-          console.log(`\\n🚀 Received Dynamic Scenario Request!`);
-          console.log(`Browser: ${browserChoice}`);
-          console.log(`URL: ${url}`);
-          console.log(`Prompt: ${prompt}`);
-
-          const script = `
-            const { chromium, firefox, webkit } = require('playwright');
-            const fs = require('fs');
-            const path = require('path');
-
-            (async () => {
-              const engine = process.env.TEST_BROWSER || 'chromium';
-              const browserType = engine === 'firefox' ? firefox : (engine === 'webkit' ? webkit : chromium);
-              
-              console.log('Launching ' + engine + ' browser...');
-              const browser = await browserType.launch({ 
-                headless: false, 
-                slowMo: 300,
-                args: engine === 'chromium' ? ['--start-maximized'] : []
-              });
-              
-              const videosDir = path.join(__dirname, 'test-results', 'videos');
-              if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
-
-              const context = await browser.newContext({ viewport: null, recordVideo: { dir: videosDir } });
-              const page = await context.newPage();
-              
-              console.log('Navigating to ' + process.env.TEST_URL);
-              await page.goto(process.env.TEST_URL, { waitUntil: 'networkidle' }).catch(e => console.log('Navigation took too long, continuing...'));
-              
-              if (process.env.TEST_PROMPT.toLowerCase().includes('login')) {
-                console.log('Simulating login flow...');
-                try {
-                  let emailInput = page.locator('input[type="email"]');
-                  if (await emailInput.count() === 0) emailInput = page.locator('input[name="email"]');
-                  if (await emailInput.count() === 0) emailInput = page.locator('input[type="text"]').first();
-                  await emailInput.fill('qarajendra4893@gmail.com');
-                  
-                  const passInput = page.locator('input[type="password"]').first();
-                  await passInput.fill('rgp@1234');
-                  
-                  const btn = page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Log in"), button:has-text("Login"), button:has-text("Continue")').first();
-                  await btn.click();
-                } catch(err) {
-                  console.log('Could not complete login flow automatically.');
-                }
-              }
-
-              console.log('Scenario complete. Taking a screenshot and saving video...');
-              await page.waitForTimeout(4000);
-              
-              const screenshotPath = path.join(__dirname, 'scenario-result.png');
-              await page.screenshot({ path: screenshotPath, fullPage: true });
-              console.log('Screenshot saved to: ' + screenshotPath);
-              
-              // Close context to flush video to disk
-              await context.close();
-              await browser.close();
-
-              // Export the latest video file for the UI
-              try {
-                const files = fs.readdirSync(videosDir).filter(f => f.endsWith('.webm'));
-                if (files.length > 0) {
-                  // Get the most recently created video
-                  const latestVideo = files.map(f => ({ f, ctime: fs.statSync(path.join(videosDir, f)).ctimeMs })).sort((a, b) => b.ctime - a.ctime)[0].f;
-                  fs.copyFileSync(path.join(videosDir, latestVideo), path.join(__dirname, 'scenario-video.webm'));
-                  console.log('Video saved to scenario-video.webm');
-                }
-              } catch(e) {
-                console.log('Failed to export video:', e.message);
-              }
-            })();
-          `;
-          
-          const fs = require('fs');
-          const path = require('path');
-          const { exec } = require('child_process');
-          const tempScriptPath = path.join(__dirname, 'temp-scenario.js');
-          fs.writeFileSync(tempScriptPath, script, 'utf8');
-
-          const childEnv = Object.assign({}, process.env, { 
-            TEST_URL: url, 
-            TEST_PROMPT: prompt,
-            TEST_BROWSER: browserChoice 
-          });
-          exec(`node temp-scenario.js`, { env: childEnv, timeout: 60000 }, (err, stdout, stderr) => {
-            try { fs.unlinkSync(tempScriptPath); } catch(e) {}
-            
-            let finalStatus = 'success';
-            let reportLog = stdout || '';
-            if (err || stderr) {
-              finalStatus = 'error';
-              reportLog += '\\nERROR:\\n' + (stderr || err.message);
-            }
-            
-            console.log('Finished Dynamic Scenario Execution. Returning report.');
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ 
-              status: finalStatus, 
-              message: finalStatus === 'success' ? 'Scenario Passed!' : 'Scenario Failed!',
-              report: reportLog
-            }));
-          });
-        } catch(e) {
-          res.writeHead(400);
-          res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      if (!isLocalWalkthroughRequest(req)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Scenario runs are available only from the local QARP dashboard.' }));
+        return;
+      }
+      if ([...scenarioJobs.values()].some(job => job.status === 'running')) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'A scenario is already running. Wait for it to finish before starting another.' }));
+        return;
+      }
+      try {
+        const input = await readWalkthroughBody(req, 16 * 1024);
+        const job = startScenario(currentProjectRoot, validateScenarioInput(input));
+        scenarioJobs.set(job.id, job);
+        while (scenarioJobs.size > 20) {
+          const oldest = scenarioJobs.keys().next().value;
+          if (scenarioJobs.get(oldest).status === 'running') break;
+          scenarioJobs.delete(oldest);
         }
-      });
+        res.writeHead(202, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ id: job.id, status: job.status, startedAt: job.startedAt }));
+      } catch (error) {
+        res.writeHead(error.statusCode || 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message || 'Could not start the scenario.' }));
+      }
       return;
     }
-    // --- End AI Scenario Integration ---
 
+    const scenarioStatusMatch = cleanUrl.match(/^\/api\/scenarios\/([0-9a-f-]{36})$/i);
+    if (req.method === 'GET' && scenarioStatusMatch) {
+      if (!isLocalWalkthroughRequest(req)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Scenario results are available only from the local QARP dashboard.' }));
+        return;
+      }
+      const job = scenarioJobs.get(scenarioStatusMatch[1]);
+      if (!job) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Scenario run not found.' }));
+        return;
+      }
+      const hasArtifact = type => {
+        try {
+          getScenarioArtifact(job, type);
+          return true;
+        } catch (error) {
+          if (error.statusCode === 404) return false;
+          throw error;
+        }
+      };
+      let artifacts;
+      try {
+        artifacts = {
+          screenshot: hasArtifact('screenshot'),
+          video: hasArtifact('video')
+        };
+      } catch (error) {
+        res.writeHead(error.statusCode || 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message || 'Could not inspect scenario artifacts.' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        id: job.id,
+        status: job.status,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
+        input: { url: job.input.url, browser: job.input.browser },
+        report: job.report,
+        error: job.error,
+        artifacts
+      }));
+      return;
+    }
+
+    const scenarioArtifactMatch = cleanUrl.match(/^\/api\/scenarios\/([0-9a-f-]{36})\/artifacts\/(screenshot|video)$/i);
+    if (req.method === 'GET' && scenarioArtifactMatch) {
+      if (!isLocalWalkthroughRequest(req)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Scenario artifacts are available only from the local QARP dashboard.' }));
+        return;
+      }
+      const job = scenarioJobs.get(scenarioArtifactMatch[1]);
+      if (!job) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Scenario run not found.' }));
+        return;
+      }
+      try {
+        const artifact = getScenarioArtifact(job, scenarioArtifactMatch[2]);
+        res.writeHead(200, {
+          'Content-Type': artifact.contentType,
+          'Content-Length': artifact.size,
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff'
+        });
+        fs.createReadStream(artifact.filePath).pipe(res);
+      } catch (error) {
+        res.writeHead(error.statusCode || 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+      return;
+    }
 
     if (req.method === 'GET' && cleanUrl === '/runner-sessions') {
       const sessions = [...managedRunnerSessions.values()].map(({ id, name, projectRoot, port: sessionPort, url, startedAt }) => ({
@@ -3415,7 +3445,7 @@ function createRunnerServer(options = {}) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         projectName: path.basename(currentProjectRoot),
-        gitBranch: structure ? structure.gitBranch : 'main',
+        gitBranch: structure ? structure.gitBranch : 'unknown',
         totalTests,
         passed: totalPassed,
         failed: totalFailed,
@@ -3836,9 +3866,9 @@ function createRunnerServer(options = {}) {
     const networkIps = getNetworkIPs();
     console.log(`\n🎭 Playwright Automation Hub Server started!`);
     console.log(`   Local Access:   http://localhost:${port}`);
-    if (networkIps.length > 0) {
+    if (!isLoopbackHost(host) && networkIps.length > 0) {
       networkIps.forEach(ip => {
-        console.log(`   Network Access: http://${ip}:${port}  (Share this with teammates on your Wi-Fi/LAN)`);
+        console.warn(`   LAN Access:     http://${ip}:${port}  (Trusted network only; no authentication is configured)`);
       });
     }
     console.log(`   Watching tests in: ${currentProjectRoot}`);
@@ -3862,6 +3892,13 @@ function createRunnerServer(options = {}) {
   });
 
   server.on('close', () => {
+    scenarioJobs.forEach(job => {
+      if (job.status !== 'running' || !job.proc) return;
+      job.status = 'failed';
+      job.error = 'QARP server stopped before the scenario finished.';
+      job.completedAt = new Date().toISOString();
+      job.proc.kill();
+    });
     const sessions = [...walkthroughSessions.values()];
     walkthroughSessions.clear();
     sessions.forEach(session => {
@@ -3879,13 +3916,125 @@ function createRunnerServer(options = {}) {
 // ── Express / Connect Middleware Integration ──
 function runnerMiddleware(options = {}) {
   const projectRoot = options.projectRoot || process.cwd();
-  return (req, res, next) => {
-    const [cleanUrl] = req.url.split('?');
-    if (['/structure', '/projects', '/run', '/history', '/show-report', '/allure-report'].some(p => cleanUrl.startsWith(p))) {
-      return next();
+  let server = null;
+  let serverReady = null;
+
+  function getServer() {
+    if (!serverReady) {
+      server = createRunnerServer({
+        port: 0,
+        host: '127.0.0.1',
+        projectRoot,
+        openBrowserOnStart: false
+      });
+      serverReady = new Promise((resolve, reject) => {
+        const onError = error => reject(error);
+        server.once('error', onError);
+        server.once('listening', () => {
+          server.removeListener('error', onError);
+          resolve(server.address().port);
+        });
+      }).catch(error => {
+        serverReady = null;
+        throw error;
+      });
     }
-    next();
+    return serverReady;
+  }
+
+  function addMountBootstrap(html, mountPrefix) {
+    const prefix = JSON.stringify(mountPrefix).replace(/</g, '\\u003c');
+    const bootstrap = `<script>window.__QARP_BASE_PATH__=${prefix};(function(){const prefix=window.__QARP_BASE_PATH__;const nativeFetch=window.fetch.bind(window);window.fetch=function(input,init){if(!prefix)return nativeFetch(input,init);let target=typeof input==='string'||input instanceof URL?input.toString():input instanceof Request?input.url:null;if(!target)return nativeFetch(input,init);const url=new URL(target,window.location.href);if(url.origin===window.location.origin&&!url.pathname.startsWith(prefix+'/')&&url.pathname!==prefix)url.pathname=prefix+url.pathname;const nextInput=input instanceof Request?new Request(url.href,input):url.href;return nativeFetch(nextInput,init)}})();</script>`;
+    const headIndex = html.toLowerCase().indexOf('</head>');
+    return headIndex === -1
+      ? `${bootstrap}${html}`
+      : `${html.slice(0, headIndex)}${bootstrap}${html.slice(headIndex)}`;
+  }
+
+  const middleware = async (req, res, next) => {
+    if (!req.url || !req.url.startsWith('/') || req.url.startsWith('//')) return next();
+    const allowedMethods = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']);
+    if (!allowedMethods.has(req.method)) return next();
+    const requestOrigin = req.headers.origin;
+    const requestProtocol = req.protocol || (req.socket.encrypted ? 'https' : 'http');
+    const expectedOrigin = `${requestProtocol}://${req.headers.host}`;
+    if (requestOrigin && requestOrigin !== expectedOrigin) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Vary': 'Origin' });
+      res.end(JSON.stringify({ error: 'The QARP middleware accepts same-origin browser requests only.' }));
+      return;
+    }
+
+    try {
+      const internalPort = await getServer();
+      const mountPrefix = String(req.baseUrl || options.mountPath || '').replace(/\/+$/, '');
+      const internalOrigin = `http://127.0.0.1:${internalPort}`;
+      const headers = { ...req.headers, host: `127.0.0.1:${internalPort}` };
+      if (req.headers.origin) headers.origin = internalOrigin;
+
+      let parsedBody = null;
+      if (req.readableEnded && req.body !== undefined && !['GET', 'HEAD'].includes(req.method)) {
+        parsedBody = Buffer.isBuffer(req.body)
+          ? req.body
+          : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
+        headers['content-type'] = 'application/json';
+        headers['content-length'] = String(parsedBody.length);
+      }
+
+      const upstream = http.request({
+        hostname: '127.0.0.1',
+        port: internalPort,
+        method: req.method,
+        path: req.url,
+        headers
+      }, upstreamResponse => {
+        const responseHeaders = { ...upstreamResponse.headers };
+        delete responseHeaders['access-control-allow-origin'];
+        delete responseHeaders['access-control-allow-methods'];
+        delete responseHeaders['access-control-allow-headers'];
+
+        if (!(responseHeaders['content-type'] || '').includes('text/html')) {
+          res.writeHead(upstreamResponse.statusCode || 502, responseHeaders);
+          upstreamResponse.pipe(res);
+          return;
+        }
+
+        const chunks = [];
+        upstreamResponse.on('data', chunk => chunks.push(chunk));
+        upstreamResponse.on('end', () => {
+          const html = Buffer.concat(chunks).toString('utf8');
+          const output = Buffer.from(addMountBootstrap(html, mountPrefix), 'utf8');
+          delete responseHeaders['content-encoding'];
+          delete responseHeaders['transfer-encoding'];
+          responseHeaders['content-length'] = String(output.length);
+          res.writeHead(upstreamResponse.statusCode || 502, responseHeaders);
+          res.end(output);
+        });
+      });
+
+      upstream.on('error', error => {
+        if (res.headersSent) {
+          res.destroy(error);
+          return;
+        }
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `QARP middleware server failed: ${error.message}` }));
+      });
+
+      if (parsedBody) upstream.end(parsedBody);
+      else req.pipe(upstream);
+    } catch (error) {
+      next(error);
+    }
   };
+
+  middleware.close = callback => {
+    if (!server || !server.listening) {
+      if (callback) callback();
+      return;
+    }
+    server.close(callback);
+  };
+  return middleware;
 }
 
 // ── Auto-start if executed directly from terminal or via global CLI ──
@@ -3893,7 +4042,8 @@ if (require.main === module) {
   (async () => {
     const args = process.argv.slice(2);
     let cliPort = 9300; // default to 9300
-    let cliHost = '0.0.0.0'; // allows access from other devices/people on network
+    let cliHost = '127.0.0.1';
+    const lanAccess = args.includes('--lan');
     let cliRoot = process.cwd();
     let shouldOpenBrowser = true;
     let shouldCloseOldBrowsers = true;
@@ -3910,6 +4060,13 @@ if (require.main === module) {
       if (arg === '--close-all-browsers') closeAllBrowsers = true;
       if (arg === '--no-kill-port') shouldKillOldPort = false;
     });
+
+    if (lanAccess && cliHost === '127.0.0.1') cliHost = '0.0.0.0';
+    if (!isLoopbackHost(cliHost) && !lanAccess) {
+      console.error('Network binding is disabled by default. Use --lan to explicitly allow trusted LAN access.');
+      process.exitCode = 1;
+      return;
+    }
 
     console.log('\n=============================================================');
     console.log('  🎭 QARP Playwright Automation Hub Launcher');
@@ -3940,6 +4097,7 @@ if (require.main === module) {
     createRunnerServer({
       port: cliPort,
       host: cliHost,
+      allowLan: lanAccess,
       projectRoot: cliRoot,
       openBrowserOnStart: shouldOpenBrowser
     });

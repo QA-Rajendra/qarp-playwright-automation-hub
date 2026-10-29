@@ -2,7 +2,7 @@
 
 ## 8. Using as an npm Dependency (GitHub Package)
 
-Once pushed to GitHub, any developer or teammate anywhere in the world can install `qarp-playwright-automation-hub` in their own project in one step.
+Once pushed to GitHub, a developer can install `qarp-playwright-automation-hub` in their own project in one step.
 
 ### Step 1: Install the Package
 
@@ -26,7 +26,7 @@ Add the following to their project's `dependencies` or `devDependencies`:
     "qarp-playwright-automation-hub": "github:QA-Rajendra/qarp-playwright-automation-hub"
   },
   "scripts": {
-    "test:ui": "playwright-hub"
+    "test:ui": "qarp-playwright-automation-hub"
   }
 }
 ```
@@ -41,18 +41,18 @@ npm install
 
 ### Step 2: Run It Once Installed
 
-Once installed in their project, they have **3 ways** to launch the Playwright Automation Hub:
+Once installed in their project, they have **4 ways** to launch the Playwright Automation Hub:
 
 **1. From Terminal (via npx):**
 
 ```bash
-npx qarp-uiPlaywrightTool
+npx qarp-playwright-automation-hub
 ```
 > ⚡ **Auto-Cleanup & Launch Features:**
 > - **Auto-closes old port:** Automatically terminates any lingering process occupying port 9300 (or report/allure ports).
 > - **Auto-closes old port browsers:** Closes lingering browser instances/processes specifically associated with the local run port (leaves all your personal browser windows untouched).
 > - **Auto-opens new browser:** Automatically launches a fresh browser window directly at `http://localhost:9300`.
-> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--close-all-browsers`, `--no-kill-port`.
+> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--close-all-browsers`, `--no-kill-port`, `--lan` (trusted LAN only).
 
 
 **2. Via npm script:**
@@ -61,7 +61,7 @@ npx qarp-uiPlaywrightTool
 npm run test:ui
 ```
 
-**3. Programmatically in Node.js / Express:**
+**3. Programmatically as a standalone server:**
 
 ```javascript
 const {createRunnerServer} = require("qarp-playwright-automation-hub");
@@ -74,6 +74,26 @@ createRunnerServer({
 ```
 
 > The server will start at `http://localhost:9300` and automatically scan for test files in the `tests/` and `e2e/` directories of the consuming project.
+
+**4. Mount the complete UI and API under Express/Connect:**
+
+```javascript
+const express = require("express");
+const {runnerMiddleware} = require("qarp-playwright-automation-hub");
+
+const app = express();
+const runner = runnerMiddleware({projectRoot: __dirname});
+app.use("/test-runner", runner);
+
+const server = app.listen(3000);
+server.on("close", () => runner.close());
+```
+
+Mount the middleware before a catch-all static handler. It serves the dashboard and runner API below the mount path and rewrites same-origin API calls for that prefix.
+
+### Network access
+
+The CLI and programmatic server bind to loopback by default. To expose the dashboard to a trusted LAN intentionally, start it with `npm start -- --lan` or pass both a non-loopback `host` and `allowLan: true` to `createRunnerServer`. LAN mode has no authentication; do not expose it to the public internet or an untrusted network. Browser cross-origin access is denied by default; standalone server integrations may allow specific exact origins with `corsOrigins: ["https://trusted.example"]`.
 
 ---
 
@@ -110,6 +130,10 @@ If the Puppeteer browser was not downloaded during dependency installation, inst
 ```bash
 npx puppeteer browsers install chrome
 ```
+
+## Capture Browser Scenario Evidence
+
+The MCP Inspector's **Browser Scenario Evidence** control runs a local, headless Playwright browser against the supplied HTTP(S) URL and records page title, uncaught page errors, a screenshot, and a video. Scenario notes are not stored, sent to an AI service, or executed as clicks/assertions. Playwright and the selected browser binary must be installed in the active project. Runs are limited to 90 seconds; generated evidence is stored under `.qarp-scenario-runs/` and ignored by Git. This endpoint is local-dashboard-only.
 
 ### Application themes
 
