@@ -1,13 +1,15 @@
 /**
  * QARP-Tool Theme Controller
- * Supports Theme 1 (Default / Midnight Cyber) and Theme 2 (Blue).
+ * Supports Theme 1 (Default / Midnight Cyber) and Theme 2 (Sage Slate).
  */
 
 class ThemeManager {
   constructor() {
     this.root = document.documentElement;
-    const stored = localStorage.getItem('app-theme') || localStorage.getItem('pw_theme') || 'default';
-    this.activeTheme = (stored === 'blue' || stored === 'blue-erp') ? 'blue' : 'default';
+    const stored = localStorage.getItem('app-theme') || localStorage.getItem('pw_theme') || 'sage';
+    this.activeTheme = (stored === 'sage' || stored === 'green-slate' || stored === 'blue' || stored === 'blue-erp')
+      ? 'sage'
+      : 'default';
     this.init();
   }
 
@@ -17,8 +19,8 @@ class ThemeManager {
   }
 
   applyTheme(themeKey) {
-    if (themeKey === 'blue-erp') themeKey = 'blue';
-    if (themeKey !== 'default' && themeKey !== 'blue') {
+    if (['blue', 'blue-erp', 'green-slate'].includes(themeKey)) themeKey = 'sage';
+    if (themeKey !== 'default' && themeKey !== 'sage') {
       themeKey = 'default';
     }
     this.activeTheme = themeKey;
@@ -26,18 +28,18 @@ class ThemeManager {
     localStorage.setItem('app-theme', themeKey);
     localStorage.setItem('pw_theme', themeKey);
 
-    const isBlue = themeKey === 'blue';
+    const isSage = themeKey === 'sage';
     const icoEl = document.getElementById('themeIco');
     const lblEl = document.getElementById('themeLbl');
     const dotEl = document.getElementById('themeDot');
 
-    if (icoEl) icoEl.textContent = isBlue ? '🔷' : '🌙';
-    if (lblEl) lblEl.textContent = isBlue ? 'BLUE' : 'DEFAULT';
-    if (dotEl) dotEl.className = isBlue ? 'w-2 h-2 rounded-full bg-blue-500' : 'w-2 h-2 rounded-full bg-violet-500';
+    if (icoEl) icoEl.textContent = isSage ? '🌿' : '🌙';
+    if (lblEl) lblEl.textContent = isSage ? 'SAGE' : 'DEFAULT';
+    if (dotEl) dotEl.className = isSage ? 'w-2 h-2 rounded-full bg-lime-200' : 'w-2 h-2 rounded-full bg-violet-500';
 
     // Highlight active option in menu
     document.querySelectorAll('.theme-opt').forEach(opt => {
-      const optKey = opt.dataset.theme === 'blue-erp' ? 'blue' : opt.dataset.theme;
+      const optKey = opt.dataset.theme;
       const active = optKey === themeKey;
       opt.classList.toggle('active', active);
       const checkEl = opt.querySelector('.theme-check');
@@ -57,8 +59,8 @@ class ThemeManager {
     if (menu) {
       menu.classList.toggle('hidden');
     } else {
-      // In sub-pages without dropdown, toggle directly between Default and Blue
-      this.applyTheme(this.activeTheme === 'default' ? 'blue' : 'default');
+      // In sub-pages without a picker, toggle between the two available palettes.
+      this.applyTheme(this.activeTheme === 'default' ? 'sage' : 'default');
     }
   }
 
@@ -78,7 +80,7 @@ function changeTheme(theme) {
   if (window.theme && typeof window.theme.applyTheme === 'function') {
     window.theme.applyTheme(theme);
   } else {
-    const key = (theme === 'blue' || theme === 'blue-erp') ? 'blue' : 'default';
+    const key = ['sage', 'green-slate', 'blue', 'blue-erp'].includes(theme) ? 'sage' : 'default';
     document.documentElement.setAttribute('data-theme', key);
     localStorage.setItem('app-theme', key);
   }
@@ -86,8 +88,17 @@ function changeTheme(theme) {
 
 // Instant theme bootstrap to avoid unstyled flash
 (function () {
-  const saved = localStorage.getItem('app-theme') || localStorage.getItem('pw_theme') || 'default';
-  const active = (saved === 'blue' || saved === 'blue-erp') ? 'blue' : 'default';
+  let saved = localStorage.getItem('app-theme') || localStorage.getItem('pw_theme');
+  if (localStorage.getItem('sage-default-migrated') !== 'true') {
+    if (saved === 'default') {
+      saved = 'sage';
+      localStorage.setItem('app-theme', saved);
+      localStorage.setItem('pw_theme', saved);
+    }
+    localStorage.setItem('sage-default-migrated', 'true');
+  }
+  saved = saved || 'sage';
+  const active = ['sage', 'green-slate', 'blue', 'blue-erp'].includes(saved) ? 'sage' : 'default';
   document.documentElement.setAttribute('data-theme', active);
 })();
 

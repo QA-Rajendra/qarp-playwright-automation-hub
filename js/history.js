@@ -58,6 +58,7 @@ class HistoryController {
           <span class="text-xs text-slate-500">Run tests from the runner dashboard to automatically record execution logs here.</span>
         </div>
       `;
+      this.updateCompareButton();
       return;
     }
 
@@ -80,6 +81,7 @@ class HistoryController {
               ${h.failed > 0 ? `<span class="text-[11px] text-rose-400 font-semibold">${h.failed} failed</span>` : ''}
               ${h.skipped > 0 ? `<span class="text-[11px] text-amber-400">${h.skipped} skipped</span>` : ''}
               <span class="text-[10px] text-slate-500">(${h.total} total)</span>
+              ${h.runId && /^[a-zA-Z0-9_-]{1,128}$/.test(h.runId) ? `<label class="ml-auto flex items-center gap-1 text-[10px] text-cyan-300"><input class="compare-run-checkbox accent-cyan-500" type="checkbox" value="${h.runId}"> Compare</label>` : ''}
             </div>
             <div class="text-[11px] text-slate-300 break-all bg-slate-950/70 p-2 rounded-lg border border-slate-800/80">
               <span class="text-cyan-400 font-bold">npx playwright test</span>
@@ -87,6 +89,7 @@ class HistoryController {
             </div>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+            ${h.runId && /^[a-zA-Z0-9_-]{1,128}$/.test(h.runId) ? `<a class="rounded-lg border border-cyan-900 px-3 py-1.5 text-xs text-cyan-200 hover:bg-cyan-950/60" href="results.html?runId=${encodeURIComponent(h.runId)}">Test details</a>` : ''}
             <button type="button" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:border-violet-500 hover:text-purple-300 text-slate-300 transition-all text-xs flex items-center gap-1.5"
                     onclick="historyCtrl.rerunCommand('${encodeURIComponent(h.command || '')}')">
               <span>🔁</span> Run again
@@ -99,6 +102,7 @@ class HistoryController {
         </div>
       `;
     }).join('');
+    this.updateCompareButton();
   }
 
   setFilter(status) {
@@ -137,6 +141,61 @@ class HistoryController {
     const searchInput = document.getElementById('historySearch');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => this.search(e.target.value));
+    }
+    const historyList = document.getElementById('historyList');
+    if (historyList) {
+      historyList.addEventListener('change', event => {
+        if (event.target.matches('.compare-run-checkbox')) this.updateCompareButton();
+      });
+    }
+    this.updateCompareButton();
+  }
+
+  updateCompareButton() {
+    const selected = document.querySelectorAll('.compare-run-checkbox:checked');
+    const button = document.getElementById('compareRunsButton');
+    const status = document.getElementById('compareStatus');
+    if (button) button.disabled = selected.length !== 2;
+    if (status && selected.length > 2) status.textContent = 'Select exactly two runs to compare.';
+    else if (status) status.textContent = `${selected.length} of 2 runs selected. Only runs with structured results can be compared.`;
+  }
+
+  async compareSelectedRuns() {
+    const selected = [...document.querySelectorAll('.compare-run-checkbox:checked')];
+    if (selected.length !== 2) return;
+    const status = document.getElementById('compareStatus');
+    const results = document.getElementById('compareResults');
+    const button = document.getElementById('compareRunsButton');
+    if (!status || !results) return;
+    button.disabled = true;
+    status.textContent = 'Loading run comparison…';
+    results.replaceChildren();
+
+    try {
+      const comparison = await api.getRunComparison(selected[0].value, selected[1].value);
+      const summary = document.createElement('p');
+      summary.className = 'text-xs text-slate-300';
+      summary.textContent = `${comparison.changes.length} test status changes between ${comparison.first.runId} and ${comparison.second.runId}.`;
+      results.appendChild(summary);
+      if (!comparison.changes.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-slate-500';
+        empty.textContent = 'No test status changes were found.';
+        results.appendChild(empty);
+      }
+      for (const change of comparison.changes) {
+        const row = document.createElement('div');
+        row.className = 'rounded border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs';
+        const before = `${change.before}${change.beforeFlaky ? ' (flaky)' : ''}`;
+        const after = `${change.after}${change.afterFlaky ? ' (flaky)' : ''}`;
+        row.textContent = `${change.project || 'default'} · ${change.file} · ${change.title}: ${before} → ${after}`;
+        results.appendChild(row);
+      }
+      status.textContent = 'Comparison complete.';
+    } catch (error) {
+      status.textContent = `Could not compare runs: ${error.message}`;
+    } finally {
+      this.updateCompareButton();
     }
   }
 }

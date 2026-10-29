@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="default">
+<html lang="en" data-theme="sage">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: ['class', '[data-theme="default"], [data-theme="dark"]'],
+      darkMode: ['class', '[data-theme="default"], [data-theme="sage"], [data-theme="dark"]'],
       theme: {
         extend: {
           fontFamily: {
@@ -68,7 +68,7 @@
               <span id="themeLbl" class="tracking-wider font-semibold">DEFAULT</span>
             </button>
 
-            <!-- Theme Picker Dropdown (Only Default & Blue ERP) -->
+            <!-- Theme Picker Dropdown -->
             <div class="hidden absolute top-full right-0 mt-2 w-48 p-2 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1 text-[11px]"
                  id="themeMenu">
               <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1">Select Theme</div>
@@ -86,17 +86,17 @@
                 <span class="theme-check font-bold text-xs text-purple-400"></span>
               </button>
 
-              <!-- Theme 2: Blue -->
-              <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-blue-950/60 hover:text-blue-200 text-left transition-all"
-                      data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);">
+              <!-- Theme 2: Sage Slate -->
+              <button type="button" class="theme-opt flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-300 hover:bg-lime-950/40 hover:text-lime-100 text-left transition-all"
+                      data-theme="sage" onclick="changeTheme('sage'); theme.toggleThemeMenu(event);">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm">🔷</span>
+                  <span class="text-sm">🌿</span>
                   <div>
-                    <span class="font-bold text-xs block leading-tight">Blue</span>
-                    <span class="text-[9px] text-slate-400 block font-mono">Enterprise Blue</span>
+                    <span class="font-bold text-xs block leading-tight">Sage Slate</span>
+                    <span class="text-[9px] text-slate-400 block font-mono">Slate &amp; Soft Green</span>
                   </div>
                 </div>
-                <span class="theme-check font-bold text-xs text-blue-400"></span>
+                <span class="theme-check font-bold text-xs text-lime-200"></span>
               </button>
             </div>
           </div>
@@ -105,11 +105,11 @@
         <!-- Navigation Links -->
         <button type="button" id="quickLinksToggle"
                 class="mt-3 w-full flex items-center justify-between rounded-md px-1 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors"
-                aria-expanded="true" aria-controls="quickLinksPanel" title="Collapse quick links">
+                aria-expanded="false" aria-controls="quickLinksPanel" title="Expand quick links">
           <span>Quick Links</span>
-          <span id="quickLinksArrow" aria-hidden="true" class="text-xs">▲</span>
+          <span id="quickLinksArrow" aria-hidden="true" class="text-xs">▼</span>
         </button>
-        <div id="quickLinksPanel">
+        <div id="quickLinksPanel" hidden>
         <div class="flex gap-2 mt-1">
           <a href="pages/history.html" class="flex-1 text-center py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:border-slate-500 text-slate-300 text-[10px] transition-all flex items-center justify-center gap-1">
             <span>📜</span> History
@@ -147,6 +147,14 @@
           <span>🧭</span>
           <span class="font-semibold tracking-wide">Walkthrough Recorder</span>
           <span class="text-[8px] text-teal-500 ml-0.5 font-mono">↗</span>
+        </a>
+        <a href="https://qa-rp-learner-platform-git-main-qa-rps-projects.vercel.app/"
+           target="_blank" rel="noopener noreferrer"
+           class="mt-1.5 w-full py-1.5 rounded-lg border border-lime-800/60 bg-lime-950/30 hover:bg-lime-900/50 hover:border-lime-500 text-lime-200 text-[10px] transition-all flex items-center justify-center gap-1.5 group"
+           title="Open the QA-RP Learner Platform in a new tab">
+          <span>🎓</span>
+          <span class="font-semibold tracking-wide">Learner Platform</span>
+          <span class="text-[8px] text-lime-400 ml-0.5 font-mono">↗</span>
         </a>
         <!-- API Traffic Inspector Button -->
         <a href="pages/results.html#apiTrafficSection"
@@ -705,6 +713,9 @@
         </div>
       </div>
 
+      <footer class="border-t border-slate-800/80 bg-slate-900/50 px-4 py-2 text-center text-[10px] text-slate-500">
+        Powered by QARP <span aria-label="copyright">&copy;</span> Version 2026
+      </footer>
     </main>
 
     <!-- ── Right Resizer Splitter ── -->
@@ -1275,12 +1286,16 @@
       const quickLinksToggle = document.getElementById('quickLinksToggle');
       const quickLinksPanel = document.getElementById('quickLinksPanel');
       const quickLinksArrow = document.getElementById('quickLinksArrow');
+      const setQuickLinksExpanded = expanded => {
+        quickLinksToggle.setAttribute('aria-expanded', String(expanded));
+        quickLinksToggle.title = expanded ? 'Collapse quick links' : 'Expand quick links';
+        quickLinksArrow.textContent = expanded ? '▲' : '▼';
+        quickLinksPanel.hidden = !expanded;
+      };
+      setQuickLinksExpanded(true);
       quickLinksToggle.addEventListener('click', () => {
         const expanded = quickLinksToggle.getAttribute('aria-expanded') === 'true';
-        quickLinksToggle.setAttribute('aria-expanded', String(!expanded));
-        quickLinksToggle.title = expanded ? 'Expand quick links' : 'Collapse quick links';
-        quickLinksArrow.textContent = expanded ? '▼' : '▲';
-        quickLinksPanel.hidden = expanded;
+        setQuickLinksExpanded(!expanded);
       });
 
       UI.initResizablePanels();

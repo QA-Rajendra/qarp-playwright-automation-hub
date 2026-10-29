@@ -58,6 +58,10 @@ let nextRunnerSessionId = 1;
 const HISTORY_FILE_NAME = '.pw-runner-history.json';
 const HISTORY_MAX = 100;
 
+function createRunId() {
+  return `run_${Date.now().toString(36)}_${crypto.randomBytes(8).toString('hex')}`;
+}
+
 function loadHistory(projectRoot) {
   const filePath = path.resolve(projectRoot, HISTORY_FILE_NAME);
   const data = getCachedJson(filePath);
@@ -77,10 +81,202 @@ function appendHistory(projectRoot, entry) {
   }
 }
 
+function getPlaywrightConfigPath(projectRoot) {
+  const candidates = [
+    'playwright.config.ts',
+    'playwright.config.js',
+    'playwright.config.mjs',
+    'playwright.config.cjs'
+  ];
+  return candidates.map(file => path.resolve(projectRoot, file)).find(file => fs.existsSync(file)) || null;
+}
+
+function prepareRunInsights(projectRoot, runId) {
+  const configPath = getPlaywrightConfigPath(projectRoot);
+  if (!configPath) return null;
+
+  const outputDirectory = path.resolve(projectRoot, '.qarp-run-results');
+  const outputFile = path.join(outputDirectory, `${runId}.json`);
+  const wrapperPath = path.resolve(projectRoot, `.qarp-playwright-${runId}.mjs`);
+  const reporterPath = path.resolve(__dirname, 'qarp-json-reporter.cjs');
+  const configUrl = require('url').pathToFileURL(configPath).href;
+  const wrapper = [
+    `import originalConfigModule from ${JSON.stringify(configUrl)};`,
+    `const reporterPath = ${JSON.stringify(reporterPath)};`,
+    `const outputFile = ${JSON.stringify(outputFile)};`,
+    `const projectRoot = ${JSON.stringify(path.resolve(projectRoot))};`,
+    `const runId = ${JSON.stringify(runId)};`,
+    'const originalConfig = originalConfigModule?.default ?? originalConfigModule;',
+    'const resolvedConfig = typeof originalConfig === "function" ? await originalConfig() : originalConfig;',
+    'const configured = resolvedConfig.reporter;',
+    'const reporters = configured == null ? [["list"]] : typeof configured === "string" ? [[configured]] : Array.isArray(configured) && typeof configured[0] === "string" && configured[1] && typeof configured[1] === "object" ? [configured] : configured.map(item => typeof item === "string" ? [item] : item);',
+    'export default { ...resolvedConfig, rootDir: resolvedConfig.rootDir || projectRoot, reporter: [...reporters, [reporterPath, { outputFile, projectRoot, runId }]] };'
+  ].join('\n');
+
+  try {
+    fs.mkdirSync(outputDirectory, { recursive: true });
+    fs.writeFileSync(wrapperPath, wrapper, 'utf8');
+    return { wrapperPath, outputFile };
+  } catch (error) {
+    throw new Error(`Could not prepare structured test results: ${error.message}`);
+  }
+}
+
+function tryPrepareRunInsights(projectRoot, runId, command) {
+  if (/(?:^|\s)--config(?:=|\s)/.test(command)) {
+    return {
+      insights: null,
+      error: 'Structured insights are disabled for commands with a custom --config option.'
+    };
+  }
+  try {
+    return { insights: prepareRunInsights(projectRoot, runId), error: null };
+  } catch (error) {
+    console.warn(`Structured test insights are unavailable for run ${runId}: ${error.message}`);
+    return { insights: null, error: error.message };
+  }
+}
+
+function loadRunInsights(projectRoot, runId) {
+  if (typeof runId !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(runId)) {
+    const error = new Error('Invalid run ID.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const filePath = path.resolve(projectRoot, '.qarp-run-results', `${runId}.json`);
+  if (!fs.existsSync(filePath)) {
+    const error = new Error('Structured results are not available for this run.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const stat = fs.statSync(filePath);
+  if (stat.size > 5 * 1024 * 1024) {
+    const error = new Error('Structured results exceed the supported size limit.');
+    error.statusCode = 413;
+    throw error;
+  }
+  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  if (data.schemaVersion !== 1 || data.runId !== runId || !Array.isArray(data.tests)) {
+    const error = new Error('Structured results are invalid or unsupported.');
+    error.statusCode = 422;
+    throw error;
+  }
+  return data;
+}
+
+function quoteRunArgument(value) {
+  const text = String(value);
+  if (/[\u0000-\u001f]/u.test(text)) throw new Error('Test paths and names cannot contain control characters.');
+  if (process.platform === 'win32') {
+    if (/[%!^"]/u.test(text)) throw new Error('A selected test path or project name contains unsupported Windows shell characters.');
+    return `"${text}"`;
+  }
+  return `'${text.replace(/'/g, "'\\''")}'`;
+}
+
+function getFailedRerunCommands(projectRoot, runId, testKeys) {
+  if (!Array.isArray(testKeys) || testKeys.length === 0 || testKeys.length > 100) {
+    const error = new Error('Select between 1 and 100 failed tests to rerun.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const report = loadRunInsights(projectRoot, runId);
+  const selectedKeys = new Set(testKeys);
+  const selected = report.tests.filter(test => selectedKeys.has(test.key)
+    && ['failed', 'timedOut', 'interrupted'].includes(test.status));
+  if (selected.length !== selectedKeys.size) {
+    const error = new Error('One or more selected tests are not failed tests in this run.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const configuredProjects = new Set(getProjects(projectRoot));
+  const grouped = new Map();
+  for (const test of selected) {
+    if (!configuredProjects.has(test.project)) {
+      const error = new Error(`Unknown browser project: ${test.project || '(default)'}.`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const candidatePath = path.resolve(projectRoot, test.file);
+    const relative = path.relative(path.resolve(projectRoot), candidatePath);
+    if (!test.file || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+      const error = new Error('A selected test path is outside the active project.');
+      error.statusCode = 403;
+      throw error;
+    }
+    let resolvedPath;
+    try {
+      resolvedPath = fs.realpathSync(candidatePath);
+    } catch (cause) {
+      const error = new Error(`Selected test file is unavailable: ${test.file}`);
+      error.statusCode = 400;
+      throw error;
+    }
+    const resolvedRelative = path.relative(path.resolve(projectRoot), resolvedPath);
+    if (resolvedRelative === '..' || resolvedRelative.startsWith(`..${path.sep}`) || path.isAbsolute(resolvedRelative)
+      || !fs.statSync(resolvedPath).isFile() || !/\.(?:spec|test)\.(?:js|ts|mjs|cjs)$/i.test(resolvedPath)) {
+      const error = new Error('A selected test file is invalid or outside the active project.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const projectTests = grouped.get(test.project) || new Map();
+    const titles = projectTests.get(resolvedRelative) || new Set();
+    titles.add(test.titlePath.join(' '));
+    projectTests.set(resolvedRelative, titles);
+    grouped.set(test.project, projectTests);
+  }
+
+  if (grouped.size !== 1) {
+    const error = new Error('Rerun failed tests from one browser project at a time.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return [...grouped.entries()].map(([project, files]) => {
+    const selectedTitles = [...files.values()].flatMap(titles => [...titles]);
+    const grep = `^(?:${selectedTitles.map(title => title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})$`;
+    const args = ['npx', 'playwright', 'test'];
+    for (const [file, titles] of files) args.push(quoteRunArgument(file));
+    args.push('--project', quoteRunArgument(project), '--grep', quoteRunArgument(grep));
+    return args.join(' ');
+  });
+}
+
+function retainRunInsights(projectRoot, keep = HISTORY_MAX) {
+  const directory = path.resolve(projectRoot, '.qarp-run-results');
+  if (!fs.existsSync(directory)) return;
+  const historyIds = new Set(loadHistory(projectRoot).map(entry => entry.runId).filter(Boolean));
+  const entries = fs.readdirSync(directory, { withFileTypes: true })
+    .filter(entry => entry.isFile() && /^[a-zA-Z0-9_-]{1,128}\.json$/.test(entry.name))
+    .map(entry => ({ name: entry.name, time: fs.statSync(path.join(directory, entry.name)).mtimeMs }))
+    .sort((a, b) => b.time - a.time);
+
+  entries.forEach((entry, index) => {
+    const runId = entry.name.slice(0, -5);
+    if (index >= keep && !historyIds.has(runId)) {
+      fs.unlinkSync(path.join(directory, entry.name));
+    }
+  });
+}
+
 function clearHistory(projectRoot) {
   const filePath = path.resolve(projectRoot, HISTORY_FILE_NAME);
   try {
     fs.writeFileSync(filePath, JSON.stringify([], null, 2), 'utf8');
+    const insightDirectory = path.resolve(projectRoot, '.qarp-run-results');
+    if (fs.existsSync(insightDirectory)) {
+      for (const entry of fs.readdirSync(insightDirectory, { withFileTypes: true })) {
+        if (entry.isFile() && /^[a-zA-Z0-9_-]{1,128}\.json$/.test(entry.name)) {
+          fs.unlinkSync(path.join(insightDirectory, entry.name));
+        }
+      }
+    }
     return true;
   } catch (_) {
     return false;
@@ -89,16 +285,70 @@ function clearHistory(projectRoot) {
 
 // ── API Traffic Extractor (Captures HTTP Requests & Responses from Tests) ──
 const API_TRAFFIC_FILE = '.pw-api-traffic.json';
+const API_TRAFFIC_MAX_ENTRIES = 500;
+const API_TRAFFIC_MAX_BYTES = 5 * 1024 * 1024;
+const SENSITIVE_FIELD = /authorization|cookie|password|passwd|secret|token|api[-_]?key|credential/i;
+
+function redactSensitiveValue(value, key = '') {
+  if (SENSITIVE_FIELD.test(key)) return '[REDACTED]';
+  if (typeof value === 'string') {
+    return value
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
+      .replace(/\b(Basic)\s+[A-Za-z0-9+/=]+/gi, '$1 [REDACTED]')
+      .replace(/\b(set-cookie|cookie)\s*:\s*[^\r\n]+/gi, '$1: [REDACTED]')
+      .replace(/([?&](?:access[_-]?token|api[_-]?key|password|passwd|secret|token)=)[^&\s]+/gi, '$1[REDACTED]')
+      .replace(/((?:password|passwd|secret|token|api[-_]?key|authorization)\s*[:=]\s*)["']?[^&\s"',;]+/gi, '$1[REDACTED]');
+  }
+  if (Array.isArray(value)) return value.map(item => redactSensitiveValue(item));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([field, item]) => [
+      field,
+      redactSensitiveValue(item, field)
+    ]));
+  }
+  return value;
+}
+
+function boundApiTraffic(entries) {
+  const bounded = entries.slice(-API_TRAFFIC_MAX_ENTRIES).map(entry => redactSensitiveValue(entry));
+  let serialized = JSON.stringify(bounded, null, 2);
+  while (bounded.length > 0 && Buffer.byteLength(serialized, 'utf8') > API_TRAFFIC_MAX_BYTES) {
+    bounded.shift();
+    serialized = JSON.stringify(bounded, null, 2);
+  }
+  return { entries: bounded, serialized };
+}
+
+function writeApiTrafficStores(projectRoot, serialized) {
+  const destinations = [
+    path.resolve(projectRoot, API_TRAFFIC_FILE),
+    path.resolve(projectRoot, 'test-results', 'api-traffic.json')
+  ];
+  for (const destination of destinations) {
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    const temporaryFile = `${destination}.tmp`;
+    fs.writeFileSync(temporaryFile, serialized, 'utf8');
+    fs.renameSync(temporaryFile, destination);
+  }
+}
 
 function loadApiTraffic(projectRoot) {
   const filePath = path.resolve(projectRoot, API_TRAFFIC_FILE);
   let data = getCachedJson(filePath);
-  if (Array.isArray(data)) return data;
+  if (!Array.isArray(data)) {
+    const resPath = path.resolve(projectRoot, 'test-results', 'api-traffic.json');
+    data = getCachedJson(resPath);
+  }
+  if (Array.isArray(data)) {
+    const safeTraffic = boundApiTraffic(data);
+    writeApiTrafficStores(projectRoot, safeTraffic.serialized);
+    fileCache.set(filePath, {
+      mtime: fs.statSync(filePath).mtimeMs,
+      data: safeTraffic.entries
+    });
+    return safeTraffic.entries;
+  }
 
-  const resPath = path.resolve(projectRoot, 'test-results', 'api-traffic.json');
-  data = getCachedJson(resPath);
-  if (Array.isArray(data)) return data;
-  
   return [];
 }
 
@@ -246,13 +496,16 @@ function extractApiTraffic(projectRoot) {
     }
   } catch (_) {}
 
+  let safeTraffic;
   try {
-    const jsonPath = path.resolve(testResultsDir, 'api-traffic.json');
-    fs.writeFileSync(jsonPath, JSON.stringify(allTraffic, null, 2), 'utf8');
-    fs.writeFileSync(path.resolve(projectRoot, API_TRAFFIC_FILE), JSON.stringify(allTraffic, null, 2), 'utf8');
-  } catch (_) {}
+    safeTraffic = boundApiTraffic(allTraffic);
+    writeApiTrafficStores(projectRoot, safeTraffic.serialized);
+  } catch (error) {
+    console.error(`Could not persist redacted API traffic: ${error.message}`);
+    return [];
+  }
 
-  return allTraffic;
+  return safeTraffic ? safeTraffic.entries : [];
 }
 
 // ── Test Explorer Scanner ──────────────────────────────────────────────────
@@ -1277,16 +1530,34 @@ function handleMCP(req, res, projectRoot, port = 9300) {
           }
           const command = buildCmd(args);
           const jid = 'job_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          const job = { output: '', done: false, result: null, proc: null, cancelled: false };
+          const runId = createRunId();
+          const { insights, error: insightsError } = tryPrepareRunInsights(projectRoot, runId, command);
+          const executionCommand = insights
+            ? `${command} --config="${insights.wrapperPath.replace(/"/g, '\\"')}"`
+            : command;
+          const job = { output: '', done: false, result: null, proc: null, cancelled: false, runId, insights, insightsError };
           runningJobs.set(jid, job);
-          console.log(`\n▶ [MCP] Executing: ${command}`);
-          const proc = spawn(command, { cwd: projectRoot, shell: true, detached: process.platform !== 'win32' });
+          console.log(`\n▶ [MCP] Executing: ${executionCommand}`);
+          const proc = spawn(executionCommand, { cwd: projectRoot, shell: true, detached: process.platform !== 'win32' });
           job.proc = proc;
           proc.stdout.on('data', d => { const s = d.toString(); process.stdout.write(s); job.output += s; });
           proc.stderr.on('data', d => { const s = d.toString(); process.stderr.write(s); job.output += s; });
           proc.on('close', code => {
             job.result = parseTestOutput(job.output, code);
             job.done = true;
+            if (insights) {
+              try {
+                const structured = loadRunInsights(projectRoot, runId);
+                job.result.flaky = structured.tests.filter(test => test.flaky).length;
+              } catch (error) {
+                job.result.insightsError = error.message;
+              }
+              try {
+                fs.unlinkSync(insights.wrapperPath);
+              } catch (error) {
+                console.warn(`Could not remove temporary Playwright config: ${error.message}`);
+              }
+            }
             try {
               job.apiTraffic = extractApiTraffic(projectRoot);
               console.log(`\n🌐 [MCP] Captured ${job.apiTraffic.length} API requests & responses from tests.`);
@@ -1294,11 +1565,16 @@ function handleMCP(req, res, projectRoot, port = 9300) {
               console.warn('⚠️ [MCP] Could not extract API traffic:', err.message);
             }
             if (!job.cancelled) {
-              appendHistory(projectRoot, { timestamp: new Date().toISOString(), command, passed: job.result.passed, failed: job.result.failed, skipped: job.result.skipped, total: job.result.total, code: job.result.code });
+              appendHistory(projectRoot, { id: runId, runId: insights ? runId : null, timestamp: new Date().toISOString(), command, passed: job.result.passed, failed: job.result.failed, skipped: job.result.skipped, flaky: job.result.flaky || 0, total: job.result.total, code: job.result.code });
+              try {
+                retainRunInsights(projectRoot);
+              } catch (error) {
+                console.warn(`Could not apply structured result retention: ${error.message}`);
+              }
             }
             setTimeout(() => runningJobs.delete(jid), 60000);
           });
-          result = { content: [{ type: 'text', text: JSON.stringify({ jobId: jid, command, status: 'started' }, null, 2) }] };
+          result = { content: [{ type: 'text', text: JSON.stringify({ jobId: jid, runId, insightsAvailable: Boolean(insights), insightsError, command, status: 'started' }, null, 2) }] };
 
         } else if (toolName === 'poll_job') {
           const { jobId, offset = 0 } = args;
@@ -1306,7 +1582,7 @@ function handleMCP(req, res, projectRoot, port = 9300) {
           if (!job) {
             result = { content: [{ type: 'text', text: JSON.stringify({ gone: true, error: 'Job not found' }) }], isError: true };
           } else {
-            result = { content: [{ type: 'text', text: JSON.stringify({ newOutput: job.output.slice(offset), offset: job.output.length, done: job.done, result: job.done ? job.result : null }, null, 2) }] };
+            result = { content: [{ type: 'text', text: JSON.stringify({ newOutput: job.output.slice(offset), offset: job.output.length, done: job.done, runId: job.runId || null, result: job.done ? job.result : null }, null, 2) }] };
           }
 
         } else if (toolName === 'cancel_job') {
@@ -3266,14 +3542,21 @@ function createRunnerServer(options = {}) {
       req.on('end', () => {
         try {
           const { command, environment = 'DEV' } = JSON.parse(body || '{}');
+          if (typeof command !== 'string' || !command.trim()) {
+            throw new Error('A Playwright command is required.');
+          }
           const id = 'job_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          const runId = 'run_' + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 4);
+          const runId = createRunId();
           const startTime = Date.now();
-          const job = { output: '', done: false, result: null, proc: null, cancelled: false };
+          const { insights, error: insightsError } = tryPrepareRunInsights(currentProjectRoot, runId, command);
+          const executionCommand = insights
+            ? `${command} --config="${insights.wrapperPath.replace(/"/g, '\\"')}"`
+            : command;
+          const job = { output: '', done: false, result: null, proc: null, cancelled: false, runId, insights, insightsError };
           runningJobs.set(id, job);
 
-          console.log(`\n▶ [Playwright Hub] [${environment}] Executing: ${command}`);
-          const proc = spawn(command, { cwd: currentProjectRoot, shell: true, detached: process.platform !== 'win32' });
+          console.log(`\n▶ [Playwright Hub] [${environment}] Executing: ${executionCommand}`);
+          const proc = spawn(executionCommand, { cwd: currentProjectRoot, shell: true, detached: process.platform !== 'win32' });
           job.proc = proc;
 
           proc.stdout.on('data', d => { const s = d.toString(); process.stdout.write(s); job.output += s; });
@@ -3283,6 +3566,19 @@ function createRunnerServer(options = {}) {
             const durationMs = Date.now() - startTime;
             job.result = parseTestOutput(job.output, code);
             job.done = true;
+            if (insights) {
+              try {
+                const structured = loadRunInsights(currentProjectRoot, runId);
+                job.result.flaky = structured.tests.filter(test => test.flaky).length;
+              } catch (error) {
+                job.result.insightsError = error.message;
+              }
+              try {
+                fs.unlinkSync(insights.wrapperPath);
+              } catch (error) {
+                console.warn(`Could not remove temporary Playwright config: ${error.message}`);
+              }
+            }
             try {
               job.apiTraffic = extractApiTraffic(currentProjectRoot);
               console.log(`\n🌐 [Playwright Hub] Captured ${job.apiTraffic.length} API requests & responses from tests.`);
@@ -3292,6 +3588,7 @@ function createRunnerServer(options = {}) {
             if (!job.cancelled) {
               appendHistory(currentProjectRoot, {
                 id: runId,
+                runId: insights ? runId : null,
                 timestamp: new Date().toISOString(),
                 command,
                 environment,
@@ -3303,15 +3600,61 @@ function createRunnerServer(options = {}) {
                 total: job.result.total,
                 code: job.result.code
               });
+              try {
+                retainRunInsights(currentProjectRoot);
+              } catch (error) {
+                console.warn(`Could not apply structured result retention: ${error.message}`);
+              }
             }
             setTimeout(() => runningJobs.delete(id), 60000);
           });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ id, runId }));
+          res.end(JSON.stringify({ id, runId, insightsAvailable: Boolean(insights), insightsError }));
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: e.message }));
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'GET' && /^\/run-insights\/[^/]+$/.test(cleanUrl)) {
+      const runId = cleanUrl.slice('/run-insights/'.length);
+      try {
+        const insights = loadRunInsights(currentProjectRoot, runId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(insights));
+      } catch (error) {
+        res.writeHead(error.statusCode || 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && /^\/run-insights\/[^/]+\/rerun-commands$/.test(cleanUrl)) {
+      const runId = cleanUrl.slice('/run-insights/'.length).replace(/\/rerun-commands$/, '');
+      let body = '';
+      let requestTooLarge = false;
+      req.on('data', chunk => {
+        if (requestTooLarge) return;
+        body += chunk;
+        if (Buffer.byteLength(body, 'utf8') > 64 * 1024) {
+          requestTooLarge = true;
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rerun request exceeds the supported size limit.' }));
+        }
+      });
+      req.on('end', () => {
+        if (requestTooLarge) return;
+        try {
+          const parsed = JSON.parse(body || '{}');
+          const commands = getFailedRerunCommands(currentProjectRoot, runId, parsed.testKeys);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ commands }));
+        } catch (error) {
+          res.writeHead(error.statusCode || 400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error.message }));
         }
       });
       return;

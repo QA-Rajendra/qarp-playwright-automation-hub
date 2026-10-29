@@ -16,6 +16,8 @@ class RunnerController {
     this.timeoutMs = 30000;
 
     this.currentJobId = null;
+    this.currentRunId = '';
+    this.currentInsightsError = '';
     this.pollTimer = null;
     this.lastCommand = '';
   }
@@ -286,8 +288,10 @@ class RunnerController {
 
     try {
       const env = (window.dashboard && dashboard.currentEnv) ? dashboard.currentEnv : 'DEV';
-      const { id } = await api.startRun(cmd, env);
+      const { id, runId, insightsError } = await api.startRun(cmd, env);
       this.currentJobId = id;
+      this.currentRunId = runId || '';
+      this.currentInsightsError = insightsError || '';
 
       // ── Broadcast jobId to MCP Inspector via BroadcastChannel ──
       try {
@@ -360,6 +364,8 @@ class RunnerController {
               total: res.total,
               cmd: cmd,
               code: res.code,
+              runId: this.currentRunId || '',
+              insightsError: this.currentInsightsError,
               failedTests: JSON.stringify(res.failedTests || [])
             });
             window.location.href = `pages/results.html?${queryParams.toString()}`;

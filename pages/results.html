@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="default">
+<html lang="en" data-theme="sage">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: ['class', '[data-theme="default"], [data-theme="dark"]'],
+      darkMode: ['class', '[data-theme="default"], [data-theme="sage"], [data-theme="dark"]'],
       theme: {
         extend: {
           fontFamily: {
@@ -122,6 +122,21 @@
       </div>
       <div id="failList"></div>
     </div>
+
+    <section id="runInsightsPanel" class="hidden rounded-2xl border border-cyan-900/60 bg-slate-900/60 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-cyan-200">Per-test run insights</h2>
+          <p id="runInsightsStatus" class="mt-1 text-xs text-slate-400" role="status" aria-live="polite"></p>
+        </div>
+        <button id="rerunInsightsButton" type="button"
+                class="rounded-lg border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs font-bold text-rose-200 hover:bg-rose-900/60 disabled:opacity-50"
+                onclick="resultsCtrl.rerunSelectedInsights()" disabled>
+          Rerun selected failures
+        </button>
+      </div>
+      <div id="runInsightsList" class="mt-4 space-y-2"></div>
+    </section>
 
     <!-- ── 🌐 Captured API Requests & Responses Section ── -->
     <div class="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md p-6 flex flex-col gap-4 shadow-xl" id="apiTrafficSection">

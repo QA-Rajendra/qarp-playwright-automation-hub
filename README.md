@@ -111,6 +111,10 @@ If the Puppeteer browser was not downloaded during dependency installation, inst
 npx puppeteer browsers install chrome
 ```
 
+### Application themes
+
+The theme picker provides **Default** and **Sage Slate**, with Sage Slate selected by default. Sage Slate uses `#202734` and `#36415A` for its slate surfaces, with `#B7D894` and `#E0F8C7` as the green accent and highlight colors. Previously saved Default and Blue theme preferences are migrated to Sage Slate once; future theme choices are remembered.
+
 ### Quick start
 
 ```bash
@@ -119,6 +123,16 @@ npm start
 ```
 
 Open **Walkthrough Recorder** in the QARP sidebar, enter a URL, pick headful or headless mode, and start a session. Use the DOM tools to inspect or interact with elements, then download a screenshot/PDF or generate a Markdown walkthrough.
+
+## Inspect and Compare Test Runs
+
+QARP records structured per-test results for runs started from its dashboard or MCP tools when the active project has a Playwright config and does not specify a custom `--config` command option. The Results page shows each test's project, file, status, duration, retry outcome, and redacted failure message. Select failed tests from one browser project to preview and rerun them; reruns are validated against the active project and configured browser projects.
+
+Structured result files are stored locally under `.qarp-run-results/`, bounded to the latest history window, and removed when execution history is cleared. The History page allows selecting two structured runs to compare per-test status and flaky changes. Older aggregate-only history entries remain readable but cannot provide per-test comparison.
+
+Captured API traffic is stored locally with sensitive headers/fields and common credential patterns redacted. Retention is bounded to 500 records and 5 MB across the traffic files. Clearing API traffic removes the saved traffic data.
+
+For projects with an existing Playwright config reporter, QARP composes its structured reporter with the configured reporters. If a custom `--config` is supplied directly in a run command, structured insights are not enabled for that run, so the custom config behavior is preserved.
 
 ## Run Tests Across Browsers
 

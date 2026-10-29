@@ -123,6 +123,56 @@ class PlaywrightAPI {
     }
   }
 
+  async getRunInsights(runId) {
+    const response = await fetch(`${this.baseUrl}/run-insights/${encodeURIComponent(runId)}`, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+  }
+
+  async getRunComparison(firstRunId, secondRunId) {
+    const [first, second] = await Promise.all([
+      this.getRunInsights(firstRunId),
+      this.getRunInsights(secondRunId)
+    ]);
+    const firstByKey = new Map(first.tests.map(test => [test.key, test]));
+    const secondByKey = new Map(second.tests.map(test => [test.key, test]));
+    const keys = new Set([...firstByKey.keys(), ...secondByKey.keys()]);
+    return {
+      first,
+      second,
+      changes: [...keys].map(key => {
+        const before = firstByKey.get(key);
+        const after = secondByKey.get(key);
+        return {
+          key,
+          title: (after || before).titlePath.join(' › '),
+          file: (after || before).file,
+          project: (after || before).project,
+          before: before ? before.status : 'not-run',
+          after: after ? after.status : 'not-run',
+          beforeFlaky: Boolean(before && before.flaky),
+          afterFlaky: Boolean(after && after.flaky)
+        };
+      }).filter(change => change.before !== change.after || change.beforeFlaky !== change.afterFlaky)
+    };
+  }
+
+  async getFailedRerunCommands(runId, testKeys) {
+    const response = await fetch(`${this.baseUrl}/run-insights/${encodeURIComponent(runId)}/rerun-commands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ testKeys }),
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data.commands;
+  }
+
   /**
    * Cancel an active test run
    */
@@ -636,5 +686,3 @@ await expect(page.getByText(/success|saved|done/i)).toBeVisible({ timeout: 8000 
 
 // Global API instance
 const api = new PlaywrightAPI();
-
-

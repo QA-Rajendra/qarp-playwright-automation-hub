@@ -64,64 +64,59 @@
 }
 
 /* ==========================================================================
-   THEME 2 — BLUE THEME
+   THEME 2 — SAGE SLATE
    ========================================================================== */
-[data-theme="blue"],
-[data-theme="blue-erp"] {
-  --primary: #1976D2;
-  --dark-primary: #1565C0;
-  --sidebar: #0B2D4D;
-  --header: #00264B;
-  --background: #F5F9FF;
-  --bg: #F5F9FF;
-  --card: #FFFFFF;
-  --border: #D9E5F2;
-  --border2: #B8CEE5;
-  --text: #172B4D;
-  --muted-text: #64748B;
-  --success: #16A34A;
-  --warning: #D97706;
-  --error: #DC2626;
-  --info: #0284C7;
-
-  /* Table Variables */
-  --table-header: #EBF3FC;
-  --table-header-text: #0B2D4D;
-  --table-background: #FFFFFF;
-  --table-bg: #FFFFFF;
-  --table-row: #FFFFFF;
-  --table-row-alternate: #F7FAFD;
-  --table-row-alt: #F7FAFD;
-  --table-row-hover: #EDF5FE;
-  --table-border: #D9E5F2;
-  --table-text: #172B4D;
-  --table-muted-text: #64748B;
-
-  /* Legacy & component mapped variables */
+[data-theme="sage"] {
+  color-scheme: dark;
+  --primary: #B7D894;
+  --dark-primary: #8FAF68;
+  --sidebar: #202734;
+  --header: #202734;
+  --background: #202734;
+  --bg: #202734;
+  --card: #36415A;
+  --border: #4B5872;
+  --border2: #66748C;
+  --text: #E0F8C7;
+  --muted-text: #B6C5A3;
+  --success: #B7D894;
+  --warning: #E4C879;
+  --error: #F28B82;
+  --info: #B7D894;
+  --table-header: #36415A;
+  --table-header-text: #E0F8C7;
+  --table-background: #202734;
+  --table-bg: #202734;
+  --table-row: #202734;
+  --table-row-alternate: #2B3548;
+  --table-row-alt: #2B3548;
+  --table-row-hover: #36415A;
+  --table-border: #4B5872;
+  --table-text: #E0F8C7;
+  --table-muted-text: #B6C5A3;
   --surface: var(--card);
-  --surface2: #EDF4FC;
-  --surface3: #E2ECF8;
+  --surface2: #36415A;
+  --surface3: #414D67;
   --t1: var(--text);
   --t2: var(--muted-text);
-  --t3: #8C9CAB;
+  --t3: #8996AC;
   --acc: var(--primary);
-  --acc-g: rgba(25, 118, 210, 0.18);
-  --acc2: var(--info);
+  --acc-g: rgba(183, 216, 148, 0.18);
+  --acc2: var(--primary);
   --green: var(--success);
-  --green-bg: #dcfce7;
-  --green-b: #86efac;
+  --green-bg: rgba(183, 216, 148, 0.12);
+  --green-b: rgba(183, 216, 148, 0.35);
   --red: var(--error);
-  --red-bg: #fee2e2;
-  --red-b: #fca5a5;
+  --red-bg: rgba(242, 139, 130, 0.12);
+  --red-b: rgba(242, 139, 130, 0.35);
   --amber: var(--warning);
   --purple: var(--primary);
-  --folder-color: #1976D2;
-  --folder-sub-color: #0284C7;
-  --file-color: #16A34A;
-  --file-hover-color: #1565C0;
-  --mono: 'JetBrains Mono', monospace;
-  --bg-animated: radial-gradient(circle at 15% 15%, rgba(25,118,210,0.06) 0%, transparent 40%),
-                 radial-gradient(circle at 85% 85%, rgba(2,132,199,0.05) 0%, transparent 40%);
+  --folder-color: #B7D894;
+  --folder-sub-color: #E0F8C7;
+  --file-color: #B7D894;
+  --file-hover-color: #E0F8C7;
+  --bg-animated: radial-gradient(circle at 20% 20%, rgba(183,216,148,0.10) 0%, transparent 40%),
+                 radial-gradient(circle at 80% 80%, rgba(224,248,199,0.06) 0%, transparent 40%);
 }
 
 /* Base resets & animated background */
@@ -428,13 +423,6 @@ table td .text-slate-500 {
   color: var(--primary) !important;
 }
 
-[data-theme="blue"] .theme-opt.active,
-[data-theme="blue-erp"] .theme-opt.active {
-  background-color: #E1EDFA !important;
-  border: 1px solid var(--primary) !important;
-  color: var(--primary) !important;
-}
-
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
@@ -577,4 +565,111 @@ table td .text-slate-500 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
+}
+
+/* Sage Slate palette */
+[data-theme="sage"] {
+  color-scheme: dark;
+}
+
+[data-theme="sage"] body {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="sage"] header,
+[data-theme="sage"] #leftSidebar,
+[data-theme="sage"] #rightConsole,
+[data-theme="sage"] main {
+  background-color: var(--sidebar) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="sage"] .bg-slate-950,
+[data-theme="sage"] .bg-slate-950\/90,
+[data-theme="sage"] .bg-slate-950\/80,
+[data-theme="sage"] .bg-slate-950\/70,
+[data-theme="sage"] .bg-slate-950\/60,
+[data-theme="sage"] .bg-slate-950\/40,
+[data-theme="sage"] .bg-slate-900,
+[data-theme="sage"] .bg-slate-900\/90,
+[data-theme="sage"] .bg-slate-900\/80,
+[data-theme="sage"] .bg-slate-900\/70,
+[data-theme="sage"] .bg-slate-900\/60,
+[data-theme="sage"] .bg-slate-900\/50,
+[data-theme="sage"] .bg-slate-900\/40,
+[data-theme="sage"] .bg-slate-800,
+[data-theme="sage"] .bg-slate-800\/80 {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="sage"] .border-slate-800,
+[data-theme="sage"] .border-slate-800\/80,
+[data-theme="sage"] .border-slate-800\/60,
+[data-theme="sage"] .border-slate-700,
+[data-theme="sage"] .border-slate-700\/80 {
+  border-color: var(--border) !important;
+}
+
+[data-theme="sage"] .text-slate-100,
+[data-theme="sage"] .text-slate-200,
+[data-theme="sage"] .text-slate-300 {
+  color: var(--text) !important;
+}
+
+[data-theme="sage"] .text-slate-400,
+[data-theme="sage"] .text-slate-500,
+[data-theme="sage"] .text-slate-600 {
+  color: var(--muted-text) !important;
+}
+
+[data-theme="sage"] .text-purple-200,
+[data-theme="sage"] .text-purple-300,
+[data-theme="sage"] .text-purple-400,
+[data-theme="sage"] .text-violet-200,
+[data-theme="sage"] .text-violet-300,
+[data-theme="sage"] .text-violet-400,
+[data-theme="sage"] .text-cyan-200,
+[data-theme="sage"] .text-cyan-300,
+[data-theme="sage"] .text-cyan-400,
+[data-theme="sage"] .text-sky-200,
+[data-theme="sage"] .text-sky-300 {
+  color: var(--primary) !important;
+}
+
+[data-theme="sage"] .border-purple-500,
+[data-theme="sage"] .border-purple-700,
+[data-theme="sage"] .border-purple-800,
+[data-theme="sage"] .border-violet-500,
+[data-theme="sage"] .border-violet-700,
+[data-theme="sage"] .border-cyan-500,
+[data-theme="sage"] .border-cyan-700,
+[data-theme="sage"] .border-sky-700 {
+  border-color: var(--primary) !important;
+}
+
+[data-theme="sage"] .bg-violet-950\/60,
+[data-theme="sage"] .bg-purple-950\/60,
+[data-theme="sage"] .bg-cyan-950\/60 {
+  background-color: rgba(183, 216, 148, 0.14) !important;
+}
+
+[data-theme="sage"] .theme-opt.active {
+  background-color: rgba(183, 216, 148, 0.2) !important;
+  border-color: rgba(183, 216, 148, 0.65) !important;
+  color: #E0F8C7 !important;
+}
+
+[data-theme="sage"] input,
+[data-theme="sage"] select,
+[data-theme="sage"] textarea {
+  background-color: #202734 !important;
+  border-color: var(--border2) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="sage"] input::placeholder,
+[data-theme="sage"] textarea::placeholder {
+  color: var(--muted-text) !important;
 }

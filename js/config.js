@@ -35,7 +35,7 @@ const APP_CONFIG = {
   // Theme Metadata
   themes: {
     'default': { ico: '🌙', name: 'DEFAULT', label: 'Midnight Cyber' },
-    'blue':    { ico: '🔷', name: 'BLUE',    label: 'Blue' }
+    'sage':    { ico: '🌿', name: 'SAGE',    label: 'Sage Slate' }
   },
 
   // CLI Execution Flags

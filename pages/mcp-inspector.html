@@ -226,6 +226,36 @@
   background: #EDF4FC !important;
 }
 
+[data-theme="sage"] {
+  --bg: #202734;
+  --surface: #36415A;
+  --surface2: #414D67;
+  --surface3: #4B5872;
+  --border: #4B5872;
+  --border2: #66748C;
+  --accent: #B7D894;
+  --accent2: #E0F8C7;
+  --accent-glow: rgba(183, 216, 148, 0.18);
+  --green: #B7D894;
+  --green-dim: rgba(183, 216, 148, 0.12);
+  --red: #F28B82;
+  --red-dim: rgba(242, 139, 130, 0.12);
+  --text: #E0F8C7;
+  --text2: #D0E2BC;
+  --text3: #B6C5A3;
+}
+
+[data-theme="sage"] .tool-item.active {
+  background: rgba(183, 216, 148, 0.18) !important;
+  border-color: #B7D894 !important;
+}
+
+[data-theme="sage"] .tool-item.active .tool-name,
+[data-theme="sage"] .endpoint,
+[data-theme="sage"] .t-meta h2 {
+  color: #E0F8C7 !important;
+}
+
 #themeMenu.hidden { display: none !important; }
 #themeMenu:not(.hidden) { display: flex !important; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1408,4 +1438,3 @@ function startDynamicScenario() {
 <script src="../js/theme.js"></script>
 </body>
 </html>
-
