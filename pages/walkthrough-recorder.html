@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Website Walkthrough Recorder - QARP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <main class="mx-auto flex w-full max-w-5xl flex-col gap-5 p-5 sm:p-8">
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <a href="../index.html" class="text-xs text-teal-300 hover:text-teal-200">← Back to QARP</a>
+        <h1 class="mt-2 text-2xl font-bold">Website Walkthrough Recorder</h1>
+        <p class="mt-1 text-sm text-slate-400">Record browser actions with Puppeteer and turn them into a readable walkthrough.</p>
+      </div>
+      <a href="https://github.com/puppeteer/puppeteer" target="_blank" rel="noopener noreferrer"
+         class="rounded-full border border-teal-800 bg-teal-950/50 px-3 py-1 text-xs font-mono text-teal-300 hover:border-teal-500">
+        PUPPETEER ↗
+      </a>
+    </header>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+      <form id="recorderForm" class="flex flex-col gap-3">
+        <label for="websiteUrl" class="text-sm font-semibold text-slate-200">Website URL</label>
+        <input id="websiteUrl" name="url" type="url" required autocomplete="url"
+               placeholder="https://example.com"
+               class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-teal-500 focus:outline-none">
+        <label for="browserMode" class="text-xs font-semibold text-slate-300">Browser mode</label>
+        <select id="browserMode" name="mode"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 focus:border-teal-500 focus:outline-none">
+          <option value="headful">Headful — show browser window</option>
+          <option value="headless">Headless — run in background</option>
+        </select>
+        <p class="text-xs leading-relaxed text-slate-400">
+          Start a browser session, then use the website yourself or query and control page elements below. Only HTTP and HTTPS URLs are allowed.
+        </p>
+        <div class="flex flex-wrap items-center gap-3 pt-1">
+          <button id="startButton" type="submit"
+                  class="rounded-lg border border-teal-700 bg-teal-950/60 px-4 py-2 text-sm font-bold text-teal-200 hover:bg-teal-900/70 disabled:cursor-wait disabled:opacity-60">
+            Start recording
+          </button>
+          <button id="stopButton" type="button" disabled
+                  class="rounded-lg border border-rose-800 bg-rose-950/40 px-4 py-2 text-sm font-bold text-rose-200 hover:bg-rose-900/60 disabled:cursor-not-allowed disabled:opacity-40">
+            Finish and generate walkthrough
+          </button>
+          <span id="status" class="text-sm text-slate-400" role="status" aria-live="polite">Ready to record.</span>
+        </div>
+      </form>
+    </section>
+
+    <section class="rounded-xl border border-amber-900/60 bg-amber-950/20 p-4">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-amber-200">Recording privacy</h2>
+      <p class="mt-2 text-xs leading-relaxed text-amber-100/80">
+        Walkthrough logging does not capture typed values or passwords. DOM queries and screenshots/PDFs may include website content; use them only on sites you are authorized to access and handle downloaded files appropriately.
+      </p>
+    </section>
+
+    <section id="browserTools" class="hidden rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+      <h2 class="text-sm font-bold text-slate-100">Inspect and control the page</h2>
+      <p class="mt-1 text-xs text-slate-500">Use CSS selectors to inspect elements, click controls, fill fields, or submit a form.</p>
+      <form id="inspectForm" class="mt-4 flex flex-col gap-2 sm:flex-row">
+        <input id="inspectSelector" required maxlength="500" autocomplete="off" placeholder="CSS selector, e.g. h1 or a.card"
+               class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 placeholder:text-slate-600 focus:border-teal-500 focus:outline-none">
+        <button type="submit" class="rounded-lg border border-sky-700 bg-sky-950/50 px-3 py-2 text-xs font-bold text-sky-200 hover:bg-sky-900/70 disabled:opacity-40">
+          Query DOM
+        </button>
+      </form>
+      <form id="actionForm" class="mt-2 flex flex-col gap-2 sm:flex-row">
+        <input id="actionSelector" required maxlength="500" autocomplete="off" placeholder="CSS selector for action"
+               class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 placeholder:text-slate-600 focus:border-teal-500 focus:outline-none">
+        <select id="actionType" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100">
+          <option value="click">Click</option>
+          <option value="fill">Fill field</option>
+          <option value="submit">Submit form</option>
+        </select>
+        <input id="actionValue" maxlength="5000" autocomplete="off" placeholder="Text to enter"
+               class="hidden min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 placeholder:text-slate-600 focus:border-teal-500 focus:outline-none">
+        <button type="submit" class="rounded-lg border border-teal-700 bg-teal-950/50 px-3 py-2 text-xs font-bold text-teal-200 hover:bg-teal-900/70 disabled:opacity-40">
+          Run action
+        </button>
+      </form>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button id="screenshotButton" type="button" disabled
+                class="rounded-lg border border-violet-800 bg-violet-950/40 px-3 py-2 text-xs font-bold text-violet-200 hover:bg-violet-900/60 disabled:opacity-40">
+          Download 2× full-page PNG
+        </button>
+        <button id="pdfButton" type="button" disabled
+                class="rounded-lg border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs font-bold text-rose-200 hover:bg-rose-900/60 disabled:opacity-40">
+          Download PDF
+        </button>
+        <span id="toolStatus" class="text-xs text-slate-400" role="status" aria-live="polite"></span>
+      </div>
+      <pre id="domResults" class="mt-3 hidden max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950 p-3 font-mono text-xs text-slate-300"></pre>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-bold text-slate-100">Recorded actions</h2>
+          <p id="recordingTarget" class="mt-1 break-all text-[11px] font-mono text-slate-500">No active session</p>
+        </div>
+        <span id="stepCount" class="rounded-full border border-slate-700 px-2.5 py-1 text-[10px] font-mono text-slate-400">0 steps</span>
+      </div>
+      <ol id="stepList" class="mt-4 max-h-80 list-decimal space-y-2 overflow-y-auto pl-5 text-xs text-slate-300">
+        <li class="list-none -ml-5 text-slate-500">Your recorded actions will appear here.</li>
+      </ol>
+    </section>
+
+    <section id="resultPanel" class="hidden rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-100">Generated walkthrough</h2>
+          <p class="mt-1 text-xs text-slate-500">Download the Markdown file to share or edit it.</p>
+        </div>
+        <button id="downloadButton" type="button"
+                class="rounded-lg border border-teal-700 bg-teal-950/50 px-3 py-2 text-xs font-bold text-teal-200 hover:bg-teal-900/70">
+          Download walkthrough.md
+        </button>
+      </div>
+      <pre id="walkthroughOutput" class="mt-3 max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-200"></pre>
+    </section>
+  </main>
+
+  <script>
+    const byId = id => document.getElementById(id);
+    const form = byId('recorderForm');
+    const startButton = byId('startButton');
+    const stopButton = byId('stopButton');
+    const status = byId('status');
+    const stepList = byId('stepList');
+    const sessionStorageKey = 'qarp-walkthrough-session';
+    const browserTools = byId('browserTools');
+    const toolStatus = byId('toolStatus');
+    let sessionId = null;
+    let pollTimer = null;
+    let latestMarkdown = '';
+    let latestTruncated = false;
+
+    function setStatus(message, color = 'text-slate-400') {
+      status.textContent = message;
+      status.className = `text-sm ${color}`;
+    }
+
+    function setSessionActive(active) {
+      startButton.disabled = active;
+      stopButton.disabled = !active;
+      browserTools.classList.toggle('hidden', !active);
+      browserTools.querySelectorAll('button, input, select').forEach(element => {
+        element.disabled = !active;
+      });
+      byId('actionValue').disabled = !active || byId('actionType').value !== 'fill';
+    }
+
+    function renderSteps(steps) {
+      byId('stepCount').textContent = `${steps.length}${latestTruncated ? '+' : ''} step${steps.length === 1 ? '' : 's'}`;
+      stepList.replaceChildren();
+      if (!steps.length) {
+        const empty = document.createElement('li');
+        empty.className = 'list-none -ml-5 text-slate-500';
+        empty.textContent = 'Waiting for browser actions…';
+        stepList.appendChild(empty);
+        return;
+      }
+      steps.forEach(step => {
+        const item = document.createElement('li');
+        item.textContent = step.description;
+        stepList.appendChild(item);
+      });
+    }
+
+    async function requestJson(endpoint, options = {}) {
+      const response = await fetch(`${window.location.origin}${endpoint}`, {
+        ...options,
+        headers: { Accept: 'application/json', ...(options.headers || {}) },
+        signal: AbortSignal.timeout(30000)
+      });
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (_) {
+        if (response.status === 404 && endpoint.startsWith('/walkthrough/')) {
+          throw new Error('QARP returned 404 for the recorder API. Stop and restart QARP (run `npm start`), then reopen this page.');
+        }
+        throw new Error(`QARP returned a non-JSON response (HTTP ${response.status}). Restart the QARP server and try again.`);
+      }
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      return data;
+    }
+
+    async function downloadArtifact(format) {
+      if (!sessionId) return;
+      toolStatus.textContent = `Generating ${format.toUpperCase()}…`;
+      toolStatus.className = 'text-xs text-teal-300';
+      try {
+        const response = await fetch(`${window.location.origin}/walkthrough/artifact?sessionId=${encodeURIComponent(sessionId)}&format=${format}`, {
+          headers: { Accept: format === 'pdf' ? 'application/pdf' : 'image/png' },
+          signal: AbortSignal.timeout(60000)
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          let error;
+          try { error = JSON.parse(text).error; } catch (_) { error = `HTTP ${response.status}`; }
+          throw new Error(error || `HTTP ${response.status}`);
+        }
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = format === 'pdf' ? 'website-page.pdf' : 'website-screenshot.png';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toolStatus.textContent = `${format.toUpperCase()} downloaded.`;
+        toolStatus.className = 'text-xs text-emerald-300';
+      } catch (error) {
+        toolStatus.textContent = `Could not generate ${format.toUpperCase()}: ${error.message}`;
+        toolStatus.className = 'text-xs text-rose-300';
+      }
+    }
+
+    async function refreshSession() {
+      if (!sessionId) return;
+      try {
+        const data = await requestJson(`/walkthrough/status?sessionId=${encodeURIComponent(sessionId)}`);
+        latestTruncated = data.truncated;
+        renderSteps(data.steps || []);
+        if (!data.isBrowserOpen) {
+          setStatus('The browser window was closed. Finish recording to generate the walkthrough.', 'text-amber-300');
+        }
+      } catch (error) {
+        if (error.message.includes('Walkthrough session not found')) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+          sessionId = null;
+          localStorage.removeItem(sessionStorageKey);
+          startButton.disabled = false;
+          stopButton.disabled = true;
+          setSessionActive(false);
+          byId('browserMode').disabled = false;
+          byId('recordingTarget').textContent = 'No active session';
+        }
+        setStatus(`Could not refresh recording status: ${error.message}`, 'text-rose-300');
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function startPolling() {
+      clearInterval(pollTimer);
+      pollTimer = setInterval(refreshSession, 1200);
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      startButton.disabled = true;
+      setStatus(byId('browserMode').value === 'headless'
+        ? 'Starting a headless browser with Puppeteer…'
+        : 'Opening a visible browser with Puppeteer…', 'text-teal-300');
+      byId('resultPanel').classList.add('hidden');
+      latestMarkdown = '';
+      latestTruncated = false;
+      try {
+        const data = await requestJson('/walkthrough/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: byId('websiteUrl').value.trim(),
+            mode: byId('browserMode').value
+          })
+        });
+        sessionId = data.sessionId;
+        localStorage.setItem(sessionStorageKey, sessionId);
+        byId('recordingTarget').textContent = `${data.title || 'Website'} · ${data.url}`;
+        byId('browserMode').disabled = true;
+        renderSteps([{ description: `Open ${data.url}` }]);
+        setSessionActive(true);
+        setStatus(data.browserMode === 'headless'
+          ? 'Headless browser started. Use the page controls below to inspect and interact.'
+          : 'Browser window opened. Use it or the page controls below to interact.', 'text-emerald-300');
+        startPolling();
+      } catch (error) {
+        setSessionActive(false);
+        byId('browserMode').disabled = false;
+        setStatus(`Could not start recording: ${error.message}`, 'text-rose-300');
+      }
+    });
+
+    stopButton.addEventListener('click', async () => {
+      if (!sessionId) return;
+      stopButton.disabled = true;
+      setStatus('Closing the browser and generating the walkthrough…', 'text-teal-300');
+      try {
+        const data = await requestJson('/walkthrough/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+        clearInterval(pollTimer);
+        pollTimer = null;
+        sessionId = null;
+        localStorage.removeItem(sessionStorageKey);
+        latestMarkdown = data.markdown;
+        latestTruncated = data.truncated;
+        renderSteps(data.steps || []);
+        byId('walkthroughOutput').textContent = latestMarkdown;
+        byId('resultPanel').classList.remove('hidden');
+        setSessionActive(false);
+        byId('browserMode').disabled = false;
+        toolStatus.textContent = '';
+        setStatus(data.warning || (data.truncated
+          ? 'Walkthrough generated, but the 200-action limit was reached.'
+          : 'Walkthrough generated.'), data.warning || data.truncated ? 'text-amber-300' : 'text-emerald-300');
+      } catch (error) {
+        stopButton.disabled = false;
+        setStatus(`Could not finish recording: ${error.message}`, 'text-rose-300');
+      }
+    });
+
+    byId('downloadButton').addEventListener('click', () => {
+      if (!latestMarkdown) return;
+      const blob = new Blob([latestMarkdown], { type: 'text/markdown;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'website-walkthrough.md';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    byId('inspectForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      toolStatus.textContent = 'Querying page elements…';
+      toolStatus.className = 'text-xs text-sky-300';
+      try {
+        const data = await requestJson('/walkthrough/inspect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, selector: byId('inspectSelector').value.trim() })
+        });
+        const output = data.elements.length
+          ? data.elements.map((item, index) => `${index + 1}. <${item.tag}>${item.text ? ` ${item.text}` : ''}${item.href ? `\\n   href: ${item.href}` : ''}${item.ariaLabel ? `\\n   aria-label: ${item.ariaLabel}` : ''}${item.role ? `\\n   role: ${item.role}` : ''}${item.type ? `\\n   type: ${item.type}` : ''}`).join('\\n')
+          : 'No elements matched that selector.';
+        byId('domResults').textContent = `${output}${data.truncated ? '\\n\\nShowing the first 30 matching elements.' : ''}`;
+        byId('domResults').classList.remove('hidden');
+        toolStatus.textContent = `Found ${data.count} matching element${data.count === 1 ? '' : 's'}.`;
+        toolStatus.className = 'text-xs text-emerald-300';
+        await refreshSession();
+      } catch (error) {
+        toolStatus.textContent = `DOM query failed: ${error.message}`;
+        toolStatus.className = 'text-xs text-rose-300';
+      }
+    });
+
+    byId('actionType').addEventListener('change', () => {
+      byId('actionValue').classList.toggle('hidden', byId('actionType').value !== 'fill');
+      byId('actionValue').disabled = !sessionId || byId('actionType').value !== 'fill';
+    });
+
+    byId('actionForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const action = byId('actionType').value;
+      toolStatus.textContent = `Performing ${action}…`;
+      toolStatus.className = 'text-xs text-teal-300';
+      try {
+        await requestJson('/walkthrough/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            action,
+            selector: byId('actionSelector').value.trim(),
+            value: action === 'fill' ? byId('actionValue').value : undefined
+          })
+        });
+        if (action === 'fill') byId('actionValue').value = '';
+        toolStatus.textContent = `${action === 'fill' ? 'Field filled (value not saved)' : `Action "${action}" completed`}.`;
+        toolStatus.className = 'text-xs text-emerald-300';
+        await refreshSession();
+      } catch (error) {
+        toolStatus.textContent = `Action failed: ${error.message}`;
+        toolStatus.className = 'text-xs text-rose-300';
+      }
+    });
+
+    byId('screenshotButton').addEventListener('click', () => downloadArtifact('png'));
+    byId('pdfButton').addEventListener('click', () => downloadArtifact('pdf'));
+
+    const savedSessionId = localStorage.getItem(sessionStorageKey);
+    if (savedSessionId) {
+      sessionId = savedSessionId;
+      setSessionActive(true);
+      byId('browserMode').disabled = true;
+      byId('recordingTarget').textContent = 'Restored active recording session';
+      setStatus('Reconnected to the active recording session.', 'text-emerald-300');
+      refreshSession();
+      startPolling();
+    }
+  </script>
+</body>
+</html>

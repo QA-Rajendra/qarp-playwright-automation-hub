@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MCP Inspector - Playwright Automation Hub</title>
+<meta name="description" content="Interactive MCP (Model Context Protocol) Inspector for Playwright Automation Hub"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/css/custom.css"/>
+<style>
+:root{--bg:#0a0b0f;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252a38;--border2:#2e3548;--accent:#7c6af7;--accent2:#5b4ef0;--accent-glow:rgba(124,106,247,0.18);--green:#34d399;--green-dim:rgba(52,211,153,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;--radius:12px;--radius-sm:8px}
+
+[data-theme="blue"],
+[data-theme="blue-erp"] {
+  --bg: #F5F9FF;
+  --surface: #FFFFFF;
+  --surface2: #EDF4FC;
+  --surface3: #E1ECF9;
+  --border: #D9E5F2;
+  --border2: #B8D2EB;
+  --accent: #1976D2;
+  --accent2: #1565C0;
+  --accent-glow: rgba(25, 118, 210, 0.15);
+  --green: #16A34A;
+  --green-dim: rgba(22, 163, 74, 0.12);
+  --red: #DC2626;
+  --red-dim: rgba(220, 38, 38, 0.12);
+  --text: #172B4D;
+  --text2: #334155;
+  --text3: #64748B;
+}
+
+[data-theme="blue"] .header,
+[data-theme="blue-erp"] .header {
+  background: #00264B !important;
+  border-bottom: 1px solid #0B2D4D !important;
+}
+
+[data-theme="blue"] .header-logo h1,
+[data-theme="blue-erp"] .header-logo h1 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .header-btn,
+[data-theme="blue-erp"] .header-btn {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #FFFFFF !important;
+}
+[data-theme="blue"] .header-btn:hover,
+[data-theme="blue-erp"] .header-btn:hover {
+  background: rgba(255,255,255,0.22) !important;
+}
+
+[data-theme="blue"] .status-pill,
+[data-theme="blue-erp"] .status-pill {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] .sidebar,
+[data-theme="blue-erp"] .sidebar {
+  background: #0B2D4D !important;
+  border-right: 1px solid #16426C !important;
+}
+
+[data-theme="blue"] .sidebar-title,
+[data-theme="blue-erp"] .sidebar-title,
+[data-theme="blue"] .section-strip,
+[data-theme="blue-erp"] .section-strip {
+  color: #93C5FD !important;
+}
+
+[data-theme="blue"] .server-info,
+[data-theme="blue-erp"] .server-info {
+  background: #071F36 !important;
+  border-color: #1A4773 !important;
+  color: #CBD5E1 !important;
+}
+
+[data-theme="blue"] .endpoint,
+[data-theme="blue-erp"] .endpoint {
+  color: #60A5FA !important;
+}
+
+[data-theme="blue"] .tool-item,
+[data-theme="blue-erp"] .tool-item {
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] .tool-item:hover,
+[data-theme="blue-erp"] .tool-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+[data-theme="blue"] .tool-item.active,
+[data-theme="blue-erp"] .tool-item.active {
+  background: #1976D2 !important;
+  border-color: #60A5FA !important;
+}
+
+[data-theme="blue"] .tool-name,
+[data-theme="blue-erp"] .tool-name {
+  color: #F8FAFC !important;
+}
+
+[data-theme="blue"] .tool-desc,
+[data-theme="blue-erp"] .tool-desc {
+  color: #94A3B8 !important;
+}
+
+[data-theme="blue"] .tool-item.active .tool-name,
+[data-theme="blue-erp"] .tool-item.active .tool-name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .tool-item.active .tool-desc,
+[data-theme="blue-erp"] .tool-item.active .tool-desc {
+  color: #E0E7FF !important;
+}
+
+[data-theme="blue"] .panel-header,
+[data-theme="blue-erp"] .panel-header {
+  background: #FFFFFF !important;
+  border-bottom-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .tool-body,
+[data-theme="blue-erp"] .tool-body {
+  background: #FFFFFF !important;
+}
+
+[data-theme="blue"] .resp-panel,
+[data-theme="blue-erp"] .resp-panel {
+  background: #F8FAFC !important;
+}
+
+[data-theme="blue"] .tab,
+[data-theme="blue-erp"] .tab {
+  color: #64748B !important;
+}
+
+[data-theme="blue"] .tab:hover,
+[data-theme="blue-erp"] .tab:hover {
+  color: #172B4D !important;
+  background: #EDF4FC !important;
+}
+
+[data-theme="blue"] .tab.active,
+[data-theme="blue-erp"] .tab.active {
+  color: #1976D2 !important;
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+  border-bottom-color: #FFFFFF !important;
+}
+
+[data-theme="blue"] .jv,
+[data-theme="blue-erp"] .jv {
+  background: #07192C !important;
+  border-color: #1B3552 !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="blue"] .ci,
+[data-theme="blue-erp"] .ci {
+  background: #112842 !important;
+  border-color: #1F4268 !important;
+  color: #93C5FD !important;
+}
+
+[data-theme="blue"] .rc,
+[data-theme="blue-erp"] .rc {
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .rch,
+[data-theme="blue-erp"] .rch {
+  background: #EDF4FC !important;
+  border-bottom-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .rcb,
+[data-theme="blue-erp"] .rcb {
+  background: #07192C !important;
+  color: #E2E8F0 !important;
+}
+
+[data-theme="blue"] input[type=text],
+[data-theme="blue"] input[type=number],
+[data-theme="blue-erp"] input[type=text],
+[data-theme="blue-erp"] input[type=number] {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #172B4D !important;
+}
+
+[data-theme="blue"] .cbrow,
+[data-theme="blue-erp"] .cbrow {
+  background: #EDF4FC !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .noargs,
+[data-theme="blue-erp"] .noargs {
+  background: #EDF4FC !important;
+  border-color: #D9E5F2 !important;
+  color: #64748B !important;
+}
+
+[data-theme="blue"] .he,
+[data-theme="blue-erp"] .he {
+  background: #FFFFFF !important;
+  border-color: #D9E5F2 !important;
+}
+
+[data-theme="blue"] .he:hover,
+[data-theme="blue-erp"] .he:hover {
+  border-color: #1976D2 !important;
+  background: #EDF4FC !important;
+}
+
+#themeMenu.hidden { display: none !important; }
+#themeMenu:not(.hidden) { display: flex !important; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;overflow:hidden}
+.app{display:grid;grid-template-rows:60px 1fr;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
+.app.monitor-open{grid-template-columns:320px 1fr 300px}
+.header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;z-index:10}
+.header-logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px var(--accent-glow)}
+.header-logo h1{font-size:16px;font-weight:700;background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-tag{background:var(--accent-glow);border:1px solid var(--accent);color:var(--accent);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.header-spacer{flex:1}
+.status-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;transition:all .3s}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:all .3s}
+.status-pill.connected .status-dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-pill.connected{border-color:rgba(52,211,153,.3);color:var(--green)}
+.status-pill.error .status-dot{background:var(--red);box-shadow:0 0 8px var(--red)}
+.status-pill.error{border-color:rgba(248,113,113,.3);color:var(--red)}
+.header-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:6px}
+.header-btn:hover{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
+.sidebar-title{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.server-info{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--text2)}
+.endpoint{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:11px;word-break:break-all;margin-top:4px}
+.copy-btn{margin-top:8px;background:var(--accent-glow);border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;width:100%}
+.copy-btn:hover{background:rgba(124,106,247,.3)}
+.section-strip{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;flex-shrink:0}
+.tools-list{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.tool-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px}
+.tool-item:hover{background:var(--surface2);border-color:var(--border)}
+.tool-item.active{background:var(--accent-glow);border-color:var(--accent)}
+.tool-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tool-item.active .tool-name{color:var(--accent)}
+.tool-desc{font-size:11px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.main{display:grid;grid-template-rows:1fr 1fr;overflow:hidden}
+.tool-panel{display:flex;flex-direction:column;overflow:hidden;border-bottom:1px solid var(--border)}
+.panel-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.panel-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.panel-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)}
+.tool-body{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);text-align:center;gap:12px}
+.ph-icon{font-size:40px;opacity:.4}
+.placeholder h3{font-size:16px;font-weight:600;color:var(--text2)}
+.placeholder p{font-size:13px;max-width:280px;line-height:1.5}
+.tool-hdr{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.t-icon{width:44px;height:44px;background:var(--accent-glow);border:1px solid var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.t-meta h2{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.t-meta p{font-size:13px;color:var(--text2);line-height:1.5}
+.slabel{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:20px}
+.args{display:flex;flex-direction:column;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:12px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:6px}
+.tbadge{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;color:var(--text3)}
+.rbadge{font-size:10px;background:var(--red-dim);border:1px solid rgba(248,113,113,.3);border-radius:4px;padding:1px 6px;color:var(--red)}
+.fd{font-size:11px;color:var(--text3)}
+input[type=text],input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color .2s,box-shadow .2s}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.cbrow{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px}
+.cbrow label{cursor:pointer;font-size:13px;color:var(--text2)}
+.noargs{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:12px;color:var(--text3);font-style:italic}
+.btn-run{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:10px 24px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-top:20px;box-shadow:0 4px 16px rgba(124,106,247,.3)}
+.btn-run:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,106,247,.4)}
+.btn-run:active{transform:translateY(0)}
+.btn-run:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+.btn-run.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent)}50%{opacity:.5;box-shadow:0 0 3px var(--accent)}}
+.fi{animation:fadeIn .25s ease}
+.resp-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.rtabs{display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{padding:7px 16px 9px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-radius:8px 8px 0 0;transition:all .15s;border:1px solid transparent;border-bottom:none;position:relative;top:1px}
+.tab:hover{color:var(--text2);background:var(--surface2)}
+.tab.active{color:var(--text);background:var(--surface);border-color:var(--border);border-bottom-color:var(--surface)}
+.tc{background:var(--accent-glow);color:var(--accent);border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px}
+.rcontent{flex:1;overflow:hidden}
+.pane{display:none;height:100%;overflow-y:auto;padding:16px 20px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.pane.active{display:block}
+.jv{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;position:relative}
+.ci{position:absolute;top:10px;right:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;transition:all .2s}
+.ci:hover{color:var(--text);border-color:var(--border2)}
+.jk{color:#93c5fd}.js{color:#86efac}.jn{color:#fde68a}.jb{color:#f9a8d4}.jl{color:var(--text3)}
+.rc{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.rch{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.rcb{padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);background:var(--bg);max-height:300px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.tok{background:var(--green-dim);border:1px solid rgba(52,211,153,.3);color:var(--green);border-radius:6px;padding:2px 8px;font-size:11px}
+.terr{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px}
+.es{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:10px;text-align:center}
+.es .ei{font-size:32px;opacity:.3}
+.es p{font-size:12px}
+.he{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s}
+.he:hover{border-color:var(--border2)}
+.hd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hd.pass{background:var(--green)}.hd.fail{background:var(--red)}
+.hc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs,.ht{font-size:11px;color:var(--text3);flex-shrink:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* ── Sidebar Tab Switcher ──────────────────────────────────────────────── */
+.sb-tabs{display:flex;gap:2px;padding:8px 8px 0;flex-shrink:0;}
+.sb-tab{flex:1;padding:6px 4px;font-size:11px;font-weight:600;font-family:inherit;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;background:var(--surface2);color:var(--text3);cursor:pointer;transition:all .15s;}
+.sb-tab.active{background:var(--surface3);color:var(--text);border-color:var(--border2);}
+.sb-tab:hover:not(.active){color:var(--text2);}
+#sb-tools-pane{display:flex;flex-direction:column;flex:1;overflow:hidden;border-top:1px solid var(--border);}
+#sb-prompts-pane{border-top:1px solid var(--border);}
+/* Prompt Items */
+.prompt-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px;}
+.prompt-item:hover{background:var(--surface2);border-color:var(--border);}
+.prompt-item.active{background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.4);}
+.prompt-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+.prompt-item.active .prompt-name{color:var(--green);}
+.prompt-desc{font-size:11px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.prompt-tag{font-size:9px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:var(--green);border-radius:10px;padding:1px 6px;font-weight:600;}
+.btn-get-prompt{background:linear-gradient(135deg,var(--green),#059669);border:none;color:#fff;padding:10px 24px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-top:20px;box-shadow:0 4px 16px rgba(52,211,153,.25);}
+.btn-get-prompt:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(52,211,153,.35);}
+.prompt-msg{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);max-height:260px;overflow-y:auto;position:relative;margin-top:12px;}
+.prompt-msg-copy{position:absolute;top:8px;right:8px;background:var(--surface3);border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.prompt-msg-copy:hover{color:var(--text);border-color:var(--border2);}
+[data-theme="blue"] .sb-tab,[data-theme="blue-erp"] .sb-tab{background:#112842 !important;border-color:#1F4268 !important;color:#93C5FD !important;}
+[data-theme="blue"] .sb-tab.active,[data-theme="blue-erp"] .sb-tab.active{background:#1976D2 !important;color:#FFFFFF !important;}
+[data-theme="blue"] .prompt-item,[data-theme="blue-erp"] .prompt-item{color:#E2E8F0 !important;}
+[data-theme="blue"] .prompt-item.active,[data-theme="blue-erp"] .prompt-item.active{background:rgba(25,118,210,0.15) !important;border-color:rgba(25,118,210,0.4) !important;}
+
+/* ── Project Selector ──────────────────────────────────────────────────── */
+.proj-section{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.proj-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.proj-selector{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.proj-selector select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:6px 8px;outline:none;cursor:pointer;transition:border-color .2s;}
+.proj-selector select:focus{border-color:var(--accent);}
+.proj-add-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--accent);font-size:18px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.proj-add-btn:hover{background:var(--accent-glow);border-color:var(--accent);}
+.proj-path{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);word-break:break-all;line-height:1.4;margin-bottom:6px;padding:4px 6px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);}
+.proj-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;margin-bottom:4px;}
+.proj-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.proj-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.proj-dot.warn{background:#f59e0b;box-shadow:0 0 6px #f59e0b;}
+.proj-dot.err{background:var(--red);box-shadow:0 0 6px var(--red);}
+.proj-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap;}
+.proj-chip{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:10px;}
+
+/* ── Add Project Modal ─────────────────────────────────────────────────── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:fadeIn .2s ease;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);}
+.modal-close{background:transparent;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:0 4px;transition:color .15s;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);}
+.mf{display:flex;flex-direction:column;gap:5px;}
+.ml{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;}
+.btn-detect{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:9px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;width:fit-content;}
+.btn-detect:hover{background:var(--surface3);color:var(--text);border-color:var(--accent);}
+.btn-detect:disabled{opacity:.5;cursor:not-allowed;}
+.detect-list{display:flex;flex-direction:column;gap:5px;}
+.check-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;}
+.check-icon{font-size:14px;flex-shrink:0;}
+.check-label{flex:1;color:var(--text2);}
+.check-detail{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-cancel{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:8px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-cancel:hover{background:var(--surface3);}
+.btn-save{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:8px 20px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(124,106,247,.3);}
+.btn-save:hover:not(:disabled){transform:translateY(-1px);}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+[data-theme="blue"] .proj-selector select,[data-theme="blue-erp"] .proj-selector select{background:#071F36 !important;border-color:#1A4773 !important;color:#CBD5E1 !important;}
+[data-theme="blue"] .modal-box,[data-theme="blue-erp"] .modal-box{background:#0B2D4D !important;border-color:#16426C !important;}
+[data-theme="blue"] .check-row,[data-theme="blue-erp"] .check-row{background:#071F36 !important;border-color:#1A4773 !important;}
+
+/* ── Protocol Traffic Monitor Sidebar ──────────────────────────────────── */
+
+.mon-sidebar{display:none;flex-direction:column;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);}
+.app.monitor-open .mon-sidebar{display:flex;}
+.mon-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.mon-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);flex:1;}
+.mon-clear-btn{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px;font-family:inherit;transition:color .15s;}
+.mon-clear-btn:hover{color:var(--red);}
+.mon-list{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;display:flex;flex-direction:column;gap:6px;}
+.mon-entry{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px;}
+.mon-entry-hdr{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);cursor:pointer;}
+.mon-dir{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.mon-dir.out{background:rgba(124,106,247,.2);color:var(--accent);}
+.mon-dir.in{background:rgba(52,211,153,.15);color:var(--green);}
+.mon-method{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mon-ts{color:var(--text3);font-size:10px;flex-shrink:0;}
+.mon-body{padding:8px 10px;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all;line-height:1.5;color:var(--text2);max-height:150px;overflow-y:auto;display:none;}
+.mon-body.open{display:block;}
+.mon-empty{padding:24px;text-align:center;color:var(--text3);font-size:12px;}
+[data-theme="blue"] .mon-sidebar,[data-theme="blue-erp"] .mon-sidebar{background:#0B2D4D !important;border-color:#16426C !important;}
+[data-theme="blue"] .mon-entry,[data-theme="blue-erp"] .mon-entry{background:#071F36 !important;border-color:#1A4773 !important;}
+[data-theme="blue"] .mon-body,[data-theme="blue-erp"] .mon-body{color:#CBD5E1 !important;}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">&#129302;</div>
+    <h1>MCP Inspector</h1>
+    <span class="logo-tag">2026-07-28</span>
+  </div>
+  <div class="header-spacer"></div>
+  <div id="sp" class="status-pill"><div class="status-dot"></div><span id="st">Connecting&hellip;</span></div>
+  <!-- Theme Selector -->
+  <div style="position:relative;">
+    <button type="button" class="header-btn" id="themeBtn" onclick="theme.toggleThemeMenu(event)" title="Switch Theme">
+      <span id="themeIco">🌙</span> <span id="themeLbl">DEFAULT</span>
+    </button>
+    <div class="hidden" id="themeMenu" style="position:absolute;top:calc(100% + 8px);right:0;width:150px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:99;flex-direction:column;gap:4px;">
+      <button type="button" class="theme-opt" data-theme="default" onclick="changeTheme('default'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
+        <span style="display:flex;align-items:center;gap:6px;"><span>🌙</span> <b>Default</b></span>
+        <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
+      </button>
+      <button type="button" class="theme-opt" data-theme="blue" onclick="changeTheme('blue'); theme.toggleThemeMenu(event);" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;text-align:left;">
+        <span style="display:flex;align-items:center;gap:6px;"><span>🔷</span> <b>Blue</b></span>
+        <span class="theme-check" style="font-weight:bold;color:var(--accent);"></span>
+      </button>
+    </div>
+  </div>
+  <button id="pinMonBtn" class="header-btn" onclick="toggleMonitor()" title="Pin Protocol Traffic Monitor">📡 Monitor</button>
+  <button class="header-btn" onclick="copyPageUrl()" title="Copy page URL with current state">🔗 Copy Page</button>
+  <a href="/" class="header-btn">&#8592; Dashboard</a>
+</header>
+<aside class="sidebar">
+  <!-- MCP Server Info -->
+  <div class="sidebar-header">
+    <div class="sidebar-title">MCP Server</div>
+    <div class="server-info">
+      <div style="color:var(--text3);margin-bottom:2px;">Endpoint</div>
+      <div class="endpoint" id="epUrl">http://localhost:9300/mcp</div>
+      <button class="copy-btn" id="cpBtn" onclick="copyEP()">&#128203; Copy Endpoint URL</button>
+    </div>
+  </div>
+
+  <!-- Project Selector -->
+  <div class="proj-section">
+    <div class="proj-label">PROJECT</div>
+    <div class="proj-selector">
+      <select id="projSelect" onchange="selectNamedProject(this.value)">
+        <option value="">Loading projects...</option>
+      </select>
+      <button class="proj-add-btn" onclick="openAddModal()" title="Add Playwright Project">+</button>
+      <button class="proj-add-btn" style="margin-left:8px;" onclick="openAiScenarioModal()" title="Dynamic AI Scenario Check">&#129302;</button>
+    </div>
+    <div class="proj-path" id="projPath">...</div>
+    <div class="proj-status" id="projStatus">
+      <span class="proj-dot" id="projDot"></span>
+      <span id="projStatusText">Detecting...</span>
+    </div>
+    <div class="proj-meta" id="projMeta"></div>
+  </div>
+
+  <!-- Tools / Prompts Tabs -->
+  <div class="sb-tabs">
+    <button class="sb-tab active" id="sbt-tools" onclick="switchSbTab('tools')">&#128295; Tools <span id="tc">0</span></button>
+    <button class="sb-tab" id="sbt-prompts" onclick="switchSbTab('prompts')">&#128172; Prompts <span id="pc">0</span></button>
+  </div>
+  <div id="sb-tools-pane">
+    <div class="tools-list" id="tl"></div>
+  </div>
+  <div id="sb-prompts-pane" style="display:none;flex:1;overflow-y:auto;">
+    <div class="tools-list" id="pl"></div>
+  </div>
+</aside>
+
+<!-- Add Project Modal -->
+<div id="addProjModal" class="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">&#10133; Add Playwright Project</span>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf">
+        <label class="ml">Project Name</label>
+        <input type="text" id="mpName" placeholder="e.g. Demo Project" />
+      </div>
+      <div class="mf">
+        <label class="ml">Project Path</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mpPath" placeholder="e.g. E:\qa\my-playwright-project" style="flex:1" oninput="resetDetect()" />
+          <input type="file" id="mcpDirPicker" webkitdirectory directory style="display:none" onchange="if(this.files.length>0){document.getElementById('mpPath').value=this.files[0].path?this.files[0].path.replace(/\\[^\\]*$/,''):this.files[0].webkitRelativePath.split('/')[0]; resetDetect();}">
+          <button class="btn" style="padding:0 12px;background:var(--bg3);border:1px solid var(--border);" onclick="document.getElementById('mcpDirPicker').click()">Browse</button>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Paste the full absolute path to your Playwright project folder</div>
+      </div>
+      
+      <!-- Clone Project section -->
+      <div class="mf" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border)">
+        <label class="ml">Or Clone from Git URL</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mpGit" placeholder="https://github.com/user/repo.git" style="flex:1" />
+          <button class="btn" id="mcpCloneBtn" style="padding:0 12px;background:var(--accent);color:#fff;" onclick="cloneMcpProject()">Clone</button>
+        </div>
+      </div>
+
+      <button class="btn-detect" id="detectBtn" onclick="detectProject()" style="margin-top:12px;">&#128270; Detect Playwright</button>
+      <div id="detectResults" style="display:none;margin-top:12px;">
+        <div class="detect-list" id="detectList"></div>
+      </div>
+      <div id="detectError" style="display:none;color:var(--red);font-size:12px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-save" id="saveBtn" onclick="saveProject()" disabled>&#128279; Save &amp; Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add AI Scenario Check Modal -->
+<div id="aiScenarioModal" class="modal-backdrop" style="display:none;" onclick="closeAiScenarioModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">&#129302; Add Dynamic AI Scenario Check</span>
+      <button class="modal-close" onclick="closeAiScenarioModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Input Form -->
+      <div id="aiScenarioForm">
+        <div class="mf">
+          <label class="ml">Target URL</label>
+          <input type="text" id="aiScenarioUrl" placeholder="e.g. https://qa-rp-learner-platform.vercel.app/signin" style="width:100%; box-sizing: border-box;" />
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Browser Engine</label>
+          <select id="aiScenarioBrowser" style="width:100%; box-sizing: border-box; padding: 8px; border-radius: 4px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border);">
+            <option value="chromium" selected>Google Chrome (Chromium)</option>
+            <option value="firefox">Mozilla Firefox</option>
+            <option value="webkit">Apple Safari (WebKit)</option>
+          </select>
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Scenario Prompt</label>
+          <textarea id="aiScenarioPrompt" placeholder="e.g. Test the login flow and verify the dashboard loads" rows="4" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box; resize: vertical;"></textarea>
+        </div>
+        <div class="mf" style="margin-top: 12px;">
+          <label class="ml">Description (Optional)</label>
+          <textarea id="aiScenarioDesc" placeholder="Any specific assertions or data to use..." rows="3" style="width:100%; border-radius: 4px; padding: 8px; background: var(--bg3); color: var(--text1); border: 1px solid var(--border); box-sizing: border-box;"></textarea>
+        </div>
+        <button class="btn-detect" style="margin-top: 16px; width: 100%; background: #4a5568;" onclick="startDynamicScenario()">&#9654; Run Dynamic Scenario</button>
+      </div>
+
+      <!-- Live Progress Flow Tracker -->
+      <div id="aiScenarioProgress" style="display:none; margin-top: 16px;">
+        <h4 style="color: var(--text1); margin-bottom: 12px;">Live Execution Progress:</h4>
+        <ul id="progressList" style="list-style: none; padding: 0; color: var(--text2); font-size: 14px; line-height: 1.8;">
+        </ul>
+        <div id="scenarioResult" style="display:none; margin-top: 16px; padding: 12px; border-radius: 6px; background: rgba(72, 187, 120, 0.1); color: #48bb78; border: 1px solid #48bb78;">
+          &#9989; <strong>Scenario Passed!</strong> All dynamic assertions verified successfully.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<main class="main">
+  <div class="tool-panel">
+    <div class="panel-header">
+      <span class="panel-title">Tool Call</span>
+      <span class="panel-badge" id="stn">&mdash;</span>
+    </div>
+    <div class="tool-body" id="tb">
+      <div class="placeholder"><div class="ph-icon">&#128295;</div><h3>Select a Tool</h3><p>Pick a tool from the sidebar to see its schema and call it interactively.</p></div>
+    </div>
+  </div>
+  <div class="resp-panel">
+    <div class="rtabs">
+      <div class="tab active" onclick="sw('result')" id="tab-result">Result</div>
+      <div class="tab" onclick="sw('request')" id="tab-request">Request <span class="tc" id="rc">&mdash;</span></div>
+      <div class="tab" onclick="sw('response')" id="tab-response">Response <span class="tc" id="rsc">&mdash;</span></div>
+      <div class="tab" onclick="sw('history')" id="tab-history">History <span class="tc" id="hc">0</span></div>
+    </div>
+    <div class="rcontent">
+      <div class="pane active" id="pane-result"><div class="es"><div class="ei">&#128397;</div><p>Call a tool to see its result here.</p></div></div>
+      <div class="pane" id="pane-request"><div class="es"><div class="ei">&#128228;</div><p>The JSON-RPC request will appear here.</p></div></div>
+      <div class="pane" id="pane-response"><div class="es"><div class="ei">&#128229;</div><p>The raw JSON-RPC response will appear here.</p></div></div>
+      <div class="pane" id="pane-history"><div class="es"><div class="ei">&#128220;</div><p>Calls made in this session will appear here.</p></div></div>
+    </div>
+  </div>
+</main>
+<aside class="mon-sidebar" id="monSidebar">
+  <div class="mon-header">
+    <span class="mon-title">📡 Protocol Traffic</span>
+    <button class="mon-clear-btn" onclick="clearMonitor()" title="Clear traffic log">✕ Clear</button>
+  </div>
+  <div class="mon-list" id="monList"><div class="mon-empty">No traffic yet.<br>Call a tool to see live JSON-RPC frames.</div></div>
+</aside>
+</div><script>
+const BASE=window.location.origin,MCP=BASE+'/mcp';
+let tools=[],prompts=[],active=null,activePrompt=null,hist=[],cid=1,monEntries=[];
+const ICONS={list_test_files:'📂',list_projects:'🌐',run_tests:'▶️',poll_job:'📊',cancel_job:'❌',get_history:'📜',clear_history:'🗑️'};
+document.getElementById('epUrl').textContent=MCP;
+
+async function init(){
+  try{
+    const req={jsonrpc:'2.0',id:cid,method:'initialize',params:{protocolVersion:'2026-07-28',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}}};
+    addMonEntry('out','initialize',req);
+    const r=await rpc('initialize',{protocolVersion:'2026-07-28',capabilities:{},clientInfo:{name:'mcp-inspector',version:'1.0.0'}});
+    addMonEntry('in','initialize \u2190 response',r);
+    if(r.result&&r.result.serverInfo)setSt('connected','\ud83d\udfe2 '+r.result.serverInfo.name);
+    else setSt('connected','\ud83d\udfe2 Connected');
+    await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:cid++,method:'notifications/initialized',params:{}})});
+    addMonEntry('out','notifications/initialized',{jsonrpc:'2.0',method:'notifications/initialized'});
+    const tr=await rpc('tools/list',{});
+    addMonEntry('in','tools/list \u2190 response',tr);
+    if(tr.result&&tr.result.tools){tools=tr.result.tools;renderTools();}
+    await loadPrompts();
+    await loadNamedProjects();
+  }catch(e){setSt('error','\ud83d\udd34 Offline');}
+}
+
+// ── Project Selector ──────────────────────────────────────────────────────
+let namedProjects=[], currentProjPath='';
+
+async function loadNamedProjects(){
+  try{
+    const r=await fetch(BASE+'/named-projects');
+    const d=await r.json();
+    namedProjects=d.projects||[];
+    currentProjPath=d.current||'';
+    // Auto-add current project if not in list
+    if(currentProjPath && !namedProjects.find(p=>p.path===currentProjPath)){
+      const name=currentProjPath.split(/[/\\]/).pop()||'Current Project';
+      namedProjects.unshift({name,path:currentProjPath});
+    }
+    renderProjectDropdown();
+    updateProjectStatus(currentProjPath);
+  }catch(_){}
+}
+
+function renderProjectDropdown(){
+  const sel=document.getElementById('projSelect');
+  if(!sel)return;
+  sel.innerHTML=namedProjects.map(p=>
+    `<option value="${esc(p.path)}" ${p.path===currentProjPath?'selected':''}>${esc(p.name)}</option>`
+  ).join('')||'<option value="">No projects saved</option>';
+}
+
+async function selectNamedProject(projPath){
+  if(!projPath)return;
+  try{
+    const r=await fetch(BASE+'/project-path',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.ok){
+      currentProjPath=d.current;
+      updateProjectStatus(d.current,d);
+    }
+  }catch(e){console.warn('Project switch failed',e);}
+}
+
+async function updateProjectStatus(projPath, info){
+  const pathEl=document.getElementById('projPath');
+  const dot=document.getElementById('projDot');
+  const txt=document.getElementById('projStatusText');
+  const meta=document.getElementById('projMeta');
+  if(!projPath){dot.className='proj-dot err';txt.textContent='No project selected';return;}
+  if(pathEl)pathEl.textContent=projPath;
+  // Detect project
+  try{
+    const r=await fetch(BASE+'/project-detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.ok){
+      dot.className='proj-dot ok';
+      txt.textContent='Project Connected';
+      txt.style.color='var(--green)';
+    } else {
+      dot.className='proj-dot warn';
+      txt.textContent='Partial — no playwright.config';
+      txt.style.color='#f59e0b';
+    }
+    // Meta chips
+    const chips=[];
+    if(d.testCount>0)chips.push(`${d.testCount} tests`);
+    if(d.browserProjects&&d.browserProjects.length>0)chips.push(d.browserProjects.join(' · '));
+    if(meta)meta.innerHTML=chips.map(c=>`<span class="proj-chip">${esc(c)}</span>`).join('');
+  }catch(_){
+    dot.className='proj-dot err';
+    txt.textContent='Detection failed';
+    txt.style.color='var(--red)';
+  }
+}
+
+// ── Add Project Modal ─────────────────────────────────────────────────────
+let detectResult=null;
+
+function openAddModal(){
+  document.getElementById('addProjModal').classList.add('open');
+  document.getElementById('mpName').value='';
+  document.getElementById('mpPath').value='';
+  resetDetect();
+  setTimeout(()=>document.getElementById('mpPath').focus(),100);
+}
+
+function closeAddModal(e){
+  if(e&&e.target!==document.getElementById('addProjModal'))return;
+  document.getElementById('addProjModal').classList.remove('open');
+  detectResult=null;
+}
+
+function resetDetect(){
+  detectResult=null;
+  document.getElementById('detectResults').style.display='none';
+  document.getElementById('detectError').style.display='none';
+  document.getElementById('saveBtn').disabled=true;
+}
+
+async function detectProject(){
+  const projPath=document.getElementById('mpPath').value.trim();
+  if(!projPath){document.getElementById('detectError').textContent='Enter a project path first';document.getElementById('detectError').style.display='block';return;}
+  const btn=document.getElementById('detectBtn');
+  btn.disabled=true;btn.textContent='\ud83d\udd0d Detecting...';
+  document.getElementById('detectError').style.display='none';
+  try{
+    const r=await fetch(BASE+'/project-detect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    detectResult=d;
+    // Auto-fill name if empty
+    if(!document.getElementById('mpName').value.trim()&&d.projectName){
+      document.getElementById('mpName').value=d.projectName;
+    }
+    // Render checks
+    const list=document.getElementById('detectList');
+    list.innerHTML=(d.checks||[]).map(c=>`
+      <div class="check-row">
+        <span class="check-icon">${c.ok?'\u2705':'\u274c'}</span>
+        <span class="check-label">${esc(c.label)}</span>
+        ${c.detail?`<span class="check-detail" title="${esc(c.detail)}">${esc(c.detail)}</span>`:''}
+      </div>`).join('');
+    document.getElementById('detectResults').style.display='block';
+    document.getElementById('saveBtn').disabled=!d.ok;
+    if(!d.ok){
+      document.getElementById('detectError').textContent='playwright.config not found. You can still save, but tools may not work correctly.';
+      document.getElementById('detectError').style.display='block';
+      document.getElementById('saveBtn').disabled=false;
+    }
+  }catch(err){
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  }
+  btn.disabled=false;btn.innerHTML='\ud83d\udd0d Detect Playwright';
+}
+
+async function saveProject(){
+  const name=document.getElementById('mpName').value.trim();
+  const projPath=document.getElementById('mpPath').value.trim();
+  if(!name){document.getElementById('detectError').textContent='Project name is required';document.getElementById('detectError').style.display='block';return;}
+  if(!projPath){document.getElementById('detectError').textContent='Project path is required';document.getElementById('detectError').style.display='block';return;}
+  try{
+    // Save to named projects
+    await fetch(BASE+'/named-projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,path:projPath})});
+    // Switch active project
+    await fetch(BASE+'/project-path',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:projPath})});
+    currentProjPath=projPath;
+    await loadNamedProjects();
+    closeAddModal();
+  }catch(err){
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  }
+}
+
+async function cloneMcpProject() {
+  const gitUrl = document.getElementById('mpGit').value.trim();
+  if(!gitUrl){document.getElementById('detectError').textContent='Git URL is required';document.getElementById('detectError').style.display='block';return;}
+  const btn = document.getElementById('mcpCloneBtn');
+  
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Cloning...';
+    document.getElementById('detectError').style.display='none';
+    
+    const res = await fetch(BASE+'/clone-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gitUrl })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to clone');
+    
+    const name = data.projectName;
+    await fetch(BASE+'/named-projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,path:data.current})});
+    currentProjPath=data.current;
+    await loadNamedProjects();
+    closeAddModal();
+  } catch(err) {
+    document.getElementById('detectError').textContent=err.message;
+    document.getElementById('detectError').style.display='block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Clone';
+  }
+}
+
+async function loadPrompts(){
+  try{
+    const pr=await rpc('prompts/list',{});
+    if(pr.result&&pr.result.prompts){prompts=pr.result.prompts;renderPrompts();}
+  }catch(_){}
+}
+
+function switchSbTab(tab){
+  document.getElementById('sbt-tools').classList.toggle('active',tab==='tools');
+  document.getElementById('sbt-prompts').classList.toggle('active',tab==='prompts');
+  document.getElementById('sb-tools-pane').style.display=tab==='tools'?'flex':'none';
+  document.getElementById('sb-prompts-pane').style.display=tab==='prompts'?'block':'none';
+}
+
+const PROMPT_ICONS={run_all_tests:'🚀',run_smoke_tests:'💨',diagnose_last_failure:'🔍',run_file:'📄',full_regression:'🔄',check_api_traffic:'🌐',cross_browser_check:'💻',health_check:'❤️'};
+
+function renderPrompts(){
+  const el=document.getElementById('pl');
+  document.getElementById('pc').textContent=prompts.length;
+  if(!el)return;
+  el.innerHTML='';
+  prompts.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='prompt-item';d.id='pi-'+p.name;
+    const hasArgs=p.arguments&&p.arguments.length>0;
+    d.innerHTML=`<div class="prompt-name">${PROMPT_ICONS[p.name]||'💬'} ${p.name} ${hasArgs?'<span class="prompt-tag">'+p.arguments.length+' args</span>':''}</div><div class="prompt-desc">${p.description}</div>`;
+    d.addEventListener('click',()=>selectPrompt(p));
+    el.appendChild(d);
+  });
+}
+
+function selectPrompt(prompt){
+  activePrompt=prompt;
+  document.querySelectorAll('.prompt-item').forEach(e=>e.classList.remove('active'));
+  const it=document.getElementById('pi-'+prompt.name);if(it)it.classList.add('active');
+  document.getElementById('stn').textContent=prompt.name;
+  const args=prompt.arguments||[];
+  let h=`<div class="fi"><div class="tool-hdr"><div class="t-icon">${PROMPT_ICONS[prompt.name]||'💬'}</div><div class="t-meta"><h2>${prompt.name}</h2><p>${prompt.description}</p></div></div>`;
+  h+='<div class="slabel">Prompt Arguments</div>';
+  if(!args.length){
+    h+='<div class="noargs">This prompt takes no arguments — ready to use as-is.</div>';
+  }else{
+    h+='<div class="args">';
+    args.forEach(a=>{
+      const fid='pa-'+a.name;
+      h+=`<div class="fg"><div class="fl">${a.name} ${a.required?'<span class="rbadge">required</span>':''}</div><div class="fd">${a.description||''}</div><input type="text" id="${fid}" placeholder="${a.description||a.name}" /></div>`;
+    });
+    h+='</div>';
+  }
+  h+='<button class="btn-get-prompt" id="gpb" onclick="getPrompt()"><div class="spin"></div><span>► Get Prompt Messages</span></button></div>';
+  document.getElementById('tb').innerHTML=h;
+  sw('result');
+}
+
+async function getPrompt(){
+  if(!activePrompt)return;
+  const btn=document.getElementById('gpb');
+  btn.classList.add('loading');btn.disabled=true;
+  const args={};
+  (activePrompt.arguments||[]).forEach(a=>{
+    const el=document.getElementById('pa-'+a.name);
+    if(el&&el.value.trim())args[a.name]=el.value.trim();
+  });
+  try{
+    const res=await rpc('prompts/get',{name:activePrompt.name,arguments:args});
+    const p=document.getElementById('pane-result');
+    if(res.error){
+      p.innerHTML=`<div class="rc fi"><div class="rch"><span class="terr">Error</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">${activePrompt.name}</span></div><div class="rcb" style="color:var(--red)">${esc(res.error.message)}</div></div>`;
+    }else{
+      const messages=res.result&&res.result.messages||[];
+      const desc=res.result&&res.result.description||'';
+      let h=`<div class="rc fi"><div class="rch"><span class="tok">✓ Prompt Ready</span><span style="font-family:monospace;font-size:12px;color:var(--text2);margin-left:6px">${activePrompt.name}</span><span style="font-size:11px;color:var(--text3);margin-left:auto">${messages.length} message(s)</span></div>`;
+      if(desc)h+=`<div class="rcb" style="color:var(--text3);font-size:11px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:0">${esc(desc)}</div>`;
+      messages.forEach((m,i)=>{
+        const txt=typeof m.content==='string'?m.content:(m.content&&m.content.text)||JSON.stringify(m.content);
+        h+=`<div class="prompt-msg"><button class="prompt-msg-copy" onclick="cp(this.getAttribute('data-v'))" data-v="${txt.replace(/"/g,'&quot;')}">Copy</button>${esc(txt)}</div>`;
+      });
+      h+='</div>';
+      p.innerHTML=h;
+      addHist(activePrompt.name,args,res,0);
+    }
+    sw('result');
+  }catch(e){
+    document.getElementById('pane-result').innerHTML=`<div class="es"><div class="ei">⚠️</div><p>${esc(e.message)}</p></div>`;
+  }
+  btn.classList.remove('loading');btn.disabled=false;
+}
+
+async function rpc(method,params){
+  const id=cid++;
+  const body={jsonrpc:'2.0',id,method,params};
+  addMonEntry('out',method,body);
+  const r=await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===204)return{};
+  const t=await r.text();
+  const parsed=t?JSON.parse(t):{};
+  addMonEntry('in',method+' ← response',parsed);
+  return parsed;
+}
+
+function setSt(type,text){
+  document.getElementById('sp').className='status-pill '+type;
+  document.getElementById('st').textContent=text;
+}
+
+function renderTools(){
+  const el=document.getElementById('tl');
+  document.getElementById('tc').textContent=tools.length;
+  el.innerHTML='';
+  tools.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='tool-item';d.id='ti-'+t.name;
+    d.innerHTML='<div class="tool-name">'+(ICONS[t.name]||'🔧')+' '+t.name+'</div><div class="tool-desc">'+t.description+'</div>';
+    d.addEventListener('click',()=>selectTool(t));
+    el.appendChild(d);
+  });
+}
+
+function selectTool(tool){
+  active=tool;
+  document.querySelectorAll('.tool-item').forEach(e=>e.classList.remove('active'));
+  const it=document.getElementById('ti-'+tool.name);if(it)it.classList.add('active');
+  document.getElementById('stn').textContent=tool.name;
+  const props=(tool.inputSchema&&tool.inputSchema.properties)||{};
+  const req=(tool.inputSchema&&tool.inputSchema.required)||[];
+  const keys=Object.keys(props);
+  let h='<div class="fi"><div class="tool-hdr"><div class="t-icon">'+(ICONS[tool.name]||'🔧')+'</div><div class="t-meta"><h2>'+tool.name+'</h2><p>'+tool.description+'</p></div></div><div class="slabel">Arguments</div>';
+  if(!keys.length){h+='<div class="noargs">This tool takes no arguments.</div>';}
+  else{
+    h+='<div class="args">';
+    keys.forEach(k=>{
+      const p=props[k],isR=req.includes(k),fid='a-'+k;
+      h+='<div class="fg"><div class="fl">'+k+' <span class="tbadge">'+p.type+'</span>'+(isR?' <span class="rbadge">required</span>':'')+'</div><div class="fd">'+(p.description||'')+'</div>';
+      if(p.type==='boolean')h+='<div class="cbrow"><input type="checkbox" id="'+fid+'"/><label for="'+fid+'">'+(p.description||k)+'</label></div>';
+      else if(p.type==='number')h+='<input type="number" id="'+fid+'" placeholder="'+(p.description||'')+'" />';
+      else h+='<input type="text" id="'+fid+'" placeholder="'+(p.description||'')+'" />';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-run" id="rb" onclick="run()"><div class="spin"></div><span>&#9654; Call Tool</span></button>';
+  if(keys.length) {
+    h+='<button class="btn-run" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);" onclick="fillDemoData()" title="Auto-fill with demo data"><span>&#128161; Demo Data</span></button>';
+  }
+  h+='</div></div>';
+  document.getElementById('tb').innerHTML=h;
+}
+
+async function run(){
+  if(!active)return;
+  const btn=document.getElementById('rb');
+  btn.classList.add('loading');btn.disabled=true;
+  const props=(active.inputSchema&&active.inputSchema.properties)||{};
+  const args={};
+  Object.keys(props).forEach(k=>{
+    const el=document.getElementById('a-'+k);if(!el)return;
+    if(props[k].type==='boolean')args[k]=el.checked;
+    else if(props[k].type==='number'){if(el.value!=='')args[k]=Number(el.value);}
+    else{if(el.value.trim()!=='')args[k]=el.value.trim();}
+  });
+  const req={jsonrpc:'2.0',id:cid,method:'tools/call',params:{name:active.name,arguments:args}};
+  showReq(req);
+  try{
+    const t0=Date.now();
+    const res=await rpc('tools/call',{name:active.name,arguments:args});
+    const ms=Date.now()-t0;
+    showRes(res);showResult(res,active.name,ms);addHist(active.name,args,res,ms);sw('result');
+  }catch(e){showResult({error:{message:e.message}},active.name,0);sw('result');}
+  btn.classList.remove('loading');btn.disabled=false;
+}
+
+function fillDemoData() {
+  if(!active) return;
+  const props=(active.inputSchema&&active.inputSchema.properties)||{};
+  Object.keys(props).forEach(k=>{
+    const el=document.getElementById('a-'+k);if(!el)return;
+    const type = props[k].type;
+    const name = k.toLowerCase();
+    
+    if(type==='boolean') {
+      el.checked = true;
+    } else if(type==='number' || name.includes('limit')) {
+      el.value = 5;
+    } else {
+      if(name.includes('jobid')) el.value = 'job-1712000000000';
+      else if(name.includes('testfile') || name.includes('file')) el.value = 'tests/example.spec.js';
+      else if(name.includes('project')) el.value = 'chromium';
+      else if(name.includes('grep')) el.value = '@smoke';
+      else el.value = 'demo_value';
+    }
+  });
+}
+
+function showReq(body){
+  const p=document.getElementById('pane-request');
+  const json=sh(JSON.stringify(body,null,2));
+  p.innerHTML='<div class="jv fi"><button class="ci" onclick="cp(this.getAttribute(\'data-v\'))" data-v="">Copy</button>'+json+'</div>';
+  p.querySelector('.ci').setAttribute('data-v',JSON.stringify(body,null,2));
+  document.getElementById('rc').textContent=JSON.stringify(body).length+' B';
+}
+
+function showRes(resp){
+  const p=document.getElementById('pane-response');
+  const json=sh(JSON.stringify(resp,null,2));
+  p.innerHTML='<div class="jv fi"><button class="ci" onclick="cp(this.getAttribute(\'data-v\'))" data-v="">Copy</button>'+json+'</div>';
+  p.querySelector('.ci').setAttribute('data-v',JSON.stringify(resp,null,2));
+  document.getElementById('rsc').textContent=JSON.stringify(resp).length+' B';
+}
+
+function showResult(resp,name,ms){
+  const p=document.getElementById('pane-result');
+  if(resp.error){
+    p.innerHTML='<div class="rc fi"><div class="rch"><span class="terr">Error</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">'+name+'</span></div><div class="rcb" style="color:var(--red)">'+esc(resp.error.message||JSON.stringify(resp.error))+'</div></div>';
+    return;
+  }
+  if(!resp.result){p.innerHTML='<div class="es"><div class="ei">📭</div><p>Empty response.</p></div>';return;}
+  const content=resp.result.content||[];
+  let h='<div class="rc fi"><div class="rch"><span class="tok">&#10003; Success</span><span style="font-family:monospace;font-size:12px;color:var(--text2)">'+name+'</span><span style="font-size:11px;color:var(--text3);margin-left:auto">'+ms+'ms</span></div>';
+  if(!content.length)h+='<div class="rcb">No content returned.</div>';
+  else content.forEach(i=>{
+    if(i.type==='text'){
+      let d=i.text;
+      try{d=sh(JSON.stringify(JSON.parse(i.text),null,2));}catch(_){d=esc(i.text);}
+      h+='<div class="rcb">'+d+'</div>';
+    }
+  });
+  h+='</div>';
+  p.innerHTML=h;
+}
+
+function addHist(name,args,res,ms){
+  hist.unshift({name,args,res,ms,t:new Date()});
+  renderHist();
+}
+
+function renderHist(){
+  const p=document.getElementById('pane-history');
+  document.getElementById('hc').textContent=hist.length;
+  if(!hist.length){p.innerHTML='<div class="es"><div class="ei">📜</div><p>No calls yet.</p></div>';return;}
+  p.innerHTML=hist.map((e,i)=>{
+    const err=!!(e.res&&e.res.error);
+    return '<div class="he" onclick="replay('+i+')"><div class="hd '+(err?'fail':'pass')+'"></div><div class="hc">'+(ICONS[e.name]||'🔧')+' '+e.name+'('+(Object.keys(e.args).length?'&hellip;':'')+')</div><div class="hs">'+e.ms+'ms</div><div class="ht">'+e.t.toLocaleTimeString()+'</div></div>';
+  }).join('');
+}
+
+function replay(i){
+  const e=hist[i];if(!e)return;
+  showReq({jsonrpc:'2.0',id:'(replay)',method:'tools/call',params:{name:e.name,arguments:e.args}});
+  showRes(e.res);showResult(e.res,e.name,e.ms);sw('result');
+}
+
+function sw(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+function copyEP(){
+  navigator.clipboard.writeText(MCP);
+  const b=document.getElementById('cpBtn');
+  b.textContent='✅ Copied!';
+  setTimeout(()=>{b.textContent='📋 Copy Endpoint URL';},2000);
+}
+
+function copyPageUrl(){
+  const url=window.location.href;
+  navigator.clipboard.writeText(url);
+  // brief visual feedback on the button
+  const btns=document.querySelectorAll('.header-btn');
+  btns.forEach(b=>{ if(b.textContent.includes('Copy Page')){
+    const orig=b.textContent; b.textContent='✅ Copied!';
+    setTimeout(()=>{b.textContent=orig;},2000);
+  }});
+}
+
+function cp(text){navigator.clipboard.writeText(text);}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Protocol Traffic Monitor ─────────────────────────────────────────────
+function addMonEntry(dir,method,payload){
+  monEntries.unshift({dir,method,payload,ts:new Date()});
+  if(monEntries.length>200)monEntries.pop();
+  renderMonitor();
+}
+function renderMonitor(){
+  const list=document.getElementById('monList');
+  if(!list)return;
+  if(!monEntries.length){list.innerHTML='<div class="mon-empty">No traffic yet.<br>Call a tool to see live JSON-RPC frames.</div>';return;}
+  list.innerHTML=monEntries.map((e,i)=>{
+    const isOut=e.dir==='out';
+    const ts=e.ts.toLocaleTimeString(undefined,{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const json=JSON.stringify(e.payload,null,2);
+    return `<div class="mon-entry"><div class="mon-entry-hdr" onclick="toggleMonBody(${i})">`+
+      `<div class="mon-dir ${isOut?'out':'in'}">${isOut?'↑':'↓'}</div>`+
+      `<div class="mon-method">${esc(e.method)}</div>`+
+      `<div class="mon-ts">${ts}</div></div>`+
+      `<div class="mon-body" id="mb-${i}">${esc(json)}</div></div>`;
+  }).join('');
+}
+function toggleMonBody(i){
+  const el=document.getElementById('mb-'+i);
+  if(el)el.classList.toggle('open');
+}
+function clearMonitor(){
+  monEntries=[];
+  renderMonitor();
+}
+function toggleMonitor(){
+  const app=document.querySelector('.app');
+  const btn=document.getElementById('pinMonBtn');
+  const open=app.classList.toggle('monitor-open');
+  btn.style.background=open?'var(--accent-glow)':'';
+  btn.style.borderColor=open?'var(--accent)':'';
+  btn.style.color=open?'var(--accent)':'';
+  if(open)renderMonitor();
+}
+
+function sh(json){
+  json=esc(json);
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+    let c='jn';
+    if(/^"/.test(m))c=/:$/.test(m)?'jk':'js';
+    else if(/true|false/.test(m))c='jb';
+    else if(/null/.test(m))c='jl';
+    return '<span class="'+c+'">'+m+'</span>';
+  });
+}
+
+// ── Auto-Monitor: BroadcastChannel + URL param ─────────────────────────────
+let autoMonitorTimer = null;
+let autoMonitorOffset = 0;
+let autoMonitorJobId = null;
+
+function startAutoMonitor(jobId, command) {
+  if (autoMonitorTimer) clearInterval(autoMonitorTimer);
+  autoMonitorJobId = jobId;
+  autoMonitorOffset = 0;
+
+  // Show live monitor banner
+  showMonitorBanner(jobId, command, 'running');
+  sw('result');
+
+  // Show initial result pane message
+  const pane = document.getElementById('pane-result');
+  pane.innerHTML = '<div class="rc fi"><div class="rch"><span style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.4);color:#a78bfa;border-radius:6px;padding:2px 8px;font-size:11px;">&#128225; Live</span><span style="font-family:monospace;font-size:12px;color:var(--text2);margin-left:6px;">poll_job</span><span id="monLiveMs" style="font-size:11px;color:var(--text3);margin-left:auto">0ms</span></div><div class="rcb" id="monLiveOutput" style="color:var(--green);min-height:60px;">Waiting for output&#8230;</div></div>';
+
+  const t0 = Date.now();
+  autoMonitorTimer = setInterval(async () => {
+    try {
+      const res = await rpc('tools/call', { name: 'poll_job', arguments: { jobId, offset: autoMonitorOffset } });
+      const msEl = document.getElementById('monLiveMs');
+      if (msEl) msEl.textContent = (Date.now() - t0) + 'ms';
+
+      if (!res.result || !res.result.content) return;
+      const text = res.result.content[0]?.text || '{}';
+      let data = {};
+      try { data = JSON.parse(text); } catch(_) {}
+
+      if (data.gone) {
+        clearInterval(autoMonitorTimer);
+        updateMonitorBanner('gone');
+        return;
+      }
+
+      const outEl = document.getElementById('monLiveOutput');
+      if (outEl && data.newOutput) {
+        outEl.textContent = (outEl.textContent === 'Waiting for output\u2026' ? '' : outEl.textContent) + data.newOutput;
+        outEl.scrollTop = outEl.scrollHeight;
+      }
+      autoMonitorOffset = data.offset || autoMonitorOffset;
+      addToHistory('poll_job', { jobId, offset: autoMonitorOffset }, res, Date.now() - t0);
+
+      if (data.done) {
+        clearInterval(autoMonitorTimer);
+        const r = data.result || {};
+        updateMonitorBanner(r.code === 0 ? 'passed' : 'failed', r);
+        showResult({ result: { content: [{ type: 'text', text: text }] } }, 'poll_job (auto)', Date.now() - t0);
+      }
+    } catch (e) { /* network hiccup, keep polling */ }
+  }, 1200);
+}
+
+function showMonitorBanner(jobId, command, status) {
+  let banner = document.getElementById('monitorBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'monitorBanner';
+    banner.style.cssText = 'padding:10px 20px;border-bottom:1px solid var(--border);background:rgba(124,106,247,0.08);display:flex;align-items:center;gap:12px;font-size:12px;flex-shrink:0;';
+    const rc = document.querySelector('.rcontent');
+    if (rc) rc.parentNode.insertBefore(banner, rc);
+  }
+  banner.innerHTML = `
+    <span id="monStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1s ease infinite;flex-shrink:0;display:inline-block;"></span>
+    <span style="color:var(--accent);font-weight:600;">&#128225; Auto-Monitoring</span>
+    <span style="color:var(--text3);">Job:</span>
+    <span style="font-family:'JetBrains Mono',monospace;color:var(--text2);font-size:11px;">${jobId}</span>
+    ${command ? `<span style="color:var(--text3);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;font-family:monospace;font-size:11px;">${esc(command)}</span>` : ''}
+    <button onclick="stopAutoMonitor()" style="margin-left:auto;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;">&#10005; Stop</button>
+  `;
+  banner.style.display = 'flex';
+}
+
+function updateMonitorBanner(status, result) {
+  const dot = document.getElementById('monStatusDot');
+  const banner = document.getElementById('monitorBanner');
+  if (!dot || !banner) return;
+  dot.style.animation = 'none';
+  if (status === 'passed') {
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow = '0 0 8px var(--green)';
+    banner.style.background = 'rgba(52,211,153,0.06)';
+    banner.style.borderBottomColor = 'rgba(52,211,153,0.2)';
+    UI.toast && UI.toast(`\u2713 Tests passed (${result.passed || 0} passed)`, 'success', 4000);
+  } else if (status === 'failed') {
+    dot.style.background = 'var(--red)';
+    dot.style.boxShadow = '0 0 8px var(--red)';
+    banner.style.background = 'rgba(248,113,113,0.06)';
+    banner.style.borderBottomColor = 'rgba(248,113,113,0.2)';
+  } else {
+    dot.style.background = 'var(--text3)';
+    dot.style.boxShadow = 'none';
+  }
+}
+
+function stopAutoMonitor() {
+  if (autoMonitorTimer) clearInterval(autoMonitorTimer);
+  const banner = document.getElementById('monitorBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// 1. Check URL ?jobId= param (opened via "Run + MCP" button)
+(function checkUrlParam() {
+  const params = new URLSearchParams(window.location.search);
+  const jobId = params.get('jobId');
+  const auto = params.get('automonitor');
+  if (jobId && auto) {
+    // Wait for MCP init to complete, then start monitoring
+    window._pendingMonitorJobId = jobId;
+  }
+})();
+
+// 2. BroadcastChannel listener (dashboard broadcasts when job starts)
+try {
+  const mcpHubChannel = new BroadcastChannel('mcp-hub');
+  mcpHubChannel.onmessage = (e) => {
+    if (e.data && e.data.type === 'job_started') {
+      startAutoMonitor(e.data.jobId, e.data.command);
+    }
+  };
+} catch (_) {}
+
+// Boot
+init().then(() => {
+  // After init, check if we have a pending jobId from URL
+  if (window._pendingMonitorJobId) {
+    startAutoMonitor(window._pendingMonitorJobId, '');
+    window._pendingMonitorJobId = null;
+  }
+});
+
+// --- AI Dynamic Scenario Controller ---
+function openAiScenarioModal() {
+  document.getElementById('aiScenarioModal').style.display = 'flex';
+  document.getElementById('aiScenarioForm').style.display = 'block';
+  document.getElementById('aiScenarioProgress').style.display = 'none';
+  document.getElementById('progressList').innerHTML = '';
+  document.getElementById('scenarioResult').style.display = 'none';
+}
+
+function closeAiScenarioModal(event) {
+  if (event && event.target !== document.getElementById('aiScenarioModal')) return;
+  document.getElementById('aiScenarioModal').style.display = 'none';
+}
+
+function startDynamicScenario() {
+  const url = document.getElementById('aiScenarioUrl').value;
+  const prompt = document.getElementById('aiScenarioPrompt').value;
+  const browserEngine = document.getElementById('aiScenarioBrowser').value;
+  
+  if (!url || !prompt) {
+    alert("Please enter both a URL and a Scenario Prompt.");
+    return;
+  }
+
+  let domain = url;
+  try { domain = new URL(url).hostname; } catch(e) {}
+
+  document.getElementById('aiScenarioForm').style.display = 'none';
+  document.getElementById('aiScenarioProgress').style.display = 'block';
+  
+  const progressList = document.getElementById('progressList');
+  const steps = [
+    `&#9203; Initializing AI browser agent for <strong>${domain}</strong>...`,
+    `&#9203; Analyzing DOM and mapping UI elements...`,
+    `&#9203; Executing prompt: <em>"${prompt}"</em>...`,
+    `&#9203; Performing dynamic interactions and assertions...`,
+    `&#9989; Execution complete. Gathering results.`
+  ];
+
+  // Add a hidden system prompt to the user prompt for robust checks
+  const systemPrompt = `\\n[SYSTEM PROMPT]: You are an expert QA tester. Analyze the UI for any visual bugs, console errors, and broken links across all test cases.`;
+  const fullPrompt = prompt + systemPrompt;
+
+  // Send request to our merged AI Scenario Backend on port 9300
+  fetch('http://localhost:9300/api/run-scenario', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, prompt: fullPrompt, browser: browserEngine })
+  })
+  .then(res => res.json())
+  .then(data => {
+    clearInterval(interval);
+    
+    // Complete the UI steps visually
+    while(currentStep < steps.length) {
+      if(currentStep > 0) {
+        const prevLi = progressList.children[currentStep - 1];
+        if(prevLi) {
+          prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
+          prevLi.style.color = '#48bb78';
+        }
+      }
+      const li = document.createElement('li');
+      li.innerHTML = steps[currentStep];
+      if (currentStep === steps.length - 1) {
+         li.innerHTML = li.innerHTML.replace('&#9203;', '&#9989;');
+         li.style.color = '#48bb78';
+      }
+      progressList.appendChild(li);
+      currentStep++;
+    }
+
+    setTimeout(() => {
+      const resDiv = document.getElementById('scenarioResult');
+      resDiv.style.display = 'block';
+      const color = data.status === 'success' ? '#48bb78' : '#e53e3e';
+      const icon = data.status === 'success' ? '&#9989;' : '&#10060;';
+      
+      resDiv.innerHTML = `
+        ${icon} <strong style="color:${color}">${data.message}</strong><br/><br/>
+        <strong>Console Report:</strong>
+        <pre style="background:var(--bg1); padding:8px; border-radius:4px; font-size:11px; white-space:pre-wrap; max-height:150px; overflow-y:auto; border:1px solid var(--border);">${data.report}</pre>
+        <strong>Final Screenshot Report:</strong><br/>
+        <img src="../scenario-result.png?t=${new Date().getTime()}" loading="lazy" style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};" alt="Scenario Report Screenshot" />
+        <br/><br/>
+        <strong>Execution Video Replay:</strong><br/>
+        <video controls autoplay muted style="max-width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid ${color};">
+          <source src="../scenario-video.webm?t=${new Date().getTime()}" type="video/webm">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    }, 500);
+  })
+  .catch(err => {
+    clearInterval(interval);
+    const li = document.createElement('li');
+    li.innerHTML = `<span style="color:#e53e3e;">&#10060; Could not connect to AI Scenario Server.</span>`;
+    progressList.appendChild(li);
+  });
+
+  let currentStep = 0;
+  const interval = setInterval(() => {
+    if (currentStep > 0) {
+      const prevLi = progressList.children[currentStep - 1];
+      if(prevLi) {
+        prevLi.innerHTML = prevLi.innerHTML.replace('&#9203;', '&#9989;');
+        prevLi.style.color = '#48bb78';
+      }
+    }
+
+    if (currentStep < steps.length - 1) {
+      const li = document.createElement('li');
+      li.innerHTML = steps[currentStep];
+      progressList.appendChild(li);
+      currentStep++;
+    }
+  }, 1500);
+}
+
+</script>
+<script src="../js/theme.js"></script>
+</body>
+</html>
+

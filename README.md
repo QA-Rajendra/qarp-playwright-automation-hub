@@ -1,0 +1,139 @@
+# Playwright Automation Hub — Modern Web Frontend
+
+## 8. Using as an npm Dependency (GitHub Package)
+
+Once pushed to GitHub, any developer or teammate anywhere in the world can install `qarp-playwright-automation-hub` in their own project in one step.
+
+### Step 1: Install the Package
+
+**Option A — One-line install command**
+
+In their terminal:
+
+```bash
+npm install github:QA-Rajendra/qarp-playwright-automation-hub
+```
+
+**Option B — Add to `package.json` directly**
+
+Add the following to their project's `dependencies` or `devDependencies`:
+
+```json
+{
+  "name": "any-other-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "qarp-playwright-automation-hub": "github:QA-Rajendra/qarp-playwright-automation-hub"
+  },
+  "scripts": {
+    "test:ui": "playwright-hub"
+  }
+}
+```
+
+Then run:
+
+```bash
+npm install
+```
+
+---
+
+### Step 2: Run It Once Installed
+
+Once installed in their project, they have **3 ways** to launch the Playwright Automation Hub:
+
+**1. From Terminal (via npx):**
+
+```bash
+npx qarp-uiPlaywrightTool
+```
+> ⚡ **Auto-Cleanup & Launch Features:**
+> - **Auto-closes old port:** Automatically terminates any lingering process occupying port 9300 (or report/allure ports).
+> - **Auto-closes old port browsers:** Closes lingering browser instances/processes specifically associated with the local run port (leaves all your personal browser windows untouched).
+> - **Auto-opens new browser:** Automatically launches a fresh browser window directly at `http://localhost:9300`.
+> - **Optional Flags:** `--port=<port>`, `--no-open`, `--no-browser-close`, `--close-all-browsers`, `--no-kill-port`.
+
+
+**2. Via npm script:**
+
+```bash
+npm run test:ui
+```
+
+**3. Programmatically in Node.js / Express:**
+
+```javascript
+const {createRunnerServer} = require("qarp-playwright-automation-hub");
+
+// Starts the UI server and points to their local tests
+createRunnerServer({
+  port: 9300,
+  projectRoot: __dirname,
+});
+```
+
+> The server will start at `http://localhost:9300` and automatically scan for test files in the `tests/` and `e2e/` directories of the consuming project.
+
+---
+
+## Analyze a JavaScript App with REA
+
+QARP includes a REA analyzer for JavaScript application folders and Electron `.asar` bundles:
+
+1. Start QARP with `npm start` and open the dashboard.
+2. In the left navigation, select **REA JS Analyzer**.
+3. Enter a path relative to the active project root (for example `dist` or `release/app.asar`), then select **Analyze with REA**.
+4. Review the output in the page. The first run uses npm to download the pinned `rea-agents@6.7.0` CLI package.
+
+For AI assistants connected to QARP MCP, call `analyze_javascript_application` with a relative `path`. Both the page and MCP tool only accept targets inside the active project root. QARP returns the REA CLI output; the JavaScript analysis itself is performed by REA.
+
+## Scan the Active Project
+
+Open **Project Analyzer** from the dashboard navigation and select **Scan active project**. First, make sure QARP's active project is the project you want to inspect (use the project switcher if needed). It inventories the active project’s folders, file extensions/languages, package manifests, recognized frameworks and tools, Playwright configuration paths, and browser projects. Framework rows show the declared version and, when available, the resolved version from the root `package-lock.json`.
+
+The scan is read-only. It does not open source file contents or `.env` secrets, and skips dependency, generated-output, and version-control folders. It is bounded to 30,000 filesystem entries, 16 directory levels, and 100 `package.json` manifests. The results describe the active project on disk; your attached Seratek demo document is descriptive reference material and is not treated as the active source project. Its example project root is `E:\qaraj\Testsuite`, which you can select as the active project before scanning if that folder exists on this machine.
+
+Connected AI assistants can request the same inventory with the QARP MCP tool `get_project_analysis`.
+
+## Record a Website Walkthrough
+
+1. Open **Walkthrough Recorder** from the dashboard navigation.
+2. Enter an HTTP or HTTPS URL and select **Start recording**. Puppeteer opens a separate visible browser window.
+3. Choose **Headful** to show the browser or **Headless** to run it in the background. In headless mode, use the page controls to query selectors, click elements, fill fields, and submit forms. The same controls are available while the visible browser is open.
+4. Download a full-page PNG screenshot or A4 PDF at any time, or select **Finish and generate walkthrough** to close the browser and create a Markdown report.
+
+The recorder is based on [Puppeteer](https://github.com/puppeteer/puppeteer) and requires Node.js 22.12 or newer. It keeps at most 200 actions and does not save filled values or passwords. DOM queries, 2× full-page screenshots, and A4 PDFs can contain page content. Browsing and downloads run on the same computer as the QARP server; use the recorder only on websites you are authorized to access. The default mode for programmatic server integrations can be set with `walkthroughHeadless: true` in `createRunnerServer` options.
+
+If the Puppeteer browser was not downloaded during dependency installation, install it from the project directory with:
+
+```bash
+npx puppeteer browsers install chrome
+```
+
+### Quick start
+
+```bash
+npm install
+npm start
+```
+
+Open **Walkthrough Recorder** in the QARP sidebar, enter a URL, pick headful or headless mode, and start a session. Use the DOM tools to inspect or interact with elements, then download a screenshot/PDF or generate a Markdown walkthrough.
+
+## Run Tests Across Browsers
+
+In the Runner view, **Configured Projects** shows the browser projects declared in the active project's `playwright.config`:
+
+- Chromium is selected by default when configured; otherwise, the first configured browser project is selected.
+- Choose one or more browser projects to run the selected test only in those browsers.
+- Choose **All browsers** to run it in every configured browser project.
+
+The hub's sample `playwright.config.js` includes Chromium, Firefox, and WebKit. Install their browser binaries from the project folder with:
+
+```bash
+npx playwright install chromium firefox webkit
+```
+
+For another project, add the browser projects you want to use to its Playwright configuration; QARP lists the configured project names automatically. Separate HAR filenames in the sample configuration keep simultaneous browser projects from writing to the same file.
+
+The same selection is used by QARP's AI chat. The `run_tests` MCP tool accepts either one `project` or a `projects` array; omitting both runs all configured projects.

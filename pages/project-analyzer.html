@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Analyzer - QARP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <main class="mx-auto flex w-full max-w-6xl flex-col gap-5 p-5 sm:p-8">
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <a href="../index.html" class="text-xs text-sky-300 hover:text-sky-200">← Back to QARP</a>
+        <h1 class="mt-2 text-2xl font-bold">Project Analyzer</h1>
+        <p class="mt-1 text-sm text-slate-400">Scan the active project for its folder layout, languages, frameworks, versions, and configuration paths.</p>
+      </div>
+      <button id="scanButton" type="button"
+              class="rounded-lg border border-sky-700 bg-sky-950/60 px-4 py-2 text-sm font-bold text-sky-200 hover:bg-sky-900/70 disabled:cursor-wait disabled:opacity-60">
+        Scan active project
+      </button>
+    </header>
+
+    <div id="status" class="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300" role="status" aria-live="polite">
+      Loading project analysis…
+    </div>
+
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Project summary">
+      <article class="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Project</h2>
+        <p id="projectName" class="mt-2 break-words text-sm font-bold text-cyan-200">—</p>
+        <p id="projectRoot" class="mt-1 break-all font-mono text-[10px] text-slate-400">—</p>
+      </article>
+      <article class="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Files scanned</h2>
+        <p id="fileCount" class="mt-2 text-2xl font-bold text-slate-100">—</p>
+        <p id="scanDepth" class="mt-1 text-[10px] text-slate-500">—</p>
+      </article>
+      <article class="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Node.js runtime</h2>
+        <p id="nodeVersion" class="mt-2 text-2xl font-bold text-emerald-300">—</p>
+        <p class="mt-1 text-[10px] text-slate-500">Version running QARP</p>
+      </article>
+      <article class="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+        <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Playwright</h2>
+        <p id="testCount" class="mt-2 text-2xl font-bold text-violet-300">—</p>
+        <p id="browserProjects" class="mt-1 break-words text-[10px] text-slate-400">—</p>
+      </article>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+      <h2 class="text-sm font-bold text-slate-100">Detected frameworks and tools</h2>
+      <p class="mt-1 text-xs text-slate-500">Declared versions come from package manifests; resolved versions are shown only when available in the root npm lockfile.</p>
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full min-w-[920px] text-left text-xs">
+          <thead class="border-b border-slate-800 text-[10px] uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-3 py-2">Framework / tool</th>
+              <th class="px-3 py-2">Package</th>
+              <th class="px-3 py-2">Category</th>
+              <th class="px-3 py-2">Declared</th>
+              <th class="px-3 py-2">Resolved</th>
+              <th class="px-3 py-2">Manifest path</th>
+            </tr>
+          </thead>
+          <tbody id="frameworkRows" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+        <h2 class="text-sm font-bold text-slate-100">Languages</h2>
+        <div id="languageList" class="mt-3 flex flex-wrap gap-2"></div>
+      </section>
+      <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+        <h2 class="text-sm font-bold text-slate-100">Detected package manifests</h2>
+        <div id="manifestList" class="mt-3 space-y-2"></div>
+      </section>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+        <h2 class="text-sm font-bold text-slate-100">Project folder paths (up to 500)</h2>
+        <div id="folderList" class="mt-3 flex flex-wrap gap-2"></div>
+      </section>
+      <section class="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+        <h2 class="text-sm font-bold text-slate-100">Configuration and lockfiles</h2>
+        <div id="configList" class="mt-3 space-y-1"></div>
+      </section>
+    </div>
+
+    <section id="warningsPanel" class="hidden rounded-xl border border-amber-900/70 bg-amber-950/20 p-5">
+      <h2 class="text-sm font-bold text-amber-200">Scan notes</h2>
+      <ul id="warningList" class="mt-2 list-inside list-disc space-y-1 text-xs text-amber-100/80"></ul>
+    </section>
+    <p class="text-[10px] leading-relaxed text-slate-600">
+      Read-only scan: source file contents and environment secrets are not opened. Generated output, dependency directories and version-control metadata are skipped. The scan is bounded by 30,000 filesystem entries and 16 directory levels.
+    </p>
+  </main>
+
+  <script>
+    const byId = id => document.getElementById(id);
+
+    function addText(parent, value, className) {
+      const element = document.createElement('span');
+      element.textContent = value;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function renderFrameworks(frameworks) {
+      const rows = byId('frameworkRows');
+      rows.replaceChildren();
+      if (!frameworks.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 6;
+        cell.className = 'px-3 py-5 text-center text-slate-500';
+        cell.textContent = 'No known JavaScript frameworks or test tools were found in the scanned package manifests.';
+        row.appendChild(cell);
+        rows.appendChild(row);
+        return;
+      }
+
+      frameworks.forEach(framework => {
+        const row = document.createElement('tr');
+        [
+          framework.name,
+          framework.packageName,
+          framework.category,
+          framework.declaredVersion,
+          framework.resolvedVersion || 'Not available in package-lock.json',
+          framework.manifestPath
+        ].forEach((value, index) => {
+          const cell = document.createElement('td');
+          cell.className = `px-3 py-2.5 ${index === 0 ? 'font-semibold text-slate-200' : 'font-mono text-slate-400'} ${index === 4 && !framework.resolvedVersion ? 'italic text-slate-500' : ''}`;
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        rows.appendChild(row);
+      });
+    }
+
+    function renderList(id, items, emptyText, label) {
+      const container = byId(id);
+      container.replaceChildren();
+      if (!items.length) {
+        addText(container, emptyText, 'text-xs text-slate-500');
+        return;
+      }
+      items.forEach(item => {
+        if (label) {
+          const element = document.createElement('div');
+          element.className = 'flex flex-wrap items-baseline justify-between gap-2 rounded border border-slate-800 bg-slate-950/60 px-3 py-2';
+          addText(element, label(item), 'text-xs font-mono text-slate-300');
+          addText(element, item.path, 'text-[10px] font-mono text-slate-500');
+          container.appendChild(element);
+        } else {
+          const element = document.createElement('span');
+          element.className = 'rounded border border-slate-800 bg-slate-950/60 px-2.5 py-1 text-[11px] font-mono text-slate-300';
+          element.textContent = item;
+          container.appendChild(element);
+        }
+      });
+    }
+
+    function renderAnalysis(data) {
+      byId('projectName').textContent = data.projectName || 'Unknown';
+      byId('projectRoot').textContent = data.projectRoot || '';
+      byId('fileCount').textContent = Number(data.scan && data.scan.filesCounted || 0).toLocaleString();
+      byId('scanDepth').textContent = `${data.scan && data.scan.truncated ? 'Scan reached a limit' : 'Scan completed'} · max depth ${data.scan && data.scan.maxDepth || '—'}`;
+      byId('nodeVersion').textContent = data.runtime && data.runtime.nodeVersion || 'Not detected';
+      byId('testCount').textContent = Number(data.playwright && data.playwright.testFiles || 0).toLocaleString();
+      byId('browserProjects').textContent = (data.playwright && data.playwright.browserProjects || []).join(', ') || 'No browser projects detected';
+
+      renderFrameworks(data.frameworks || []);
+      renderList('languageList', (data.languages || []).map(language => `${language.name} · ${language.files} files`), 'No recognized source file extensions found.');
+      renderList('manifestList', data.packageManifests || [], 'No package.json manifests found.', manifest => `${manifest.name}${manifest.version ? ` · ${manifest.version}` : ''} · ${manifest.moduleType}${manifest.nodeEngine ? ` · Node ${manifest.nodeEngine}` : ''}`);
+      byId('folderList').classList.add('max-h-72', 'overflow-y-auto');
+      renderList('folderList', data.projectTree && data.projectTree.directories || [], 'No project subfolders found.');
+      if (data.scan && data.scan.directoryPathsTruncated) {
+        addText(byId('folderList'), `Showing first 500 of ${data.scan.directoriesCounted} folders`, 'w-full pt-2 text-[10px] text-amber-300');
+      }
+
+      const files = [...new Set([
+        ...(data.projectTree && data.projectTree.configurationFiles || []),
+        ...(data.playwright && data.playwright.configPaths || []),
+        ...(data.lockfilePath ? [data.lockfilePath] : [])
+      ])].sort();
+      renderList('configList', files.map(path => ({ path })), 'No known configuration or lockfiles detected.');
+
+      const warnings = data.warnings || [];
+      byId('warningsPanel').classList.toggle('hidden', warnings.length === 0 && !(data.scan && data.scan.truncated));
+      const warningList = byId('warningList');
+      warningList.replaceChildren();
+      warnings.forEach(warning => {
+        const item = document.createElement('li');
+        item.textContent = warning;
+        warningList.appendChild(item);
+      });
+      if (data.scan && data.scan.truncated) {
+        const item = document.createElement('li');
+        item.textContent = 'The scan reached its entry or depth limit; the inventory may be incomplete.';
+        warningList.appendChild(item);
+      }
+      byId('status').textContent = `Scan completed at ${new Date(data.scannedAt).toLocaleString()}.`;
+      byId('status').className = 'rounded-lg border border-emerald-900/70 bg-emerald-950/20 p-3 text-sm text-emerald-200';
+    }
+
+    async function scanProject() {
+      const button = byId('scanButton');
+      button.disabled = true;
+      button.textContent = 'Scanning…';
+      byId('status').textContent = 'Scanning the active project…';
+      byId('status').className = 'rounded-lg border border-sky-900/70 bg-sky-950/20 p-3 text-sm text-sky-200';
+      try {
+        const response = await fetch(`${window.location.origin}/project-analysis`, {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(60000)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Server returned HTTP ${response.status}`);
+        renderAnalysis(data);
+      } catch (error) {
+        byId('status').textContent = `Project scan failed: ${error.message}`;
+        byId('status').className = 'rounded-lg border border-rose-900/70 bg-rose-950/20 p-3 text-sm text-rose-200';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Scan active project';
+      }
+    }
+
+    byId('scanButton').addEventListener('click', scanProject);
+    scanProject();
+  </script>
+</body>
+</html>
