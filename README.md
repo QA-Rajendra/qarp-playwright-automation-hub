@@ -2,21 +2,24 @@
 
 ## 8. Using as an npm Dependency
 
-The repository package can be installed from GitHub. The package name `qarp-playwright-automation-hub` is not currently published to the npm registry, so running `npx qarp-playwright-automation-hub` in a project that does not already have it installed will return an npm `E404`.
-
-To run the published npm launcher directly, use:
+The package is distributed directly from GitHub. Install it into your project as a dependency:
 
 ```bash
-npx qarp-uiPlaywrightTool
+npm install github:QA-Rajendra/qarp-playwright-automation-hub
 ```
 
-Alternatively, install this repository from GitHub as described below, then use its `qarp-playwright-automation-hub` command.
+Once installed, you can launch the Playwright Automation Hub directly from your project terminal with:
+
+```bash
+npx qarp-playwright-automation-hub
+```
+*(Alias `npx qarp-uiPlaywrightTool` is also supported)*
 
 ### Step 1: Install the Package
 
 **Option A — One-line install command**
 
-In their terminal:
+In your project terminal:
 
 ```bash
 npm install github:QA-Rajendra/qarp-playwright-automation-hub
@@ -24,12 +27,10 @@ npm install github:QA-Rajendra/qarp-playwright-automation-hub
 
 **Option B — Add to `package.json` directly**
 
-Add the following to their project's `dependencies` or `devDependencies`:
+Add the following to your project's `dependencies` or `devDependencies`:
 
 ```json
 {
-  "name": "any-other-project",
-  "version": "1.0.0",
   "dependencies": {
     "qarp-playwright-automation-hub": "github:QA-Rajendra/qarp-playwright-automation-hub"
   },
@@ -49,9 +50,9 @@ npm install
 
 ### Step 2: Run It Once Installed
 
-Once installed in their project, they have **4 ways** to launch the Playwright Automation Hub:
+Once installed in your project, you have **4 ways** to launch the Playwright Automation Hub:
 
-**1. From Terminal (via npx, after installing this GitHub package):**
+**1. From Terminal (via npx):**
 
 ```bash
 npx qarp-playwright-automation-hub
@@ -216,3 +217,19 @@ npx playwright install chromium firefox webkit
 For another project, add the browser projects you want to use to its Playwright configuration; QARP lists the configured project names automatically. Separate HAR filenames in the sample configuration keep simultaneous browser projects from writing to the same file.
 
 The same selection is used by QARP's AI chat. The `run_tests` MCP tool accepts either one `project` or a `projects` array; omitting both runs all configured projects.
+
+## CDN & Offline Support Policy
+
+- **Core Functionality (100% Offline / Local):**
+  - Test discovery, execution, HAR capture, trace viewer, and test results run entirely on local loopback.
+  - The Runner Server, MCP protocol server, Git workflow inspector, Optimization Advisor, and Test Case Generator operate completely offline.
+- **External CDN Assets (Online on First Load):**
+  - **Tailwind CSS:** Loaded from `https://cdn.tailwindcss.com` for rapid modern UI rendering. Browsers cache this after initial load.
+  - **Google Fonts:** Inter & JetBrains Mono typography loaded from `fonts.googleapis.com`.
+  - **PDF.js (Roadmap page only):** The QA Roadmap document viewer loads `pdf.min.js` and worker from `cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/`.
+- If running in an air-gapped or restricted network environment, the UI will fall back to default system typography and basic styling while all test-execution and API capabilities remain fully functional.
+
+## License
+
+This project is open-source software licensed under the [MIT License](LICENSE).
+
