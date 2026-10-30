@@ -1,8 +1,16 @@
 # Playwright Automation Hub — Modern Web Frontend
 
-## 8. Using as an npm Dependency (GitHub Package)
+## 8. Using as an npm Dependency
 
-Once pushed to GitHub, a developer can install `qarp-playwright-automation-hub` in their own project in one step.
+The repository package can be installed from GitHub. The package name `qarp-playwright-automation-hub` is not currently published to the npm registry, so running `npx qarp-playwright-automation-hub` in a project that does not already have it installed will return an npm `E404`.
+
+To run the published npm launcher directly, use:
+
+```bash
+npx qarp-uiPlaywrightTool
+```
+
+Alternatively, install this repository from GitHub as described below, then use its `qarp-playwright-automation-hub` command.
 
 ### Step 1: Install the Package
 
@@ -43,7 +51,7 @@ npm install
 
 Once installed in their project, they have **4 ways** to launch the Playwright Automation Hub:
 
-**1. From Terminal (via npx):**
+**1. From Terminal (via npx, after installing this GitHub package):**
 
 ```bash
 npx qarp-playwright-automation-hub
