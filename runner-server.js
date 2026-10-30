@@ -20,6 +20,7 @@ const { spawn, execSync, execFileSync } = require('child_process');
 const puppeteer = require('puppeteer');
 const { getGitStatus } = require('./qarp-git-status.cjs');
 const { readRoadmap, validateRoadmap, writeRoadmap } = require('./qarp-roadmap-store.cjs');
+const { analyzeOptimizationProject } = require('./qarp-optimization-advisor.cjs');
 const {
   getScenarioArtifact,
   startScenario,
@@ -71,6 +72,10 @@ const HISTORY_MAX = 100;
 
 function createRunId() {
   return `run_${Date.now().toString(36)}_${crypto.randomBytes(8).toString('hex')}`;
+}
+
+function isLoopbackAddress(address = '') {
+  return address === '::1' || address.startsWith('127.') || address.startsWith('::ffff:127.');
 }
 
 function loadHistory(projectRoot) {
@@ -3414,6 +3419,28 @@ function createRunnerServer(options = {}) {
       return;
     }
 
+    if (req.method === 'GET' && cleanUrl === '/optimization-analysis') {
+      if (!isLoopbackAddress(req.socket.remoteAddress || '')) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Optimization Advisor scans are available from the local machine only.' }));
+        return;
+      }
+      try {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(analyzeOptimizationProject(currentProjectRoot)));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `Optimization scan failed: ${error.message}` }));
+      }
+      return;
+    }
+
+    if (cleanUrl === '/optimization-analysis') {
+      res.writeHead(405, { 'Allow': 'GET', 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Optimization Advisor accepts GET requests only.' }));
+      return;
+    }
+
     if (req.method === 'GET' && cleanUrl === '/project-analysis') {
       try {
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -3987,6 +4014,17 @@ function runnerMiddleware(options = {}) {
     if (!req.url || !req.url.startsWith('/') || req.url.startsWith('//')) return next();
     const allowedMethods = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']);
     if (!allowedMethods.has(req.method)) return next();
+    let requestPath;
+    try {
+      requestPath = new URL(req.url, 'http://localhost').pathname;
+    } catch (_) {
+      return next();
+    }
+    if (requestPath.endsWith('/optimization-analysis') && !isLoopbackAddress(req.socket.remoteAddress || '')) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Optimization Advisor scans are available from the local machine only.' }));
+      return;
+    }
     const requestOrigin = req.headers.origin;
     const requestProtocol = req.protocol || (req.socket.encrypted ? 'https' : 'http');
     const expectedOrigin = `${requestProtocol}://${req.headers.host}`;

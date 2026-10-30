@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" data-theme="sage">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code Optimization Advisor - QARP</title>
+  <link rel="stylesheet" href="../assets/css/custom.css">
+  <style>
+    body { padding: 1.25rem; }
+    main { position: relative; z-index: 1; width: min(1120px, 100%); margin: 0 auto; }
+    .topbar, .controls, .summary, .finding-heading { display: flex; align-items: center; gap: .75rem; }
+    .topbar, .finding-heading { justify-content: space-between; }
+    .topbar { flex-wrap: wrap; margin-bottom: 1rem; }
+    h1 { margin: .4rem 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+    h2 { margin: 0; font-size: 1rem; }
+    p { line-height: 1.6; }
+    .muted, .fine-print { color: var(--muted-text); }
+    .panel, .metric, .finding, .status {
+      border: 1px solid var(--border);
+      border-radius: .8rem;
+      background: var(--card);
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+    }
+    .panel, .finding, .status { padding: 1rem; }
+    .controls { flex-wrap: wrap; margin: 1rem 0; }
+    button, select {
+      border: 1px solid var(--border2);
+      border-radius: .55rem;
+      background: var(--surface2);
+      color: var(--text);
+      font: inherit;
+      padding: .6rem .8rem;
+    }
+    button { cursor: pointer; font-weight: 700; }
+    button:hover, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    button:disabled { cursor: wait; opacity: .65; }
+    .primary { border-color: var(--primary); color: var(--text); }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 1rem 0; }
+    .metric { padding: 1rem; }
+    .metric strong { display: block; margin-top: .5rem; font-size: 1.5rem; }
+    .finding-list { display: grid; gap: .75rem; margin-top: 1rem; }
+    .finding h3 { margin: 0; font-size: .95rem; }
+    .badge { display: inline-block; border: 1px solid var(--border2); border-radius: 999px; padding: .2rem .55rem; font-size: .7rem; }
+    .priority-high { color: var(--error); }
+    .priority-medium { color: var(--warning); }
+    .priority-low { color: var(--success); }
+    .path, pre { overflow-wrap: anywhere; white-space: pre-wrap; }
+    pre { margin: .7rem 0; border-radius: .5rem; background: var(--background); padding: .7rem; color: var(--muted-text); font-size: .8rem; }
+    .status { margin-top: 1rem; }
+    .status[data-state="error"] { border-color: var(--error); color: var(--error); }
+    .status[data-state="success"] { border-color: var(--success); }
+    .warnings { color: var(--warning); }
+    .fine-print { margin-top: 1.25rem; font-size: .75rem; }
+    @media (max-width: 650px) {
+      body { padding: .8rem; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .finding-heading { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+  <script src="../js/theme.js"></script>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div>
+        <a href="../index.html">← Back to QARP</a>
+        <h1>Code Optimization Advisor</h1>
+        <p class="muted">Review practical Playwright and test-maintainability suggestions for the active project.</p>
+      </div>
+      <button id="themeButton" type="button" aria-label="Toggle application theme" onclick="theme.toggleThemeMenu(event)">Toggle theme</button>
+    </header>
+
+    <section class="panel" aria-label="Scan controls">
+      <div class="controls">
+        <button id="scanButton" class="primary" type="button">Scan active project</button>
+        <label for="priorityFilter">Priority</label>
+        <select id="priorityFilter">
+          <option value="all">All priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <label for="categoryFilter">Category</label>
+        <select id="categoryFilter">
+          <option value="all">All categories</option>
+          <option value="Playwright reliability">Playwright reliability</option>
+          <option value="Playwright maintainability">Playwright maintainability</option>
+          <option value="Test maintainability">Test maintainability</option>
+        </select>
+      </div>
+      <p class="muted">Scans JavaScript and TypeScript files using bounded, read-only static checks. It does not execute or edit project code.</p>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite">Ready to scan the active project.</div>
+
+    <section id="summary" class="summary" aria-label="Finding summary" hidden>
+      <article class="metric"><span class="muted">Findings</span><strong id="totalCount">0</strong></article>
+      <article class="metric"><span class="muted">High</span><strong id="highCount">0</strong></article>
+      <article class="metric"><span class="muted">Medium</span><strong id="mediumCount">0</strong></article>
+      <article class="metric"><span class="muted">Low</span><strong id="lowCount">0</strong></article>
+    </section>
+
+    <section id="warningsPanel" class="panel warnings" aria-label="Scan notes" hidden>
+      <h2>Scan notes</h2>
+      <ul id="warnings"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="findingsTitle">
+      <div class="finding-heading">
+        <h2 id="findingsTitle">Findings</h2>
+        <span id="projectName" class="muted"></span>
+      </div>
+      <div id="findingList" class="finding-list" aria-live="polite"></div>
+    </section>
+
+    <p class="fine-print">
+      Suggestions are static-analysis heuristics, not guaranteed defects or measured performance improvements.
+      Confirm each suggestion manually and verify changes with your project tests and benchmarks.
+    </p>
+  </main>
+
+  <script>
+    const element = id => document.getElementById(id);
+    let findings = [];
+
+    function setStatus(message, state) {
+      const status = element('status');
+      status.textContent = message;
+      status.dataset.state = state || 'info';
+    }
+
+    function renderSummary(data) {
+      const counts = { high: 0, medium: 0, low: 0 };
+      data.findings.forEach(finding => { counts[finding.priority] = (counts[finding.priority] || 0) + 1; });
+      element('totalCount').textContent = String(data.findings.length);
+      element('highCount').textContent = String(counts.high);
+      element('mediumCount').textContent = String(counts.medium);
+      element('lowCount').textContent = String(counts.low);
+      element('summary').hidden = false;
+      element('projectName').textContent = data.projectName ? `Project: ${data.projectName}` : '';
+    }
+
+    function renderWarnings(warnings) {
+      const list = element('warnings');
+      list.replaceChildren();
+      warnings.forEach(warning => {
+        const item = document.createElement('li');
+        item.textContent = warning;
+        list.appendChild(item);
+      });
+      element('warningsPanel').hidden = warnings.length === 0;
+    }
+
+    function renderFindings() {
+      const priority = element('priorityFilter').value;
+      const category = element('categoryFilter').value;
+      const visible = findings.filter(finding =>
+        (priority === 'all' || finding.priority === priority)
+        && (category === 'all' || finding.category === category)
+      );
+      const list = element('findingList');
+      list.replaceChildren();
+
+      if (!findings.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No suggestions found in the supported checks.';
+        list.appendChild(empty);
+        return;
+      }
+      if (!visible.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No findings match the selected filters.';
+        list.appendChild(empty);
+        return;
+      }
+
+      visible.forEach(finding => {
+        const article = document.createElement('article');
+        article.className = 'finding';
+        const heading = document.createElement('div');
+        heading.className = 'finding-heading';
+        const title = document.createElement('h3');
+        title.textContent = finding.summary;
+        const badge = document.createElement('span');
+        badge.className = `badge priority-${finding.priority}`;
+        badge.textContent = finding.priority.toUpperCase();
+        heading.append(title, badge);
+        const meta = document.createElement('p');
+        meta.className = 'muted path';
+        meta.textContent = `${finding.file}:${finding.line} · ${finding.category} · ${finding.ruleId}`;
+        const evidence = document.createElement('pre');
+        evidence.textContent = finding.evidence;
+        const recommendation = document.createElement('p');
+        recommendation.textContent = `Recommendation: ${finding.recommendation}`;
+        const confidence = document.createElement('p');
+        confidence.className = 'muted';
+        confidence.textContent = `Heuristic confidence: ${Math.round(finding.confidence * 100)}%`;
+        article.append(heading, meta, evidence, recommendation, confidence);
+        list.appendChild(article);
+      });
+    }
+
+    async function scanProject() {
+      const button = element('scanButton');
+      button.disabled = true;
+      setStatus('Scanning the active project…');
+      element('summary').hidden = true;
+      element('warningsPanel').hidden = true;
+      element('findingList').replaceChildren();
+      element('projectName').textContent = '';
+      try {
+        const response = await fetch('/optimization-analysis', {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(60000)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Server returned HTTP ${response.status}`);
+        if (!data || !Array.isArray(data.findings) || !Array.isArray(data.warnings)
+            || !data.scan || !Number.isInteger(data.scan.filesAnalyzed)
+            || typeof data.scan.truncated !== 'boolean') {
+          throw new Error('The server returned an invalid scan response.');
+        }
+        findings = data.findings;
+        renderSummary(data);
+        renderWarnings(data.warnings);
+        renderFindings();
+        const scanSummary = `${data.scan.filesAnalyzed.toLocaleString()} source files scanned; ${findings.length.toLocaleString()} suggestion${findings.length === 1 ? '' : 's'} found.`;
+        setStatus(data.scan.truncated ? `${scanSummary} The scan reached a safety limit.` : scanSummary, 'success');
+      } catch (error) {
+        findings = [];
+        element('summary').hidden = true;
+        element('warningsPanel').hidden = true;
+        setStatus(`Optimization scan failed: ${error.message}`, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    element('scanButton').addEventListener('click', scanProject);
+    element('priorityFilter').addEventListener('change', renderFindings);
+    element('categoryFilter').addEventListener('change', renderFindings);
+  </script>
+</body>
+</html>

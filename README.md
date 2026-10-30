@@ -124,6 +124,14 @@ The scan is read-only. It does not open source file contents or `.env` secrets, 
 
 Connected AI assistants can request the same inventory with the QARP MCP tool `get_project_analysis`.
 
+## Code Optimization Advisor
+
+Open **Code Optimization Advisor** from the dashboard navigation and select **Scan active project**. It reads JavaScript and TypeScript source files under the active project root, then presents suggestions that can be filtered by priority and category. The initial checks flag fixed Playwright waits, DOM-structure-dependent Playwright selectors, and test files longer than 300 lines.
+
+The advisor is local-only and read-only: it does not accept a filesystem path, execute project code, or change files. It skips common dependency/generated/version-control folders, symbolic links, and paths matched by root or nested `.gitignore` and `.qarpignore` files using common glob patterns (`*`, `?`, `**`, and leading `!`). A scan is bounded to 30,000 directory entries, 16 directory levels, 2,000 source files, 256 KB per source file, a 10-second budget checked between filesystem operations, 64 KB per ignore file, and 1,000 findings; skipped or truncated content is reported as a scan note. A single filesystem operation may take longer than the time budget. Each finding includes its rule ID, category, priority, project-relative file and line, short evidence excerpt, recommendation, and heuristic confidence.
+
+These are static-analysis suggestions, not guaranteed defects or measured performance improvements. Review them manually, then verify code changes with the project's tests and benchmarks.
+
 ## Record a Website Walkthrough
 
 1. Open **Walkthrough Recorder** from the dashboard navigation.
