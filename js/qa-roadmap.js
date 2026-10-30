@@ -108,6 +108,8 @@
       const card = document.createElement('article');
       card.className = 'level-card';
       card.dataset.levelId = level.id;
+      card.dataset.levelIndex = String(index);
+      card.dataset.status = level.status;
 
       const head = document.createElement('div');
       head.className = 'level-head';
@@ -142,6 +144,7 @@
       });
       levelStatus.addEventListener('change', () => {
         level.status = levelStatus.value;
+        card.dataset.status = level.status;
         markDirty();
       });
       head.append(identity, levelStatus);

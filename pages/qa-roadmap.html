@@ -2,110 +2,1080 @@
 <html lang="en" data-theme="sage">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Plan and track QA maturity across nine editable roadmap levels.">
-  <title>QA Roadmap — QARP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="An interactive QA learning roadmap with notes for testing tools and skills.">
+  <title>QA Learning Roadmap</title>
   <link rel="stylesheet" href="../assets/css/custom.css">
-  <link rel="stylesheet" href="../assets/css/qa-roadmap.css">
+  <style>
+    :root {
+      --page: var(--background);
+      --ink: var(--text);
+      --muted: var(--muted-text);
+      --surface: var(--card);
+      --tile: var(--card);
+      --tile-ink: var(--text);
+      --line: var(--border);
+      --accent: var(--primary);
+      --accent-ink: var(--background);
+      --shadow: 0 8px 18px rgb(0 0 0 / 18%);
+      --dialog-backdrop: rgb(0 0 0 / 62%);
+      --level-0: #74bce4;
+      --level-1: #bb78d6;
+      --level-2: #78c85b;
+      --level-3: #33b984;
+      --level-4: #df6685;
+      --level-5: #e4ad4b;
+      --level-6: #46b7c8;
+      --level-7: #5da4e2;
+      --level-8: #9272dc;
+    }
+
+    html {
+      background: var(--page);
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--page); }
+    body {
+      background: var(--page);
+      color: var(--ink);
+      margin: 0;
+      min-height: 100vh;
+      padding: max(18px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      transition: background .2s ease, color .2s ease;
+    }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+      outline-offset: 3px;
+    }
+    .app { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0 auto; max-width: 1120px; position: relative; z-index: 1; }
+    .topbar {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      margin: 0 auto 16px;
+      max-width: 1050px;
+    }
+    .topbar h1 { font-size: clamp(20px, 4vw, 29px); letter-spacing: -.035em; margin: 0; }
+    .topbar p { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+    .icon-button, .button {
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 700;
+      gap: 7px;
+      justify-content: center;
+      min-height: 36px;
+      padding: 8px 12px;
+      text-decoration: none;
+      transition: transform .16s ease, filter .16s ease, background .16s ease;
+    }
+    .icon-button:hover, .button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .button.danger { color: #c64052; }
+    .roadmap { display: grid; gap: 11px; }
+    .level-row {
+      --level-color: var(--level-0);
+      align-items: center;
+      background: color-mix(in srgb, var(--level-color) 13%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--level-color) 34%, transparent);
+      border-bottom: 6px solid color-mix(in srgb, var(--level-color) 74%, #263347);
+      border-radius: 13px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(138px, 25%) minmax(0, 1fr);
+      padding: 12px;
+    }
+    .level-row[data-level="0"] { --level-color: var(--level-0); }
+    .level-row[data-level="1"] { --level-color: var(--level-1); }
+    .level-row[data-level="2"] { --level-color: var(--level-2); }
+    .level-row[data-level="3"] { --level-color: var(--level-3); }
+    .level-row[data-level="4"] { --level-color: var(--level-4); }
+    .level-row[data-level="5"] { --level-color: var(--level-5); }
+    .level-row[data-level="6"] { --level-color: var(--level-6); }
+    .level-row[data-level="7"] { --level-color: var(--level-7); }
+    .level-row[data-level="8"] { --level-color: var(--level-8); }
+    .cube-wrap {
+      filter: drop-shadow(0 9px 5px rgb(17 25 39 / 22%));
+      height: 78px;
+      position: relative;
+      width: 100%;
+    }
+    .cube-wrap::after {
+      background: rgb(12 18 29 / 18%);
+      border-radius: 50%;
+      bottom: 0;
+      content: "";
+      filter: blur(5px);
+      height: 10px;
+      left: 8%;
+      position: absolute;
+      right: 5%;
+      transform: rotate(-4deg);
+    }
+    .cube {
+      height: 70px;
+      inset: 0;
+      position: absolute;
+      z-index: 1;
+    }
+    .cube-face {
+      align-items: center;
+      color: white;
+      display: flex;
+      font-weight: 800;
+      justify-content: center;
+      position: absolute;
+      text-align: center;
+      text-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+    }
+    .cube-front {
+      background: color-mix(in srgb, var(--level-color) 83%, white);
+      clip-path: polygon(0 25%, 50% 50%, 50% 100%, 0 75%);
+      inset: 0;
+    }
+    .cube-front span,
+    .cube-side span {
+      align-items: center;
+      display: flex;
+      height: auto;
+      justify-content: center;
+      line-height: 1.15;
+      min-height: 1.1em;
+      overflow-wrap: anywhere;
+      position: absolute;
+      text-align: center;
+      top: 62.5%;
+      transform: translateY(-50%);
+    }
+    .cube-front span {
+      font-size: clamp(12px, 1.25vw, 15px);
+      left: 0;
+      padding: 0 3% 0 0;
+      width: 50%;
+    }
+    .cube-side {
+      background: color-mix(in srgb, var(--level-color) 68%, #293345);
+      clip-path: polygon(50% 50%, 100% 25%, 100% 75%, 50% 100%);
+      inset: 0;
+    }
+    .cube-side span {
+      font-size: clamp(8px, .8vw, 10px);
+      left: 50%;
+      padding: 0 4%;
+      width: 50%;
+    }
+    .cube-top {
+      background: color-mix(in srgb, var(--level-color) 30%, white);
+      clip-path: polygon(0 25%, 50% 0, 100% 25%, 50% 50%);
+      inset: 0;
+    }
+    .tools {
+      align-items: stretch;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .tool-tile {
+      align-items: center;
+      background: var(--tile);
+      border: 1px solid color-mix(in srgb, var(--level-color) 22%, var(--line));
+      border-radius: 10px;
+      box-shadow: 0 4px 9px rgb(22 30 47 / 13%);
+      color: var(--tile-ink);
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      min-height: 48px;
+      min-width: 0;
+      padding: 7px 9px;
+      text-align: left;
+      transition: box-shadow .17s ease, transform .17s ease, border-color .17s ease;
+    }
+    .tool-tile:hover {
+      border-color: color-mix(in srgb, var(--level-color) 65%, var(--line));
+      box-shadow: 0 8px 14px rgb(22 30 47 / 20%);
+      transform: translateY(-3px);
+    }
+    .tool-icon {
+      align-items: center;
+      background: color-mix(in srgb, var(--level-color) 20%, var(--surface));
+      border-radius: 7px;
+      display: inline-flex;
+      flex: 0 0 29px;
+      font-size: 17px;
+      height: 29px;
+      justify-content: center;
+    }
+    .tool-name { font-size: 11px; font-weight: 750; line-height: 1.25; overflow-wrap: anywhere; }
+    .tool-delete {
+      background: transparent;
+      border: 0;
+      color: #ba4656;
+      cursor: pointer;
+      font-size: 17px;
+      line-height: 1;
+      margin-left: auto;
+      padding: 1px 3px;
+    }
+    .add-tile {
+      background: color-mix(in srgb, var(--level-color) 9%, transparent);
+      border: 1px dashed color-mix(in srgb, var(--level-color) 77%, #536078);
+      border-radius: 10px;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 750;
+      min-height: 48px;
+      transition: background .16s ease, transform .16s ease;
+    }
+    .add-tile:hover { background: color-mix(in srgb, var(--level-color) 21%, transparent); transform: translateY(-2px); }
+    .notes { display: none; margin: 0 auto; max-width: 900px; }
+    .notes.active { display: block; }
+    .roadmap.hidden { display: none; }
+    .back-link { color: var(--accent); font-size: 12px; font-weight: 750; text-decoration: none; }
+    .notes-card {
+      --level-color: var(--level-0);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .notes-head {
+      align-items: center;
+      background: color-mix(in srgb, var(--level-color) 75%, var(--surface));
+      border-bottom: 5px solid color-mix(in srgb, var(--level-color) 88%, #263347);
+      color: #fff;
+      display: flex;
+      gap: 14px;
+      padding: 17px;
+      text-shadow: 0 1px 2px rgb(0 0 0 / 24%);
+    }
+    .notes-emoji {
+      align-items: center;
+      background: rgb(255 255 255 / 88%);
+      border-radius: 10px;
+      display: flex;
+      flex: 0 0 54px;
+      font-size: 29px;
+      height: 54px;
+      justify-content: center;
+      text-shadow: none;
+    }
+    .notes-head p { font-size: 11px; font-weight: 750; margin: 0 0 3px; opacity: .94; }
+    .notes-head h2 { font-size: clamp(20px, 4vw, 26px); line-height: 1.12; margin: 0; }
+    .notes-content { padding: clamp(14px, 3vw, 22px); }
+    .section-heading {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin: 15px 0 8px;
+    }
+    .section-heading h3 { font-size: 14px; margin: 0; }
+    .description-text { font-size: 13px; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+    .key-list { display: grid; gap: 7px; list-style: none; margin: 9px 0 12px; padding: 0; }
+    .key-point {
+      align-items: start;
+      background: color-mix(in srgb, var(--level-color) 8%, var(--surface));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: flex;
+      gap: 9px;
+      justify-content: space-between;
+      padding: 8px 10px;
+    }
+    .key-point-copy { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .key-point-actions { display: flex; flex: 0 0 auto; gap: 4px; }
+    .small-button {
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 750;
+      padding: 5px 7px;
+    }
+    .small-button.delete { color: #c64052; }
+    .inline-form { display: flex; gap: 7px; }
+    .text-input, .text-area {
+      background: var(--page);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      font-size: 12px;
+      min-width: 0;
+      padding: 9px 10px;
+      width: 100%;
+    }
+    .text-area { min-height: 72px; resize: vertical; }
+    .desc-editor { display: grid; gap: 7px; }
+    .pdf-panel {
+      background: color-mix(in srgb, var(--surface) 88%, var(--page));
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-top: 16px;
+      padding: 13px;
+    }
+    .pdf-panel p { color: var(--muted); font-size: 11px; margin: 8px 0; }
+    .pdf-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    .pdf-pages { display: grid; gap: 12px; justify-items: center; margin-top: 13px; }
+    .pdf-pages canvas { background: white; border-radius: 3px; box-shadow: var(--shadow); height: auto; max-width: 100%; }
+    .pdf-message { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 9px; }
+    .notes-nav { display: flex; justify-content: space-between; margin-top: 14px; }
+    dialog {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 18px 60px rgb(0 0 0 / 30%);
+      color: var(--ink);
+      max-height: min(90vh, 760px);
+      max-width: min(480px, calc(100vw - 24px));
+      overflow-y: auto;
+      padding: 20px;
+      width: 100%;
+    }
+    dialog::backdrop { background: var(--dialog-backdrop); backdrop-filter: blur(3px); }
+    dialog h2 { font-size: 19px; margin: 0 0 14px; }
+    .form-grid { display: grid; gap: 12px; }
+    .form-grid label { color: var(--muted); display: grid; font-size: 11px; font-weight: 750; gap: 5px; }
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 15px; }
+    .sr-only { clip: rect(0,0,0,0); clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+    .live-message { color: var(--muted); font-size: 11px; min-height: 16px; margin: 8px 0 0; }
+
+    @media (max-width: 760px) {
+      .level-row { gap: 9px; grid-template-columns: minmax(115px, 25%) minmax(0, 1fr); padding: 10px; }
+      .cube-wrap { height: 70px; }
+      .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tool-tile, .add-tile { min-height: 45px; }
+    }
+    @media (max-width: 420px) {
+      body { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+      .topbar { align-items: flex-start; }
+      .topbar p { max-width: 240px; }
+      .level-row { grid-template-columns: minmax(104px, 30%) minmax(0, 1fr); }
+      .cube-wrap { height: 65px; }
+      .tools { gap: 6px; }
+      .tool-tile { gap: 6px; padding: 6px; }
+      .tool-icon { flex-basis: 26px; font-size: 15px; height: 26px; }
+      .tool-name { font-size: 10px; }
+      .key-point { flex-wrap: wrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
 </head>
 <body>
-  <main class="roadmap-shell">
-    <header class="roadmap-header">
+  <main class="app">
+    <header class="topbar">
       <div>
-        <a class="back-link" href="../index.html">← Back to QARP</a>
-        <p class="eyebrow">QUALITY MATURITY · LEVEL 0–8</p>
-        <h1 id="roadmapTitle">QA Maturity Roadmap</h1>
-        <p class="intro">A practical, editable starter outline for your quality journey. Add actions, assign owners, and adapt each level to your team's maturity model.</p>
-      </div>
-      <div class="header-actions">
-        <button id="themeToggle" class="button secondary" type="button" aria-label="Toggle theme">🌿 Theme</button>
-        <a class="button secondary" href="../data/qa-roadmap.json" target="_blank" rel="noopener">View JSON</a>
-        <button id="exportButton" class="button secondary" type="button">Export JSON</button>
-        <button id="reloadButton" class="button secondary" type="button">Reload JSON</button>
-        <button id="discardButton" class="button secondary" type="button" disabled>Discard changes</button>
-        <button id="saveButton" class="button primary" type="button" disabled>Save roadmap</button>
+        <h1>QA Learning Roadmap</h1>
+        <p>Start at Level 0 and climb to Level 8. Select a tool to open its notes.</p>
       </div>
     </header>
-
-    <section class="summary-grid" aria-label="Roadmap summary">
-      <article class="summary-card"><span>Levels</span><strong id="levelCount">—</strong></article>
-      <article class="summary-card"><span>Actions</span><strong id="itemCount">—</strong></article>
-      <article class="summary-card"><span>Completed</span><strong id="completedCount">—</strong></article>
-      <article class="summary-card progress-card">
-        <div class="progress-label"><span>Overall progress</span><strong id="progressPercent">—</strong></div>
-        <progress id="overallProgress" max="100" value="0">0%</progress>
-      </article>
-    </section>
-
-    <section class="toolbar" aria-label="Roadmap controls">
-      <label class="search-control">
-        <span class="sr-only">Search roadmap</span>
-        <input id="searchInput" type="search" placeholder="Search levels, actions, owners…" autocomplete="off">
-      </label>
-      <label class="filter-control">
-        <span class="sr-only">Filter roadmap actions</span>
-        <select id="statusFilter">
-          <option value="all">All actions</option>
-          <option value="not-started">Not started</option>
-          <option value="in-progress">In progress</option>
-          <option value="blocked">Blocked</option>
-          <option value="complete">Complete</option>
-        </select>
-      </label>
-      <button id="addItemButton" class="button primary" type="button">＋ Add action</button>
-    </section>
-
-    <div id="statusMessage" class="status-message" role="status" aria-live="polite">Loading roadmap…</div>
-    <section id="roadmapLevels" class="levels-grid" aria-label="Roadmap levels"></section>
-
-    <details class="json-help">
-      <summary>Prefer editing JSON directly?</summary>
-      <p>Edit <code>data/qa-roadmap.json</code> in the QARP project, then select <strong>Reload JSON</strong> to see those changes here. The page validates the Level 0–8 structure when saving.</p>
-    </details>
-
-    <dialog id="itemDialog" class="item-dialog">
-      <form id="itemForm" method="dialog">
-        <div class="dialog-heading">
-          <div>
-            <p class="eyebrow">ROADMAP ACTION</p>
-            <h2 id="dialogTitle">Add an action</h2>
-          </div>
-          <button id="closeDialogButton" class="icon-button" type="button" aria-label="Close editor">×</button>
-        </div>
-        <input id="itemId" type="hidden">
-        <label>Roadmap level
-          <select id="itemLevel" required></select>
-        </label>
-        <label>Action title
-          <input id="itemTitle" type="text" maxlength="160" required placeholder="e.g. Add critical checkout smoke coverage">
-        </label>
-        <label>What does done look like?
-          <textarea id="itemDescription" maxlength="1000" rows="3" placeholder="Describe the outcome or acceptance criteria."></textarea>
-        </label>
-        <div class="form-row">
-          <label>Status
-            <select id="itemStatus">
-              <option value="not-started">Not started</option>
-              <option value="in-progress">In progress</option>
-              <option value="blocked">Blocked</option>
-              <option value="complete">Complete</option>
-            </select>
-          </label>
-          <label>Owner
-            <input id="itemOwner" type="text" maxlength="80" placeholder="Name (optional)">
-          </label>
-        </div>
-        <label>Target date
-          <input id="itemTargetDate" type="date">
-        </label>
-        <div class="dialog-actions">
-          <button id="cancelDialogButton" class="button secondary" type="button">Cancel</button>
-          <button class="button primary" type="submit">Done</button>
-        </div>
-      </form>
-    </dialog>
+    <section id="roadmap" class="roadmap" aria-label="QA learning roadmap"></section>
+    <section id="notes" class="notes" aria-live="polite"></section>
+    <p id="liveMessage" class="live-message" role="status" aria-live="polite"></p>
   </main>
+
+  <dialog id="addDialog">
+    <form id="addForm">
+      <h2>Add a learning tool</h2>
+      <div class="form-grid">
+        <label>Tool name
+          <input class="text-input" id="newToolName" maxlength="80" required>
+        </label>
+        <label>Short description
+          <textarea class="text-area" id="newToolDescription" maxlength="500"></textarea>
+        </label>
+        <label>Key points (one per line)
+          <textarea class="text-area" id="newToolPoints" maxlength="2000"></textarea>
+        </label>
+        <label>Optional PDF notes (max 15 MB)
+          <input class="text-input" id="newToolPdf" type="file" accept="application/pdf,.pdf">
+        </label>
+      </div>
+      <p class="live-message" id="addError" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="button" id="cancelAdd" type="button">Cancel</button>
+        <button class="button primary" type="submit">Add tool</button>
+      </div>
+    </form>
+  </dialog>
+  <input id="pdfPicker" class="sr-only" type="file" accept="application/pdf,.pdf" tabindex="-1">
   <script src="../js/theme.js"></script>
-  <script src="../js/qa-roadmap.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    'use strict';
+    const ROADMAP_DATA = [
+      { level: 8, name: 'AI & Intelligence', tools: [
+        ['ChatGPT','🤖','An AI assistant for brainstorming, drafting, and refining QA artifacts.',['Draft test ideas from acceptance criteria, then verify every claim.','Ask for boundary cases and alternate user journeys.','Remove sensitive data before sharing prompts.']],
+        ['Claude','🧠','An AI assistant useful for analyzing long specifications and organizing test insights.',['Summarize requirements into testable behaviors.','Ask for risks, assumptions, and missing requirements.','Review generated tests against the source specification.']],
+        ['Gemini','✨','A multimodal AI assistant that can help explain workflows and structure test coverage.',['Turn product flows into clear test scenarios.','Use screenshots or diagrams only when authorized.','Validate outputs with the actual application and requirements.']],
+        ['Perplexity','🔎','An AI-powered research assistant for finding and summarizing public technical references.',['Prefer primary documentation and link to sources.','Check publication dates and version compatibility.','Keep internal project information out of public searches.']]
+      ]},
+      { level: 7, name: 'Test Management', tools: [
+        ['Jira','🔷','A work-tracking platform used to plan QA work and connect tests with delivery tickets.',['Link test work to requirements and defects.','Keep statuses and ownership current.','Use dashboards to expose risks and blockers.']],
+        ['TestRail','📊','A test case management tool for organizing plans, runs, and results.',['Group cases into maintainable suites.','Record expected results and reproducible evidence.','Review coverage and run history before releases.']],
+        ['Zephyr','⚡','A Jira-integrated test management family for planning and reporting test execution.',['Connect tests to stories and releases.','Use consistent execution statuses.','Keep reports focused on meaningful quality signals.']],
+        ['qTest','🧪','A test management platform for organizing manual and automated test work.',['Structure reusable test cases and cycles.','Connect automation results to planned coverage.','Use traceability to identify gaps and change impact.']]
+      ]},
+      { level: 6, name: 'Test Design & Planning', tools: [
+        ['XMind','🧠','A mind-mapping tool for exploring test scope, branches, and scenario relationships.',['Start with the user goal or feature under test.','Branch by inputs, states, roles, and outcomes.','Turn high-risk branches into explicit test cases.']],
+        ['MindMeister','🗺️','A collaborative mind-mapping tool for sharing test ideas and planning coverage.',['Map the workflow before writing detailed tests.','Invite reviewers to identify missing branches.','Prioritize maps by impact and likelihood.']],
+        ['Coggle','🪢','A collaborative diagramming tool for organizing test ideas into visual trees.',['Use concise branches for conditions and outcomes.','Mark assumptions that need clarification.','Keep diagrams readable and linked to requirements.']],
+        ['draw.io','📐','A diagram editor for documenting workflows, systems, and test boundaries.',['Show actors, decisions, and system boundaries.','Use diagrams to derive integration and negative cases.','Keep diagrams versioned with the relevant feature.']]
+      ]},
+      { level: 5, name: 'API Testing', tools: [
+        ['Postman','🚀','An API platform for composing requests, checking responses, and organizing collections.',['Assert status, headers, schema, and important values.','Cover authentication, invalid input, and error responses.','Keep secrets in managed variables, never in shared exports.']],
+        ['Swagger','📜','OpenAPI tooling for documenting and exploring HTTP API contracts.',['Compare implementation behavior with the API contract.','Check required fields, types, and response codes.','Use examples to clarify expected edge cases.']],
+        ['Insomnia','🌙','An API client for creating, organizing, and running HTTP requests.',['Group related requests into clear collections.','Use environment variables for endpoints and credentials.','Test success and failure behavior consistently.']],
+        ['REST Assured','☕','A Java library for expressive automated tests of REST APIs.',['Build readable request and response assertions.','Validate status, payload, headers, and contracts.','Keep test data isolated and clean up created resources.']]
+      ]},
+      { level: 4, name: 'Automation Testing', tools: [
+        ['Selenium','🌐','A browser automation framework for cross-browser web testing.',['Prefer stable semantic locators.','Wait for observable conditions rather than fixed sleeps.','Keep test setup independent and assertions user-focused.']],
+        ['Playwright','🎭','A browser automation framework with resilient web-first testing APIs.',['Use role and label locators where possible.','Isolate tests with independent browser contexts.','Capture traces and assertions that explain failures.']],
+        ['Cypress','🌲','A JavaScript testing framework for interactive web applications.',['Test visible user behavior, not implementation details.','Use controlled test data and deterministic setup.','Keep commands and assertions focused and readable.']],
+        ['TestNG','✅','A Java testing framework with annotations, suites, and configurable execution.',['Organize tests around clear behaviors.','Use setup and teardown for reliable isolation.','Apply parallel execution only when tests are safe to run concurrently.']]
+      ]},
+      { level: 3, name: 'Performance Testing', tools: [
+        ['JMeter','🪶','A load-testing tool for exercising services and measuring performance.',['Define realistic workload and ramp-up patterns.','Monitor server and dependency health alongside latency.','Avoid using production data or unapproved targets.']],
+        ['k6','📈','A scriptable load-testing tool for checking service performance under traffic.',['Model expected traffic with scenarios and thresholds.','Track percentile latency and error rates.','Run load tests only against authorized environments.']],
+        ['Gatling','🐎','A code-driven performance testing tool for simulating virtual users.',['Build realistic user journeys and pacing.','Compare latency distributions across runs.','Keep load profiles aligned with approved capacity plans.']],
+        ['LoadRunner','🚦','A performance engineering platform for modeling load and analyzing system behavior.',['Choose representative scripts and user profiles.','Correlate transactions with infrastructure metrics.','Document workload assumptions and environment limits.']]
+      ]},
+      { level: 2, name: 'Defect Tracking & Reporting', tools: [
+        ['Jira','🔷','A work-tracking tool for recording, prioritizing, and following up defects.',['Write reproducible steps and actual versus expected results.','Include impact, environment, and relevant evidence.','Link defects to affected requirements and fixes.']],
+        ['Bugzilla','🐞','An issue tracking system for reporting and managing software defects.',['Search for duplicates before filing.','Use clear severity and component fields.','Update reports when new reproduction details emerge.']],
+        ['Mantis','🦗','A defect tracking system for triaging issues and coordinating fixes.',['Provide concise steps and environment details.','Keep assignment and status aligned with triage.','Verify the fix and record the tested build.']],
+        ['YouTrack','🎯','An issue and project tracking tool for managing defects and team workflows.',['Use consistent fields and workflow states.','Attach focused evidence without sensitive data.','Connect defect trends to regression priorities.']]
+      ]},
+      { level: 1, name: 'Core QA Skills', tools: [
+        ['SDLC & STLC','🔄','The software and testing life cycles explain how quality work fits into delivery.',['Understand each phase and its quality activities.','Shift testing earlier through review and prevention.','Plan verification throughout delivery, not only at the end.']],
+        ['Test Cases','📝','A test case describes conditions, steps, and outcomes used to verify behavior.',['State preconditions and test data clearly.','Use one focused objective per case.','Make expected results observable and unambiguous.']],
+        ['Defect Life Cycle','🔁','The defect life cycle describes how issues move from discovery through resolution and verification.',['Record enough detail for another person to reproduce.','Understand triage, assignment, fix, and retest states.','Close only after verifying the fix and regression risk.']],
+        ['Agile & Scrum','🏃','Agile and Scrum practices coordinate incremental delivery and continuous feedback.',['Review acceptance criteria before implementation.','Share testing progress and blockers during the sprint.','Include quality checks in the definition of done.']]
+      ]},
+      { level: 0, name: 'Foundation', tools: [
+        ['SQL','🗄️','SQL helps testers inspect and validate data stored in relational databases.',['Use SELECT with precise filters to verify records.','Understand joins, grouping, and ordering.','Avoid modifying data without an approved test plan.']],
+        ['Git','🌿','Git tracks source changes and helps teams collaborate on test code and documentation.',['Commit small, focused changes with useful messages.','Review diffs before sharing changes.','Use branches and merges according to team workflow.']],
+        ['Linux','🐧','Linux command-line skills help testers inspect logs, files, processes, and environments.',['Navigate directories and inspect files safely.','Use pipes and filters to find relevant log lines.','Check permissions before running commands that change data.']],
+        ['Networking','🌍','Networking fundamentals help explain how clients, services, and dependencies communicate.',['Understand DNS, IP addresses, ports, and protocols.','Use status codes and timing to investigate connectivity.','Distinguish network failures from application failures.']]
+      ]}
+    ];
+
+    const ICONS = {
+      ChatGPT:'🤖', Claude:'🧠', Gemini:'✨', Perplexity:'🔎', Jira:'🔷', TestRail:'📊',
+      Zephyr:'⚡', qTest:'🧪', XMind:'🧠', MindMeister:'🗺️', Coggle:'🪢', 'draw.io':'📐',
+      Postman:'🚀', Swagger:'📜', Insomnia:'🌙', 'REST Assured':'☕', Selenium:'🌐',
+      Playwright:'🎭', Cypress:'🌲', TestNG:'✅', JMeter:'🪶', k6:'📈', Gatling:'🐎',
+      LoadRunner:'🚦', Bugzilla:'🐞', Mantis:'🦗', YouTrack:'🎯', 'SDLC & STLC':'🔄',
+      'Test Cases':'📝', 'Defect Life Cycle':'🔁', 'Agile & Scrum':'🏃', SQL:'🗄️',
+      Git:'🌿', Linux:'🐧', Networking:'🌍'
+    };
+
+    const STORAGE_KEY = 'qa-learning-roadmap-state-v1';
+    const DB_NAME = 'qa-learning-roadmap-pdfs';
+    const DB_STORE = 'pdfs';
+    const MAX_PDF_SIZE = 15 * 1024 * 1024;
+    const roadmap = document.getElementById('roadmap');
+    const notesView = document.getElementById('notes');
+    const dialog = document.getElementById('addDialog');
+    const liveMessage = document.getElementById('liveMessage');
+    let activeLevel = null;
+    let activeTool = null;
+    let state = { notes: {}, added: {} };
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
+    }
+    function announce(message) { liveMessage.textContent = message; }
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          state = {
+            notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
+            added: parsed.added && typeof parsed.added === 'object' ? parsed.added : {}
+          };
+        }
+      } catch (error) {
+        announce(`Saved roadmap edits could not be loaded: ${error.message}`);
+      }
+    }
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        return true;
+      } catch (error) {
+        announce(`Could not save your edits in this browser: ${error.message}`);
+        return false;
+      }
+    }
+    function getAdded(level) {
+      return Array.isArray(state.added[level]) ? state.added[level] : [];
+    }
+    function baseTools(level) {
+      return ROADMAP_DATA.find(entry => entry.level === level).tools.map((row, index) => ({
+        id: String(index),
+        routeId: String(index),
+        name: row[0],
+        icon: ICONS[row[0]] || '🔖',
+        description: row[2],
+        points: row[3].slice(),
+        added: false,
+        pdfId: state.notes[`l${level}-${index}`]?.pdfId || ''
+      }));
+    }
+    function getTools(level) {
+      return baseTools(level).concat(getAdded(level).map(tool => ({ ...tool, added: true })));
+    }
+    function toolKey(level, tool) { return `l${level}-${tool.routeId}`; }
+    function getNotes(level, tool) {
+      const saved = state.notes[toolKey(level, tool)];
+      return {
+        description: typeof saved?.description === 'string' ? saved.description : tool.description,
+        points: Array.isArray(saved?.points) ? saved.points.slice() : tool.points.slice(),
+        ...(saved?.pdfId ? { pdfId: saved.pdfId } : {})
+      };
+    }
+    function saveNotes(level, tool, notes) {
+      state.notes[toolKey(level, tool)] = notes;
+      saveState();
+    }
+    function levelColor(level) { return `var(--level-${level})`; }
+
+    function renderRoadmap() {
+      roadmap.replaceChildren();
+      ROADMAP_DATA.slice().sort((a, b) => b.level - a.level).forEach(entry => {
+        const row = document.createElement('section');
+        row.className = 'level-row';
+        row.dataset.level = String(entry.level);
+        row.setAttribute('aria-label', `Level ${entry.level}: ${entry.name}`);
+        const cube = document.createElement('div');
+        cube.className = 'cube-wrap';
+        cube.setAttribute('aria-label', `Level ${entry.level} ${entry.name}`);
+        cube.innerHTML = `<div class="cube" aria-hidden="true"><div class="cube-face cube-front"><span>Level ${entry.level}</span></div><div class="cube-face cube-side"><span>${escapeHTML(entry.name)}</span></div><div class="cube-face cube-top"></div></div>`;
+        const tiles = document.createElement('div');
+        tiles.className = 'tools';
+        getTools(entry.level).forEach(tool => {
+          const tile = document.createElement('button');
+          tile.type = 'button';
+          tile.className = 'tool-tile';
+          tile.dataset.route = `#l${entry.level}-${tool.routeId}`;
+          tile.setAttribute('aria-label', `${tool.name} notes`);
+          tile.innerHTML = `<span class="tool-icon" aria-hidden="true">${escapeHTML(tool.icon || '🔖')}</span><span class="tool-name">${escapeHTML(tool.name)}</span>`;
+          if (tool.added) {
+            const remove = document.createElement('span');
+            remove.className = 'sr-only';
+            remove.textContent = ' Added tool';
+            tile.appendChild(remove);
+          }
+          tiles.appendChild(tile);
+        });
+        const addButton = document.createElement('button');
+        addButton.className = 'add-tile';
+        addButton.type = 'button';
+        addButton.textContent = '+ Add';
+        addButton.dataset.addLevel = String(entry.level);
+        addButton.setAttribute('aria-label', `Add a tool to Level ${entry.level}`);
+        tiles.appendChild(addButton);
+        row.append(cube, tiles);
+        roadmap.appendChild(row);
+      });
+    }
+
+    function editDescription(level, tool, notes, content, refresh) {
+      const editor = document.createElement('div');
+      editor.className = 'desc-editor';
+      const input = document.createElement('textarea');
+      input.className = 'text-area';
+      input.maxLength = 1000;
+      input.value = notes.description;
+      input.setAttribute('aria-label', 'Edit tool description');
+      const actions = document.createElement('div');
+      actions.className = 'pdf-actions';
+      const save = document.createElement('button');
+      save.className = 'small-button';
+      save.type = 'button';
+      save.textContent = 'Save';
+      const cancel = document.createElement('button');
+      cancel.className = 'small-button';
+      cancel.type = 'button';
+      cancel.textContent = 'Cancel';
+      save.addEventListener('click', () => {
+        notes.description = input.value.trim();
+        saveNotes(level, tool, notes);
+        refresh();
+      });
+      cancel.addEventListener('click', refresh);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { event.preventDefault(); refresh(); }
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); save.click(); }
+      });
+      actions.append(save, cancel);
+      editor.append(input, actions);
+      content.replaceChildren(editor);
+      input.focus();
+    }
+
+    function renderPoint(point, index, level, tool, notes, refresh) {
+      const li = document.createElement('li');
+      li.className = 'key-point';
+      const text = document.createElement('span');
+      text.className = 'key-point-copy';
+      text.textContent = point;
+      const actions = document.createElement('div');
+      actions.className = 'key-point-actions';
+      const edit = document.createElement('button');
+      edit.className = 'small-button';
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.className = 'text-input';
+        input.maxLength = 500;
+        input.value = notes.points[index];
+        input.setAttribute('aria-label', 'Edit key point');
+        const save = document.createElement('button');
+        save.className = 'small-button';
+        save.type = 'button';
+        save.textContent = 'Save';
+        const cancel = document.createElement('button');
+        cancel.className = 'small-button';
+        cancel.type = 'button';
+        cancel.textContent = 'Cancel';
+        const saveEdit = () => {
+          const value = input.value.trim();
+          if (!value) return;
+          notes.points[index] = value;
+          saveNotes(level, tool, notes);
+          refresh();
+        };
+        save.addEventListener('click', saveEdit);
+        cancel.addEventListener('click', refresh);
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); refresh(); }
+          if (event.key === 'Enter') { event.preventDefault(); saveEdit(); }
+        });
+        li.replaceChildren(input, save, cancel);
+        input.focus();
+        input.select();
+      });
+      const remove = document.createElement('button');
+      remove.className = 'small-button delete';
+      remove.type = 'button';
+      remove.textContent = 'Delete';
+      remove.addEventListener('click', () => {
+        notes.points.splice(index, 1);
+        saveNotes(level, tool, notes);
+        refresh();
+      });
+      actions.append(edit, remove);
+      li.append(text, actions);
+      return li;
+    }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        try {
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(DB_STORE)) {
+              request.result.createObjectStore(DB_STORE, { keyPath: 'id' });
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error('Unable to open PDF storage.'));
+        } catch (error) { reject(error); }
+      });
+    }
+    async function putPdf(id, file) {
+      let db;
+      try {
+        db = await openDatabase();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put({ id, name: file.name, blob: file });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error || new Error('Unable to save this PDF.'));
+          tx.onabort = () => reject(tx.error || new Error('PDF save was cancelled.'));
+        });
+      } catch (error) { throw new Error(`Could not store PDF: ${error.message}`); }
+      finally { if (db) db.close(); }
+    }
+    async function getPdf(id) {
+      let db;
+      try {
+        db = await openDatabase();
+        return await new Promise((resolve, reject) => {
+          const request = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(id);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error || new Error('Unable to read PDF notes.'));
+        });
+      } catch (error) { throw new Error(`Could not read PDF notes: ${error.message}`); }
+      finally { if (db) db.close(); }
+    }
+    async function deletePdf(id) {
+      if (!id) return;
+      let db;
+      try {
+        db = await openDatabase();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).delete(id);
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error || new Error('Unable to remove PDF notes.'));
+          tx.onabort = () => reject(tx.error || new Error('PDF removal was cancelled.'));
+        });
+      } catch (error) { throw new Error(`Could not remove PDF notes: ${error.message}`); }
+      finally { if (db) db.close(); }
+    }
+    function makeId() {
+      try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (_) {}
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+    function validatePdf(file) {
+      if (!file) return 'Choose a PDF file first.';
+      if (file.size > MAX_PDF_SIZE) return 'PDF files must be 15 MB or smaller.';
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return 'Choose a PDF file.';
+      return '';
+    }
+
+    async function showPdf(tool, panel) {
+      const message = panel.querySelector('.pdf-message');
+      const canvases = panel.querySelector('.pdf-pages');
+      canvases.replaceChildren();
+      if (!tool.pdfId) {
+        message.textContent = 'No PDF attached yet.';
+        return;
+      }
+      try {
+        if (!window.pdfjsLib) throw new Error('The PDF viewer could not be loaded. Check your connection and reload the page.');
+        const stored = await getPdf(tool.pdfId);
+        if (!stored || !stored.blob) throw new Error('This PDF is no longer available in browser storage. Replace or remove the attachment.');
+        message.textContent = `Loading ${stored.name || 'PDF notes'}…`;
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const bytes = await stored.blob.arrayBuffer();
+        const documentPdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        for (let pageNumber = 1; pageNumber <= documentPdf.numPages; pageNumber += 1) {
+          const page = await documentPdf.getPage(pageNumber);
+          const viewport = page.getViewport({ scale: 1.2 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('Your browser cannot render PDF pages on a canvas.');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.setAttribute('aria-label', `PDF page ${pageNumber}`);
+          canvases.appendChild(canvas);
+          await page.render({ canvasContext: context, viewport }).promise;
+        }
+        message.textContent = `${stored.name || 'PDF notes'} · ${documentPdf.numPages} page${documentPdf.numPages === 1 ? '' : 's'}`;
+      } catch (error) {
+        canvases.replaceChildren();
+        message.textContent = `PDF preview unavailable: ${error.message}`;
+      }
+    }
+
+    function renderNotes(level, tool) {
+      activeLevel = level;
+      activeTool = tool;
+      roadmap.classList.add('hidden');
+      notesView.classList.add('active');
+      notesView.replaceChildren();
+      const levelData = ROADMAP_DATA.find(entry => entry.level === level);
+      const notes = getNotes(level, tool);
+      const all = ROADMAP_DATA.flatMap(entry => getTools(entry.level).map(item => ({ level: entry.level, tool: item })));
+      const currentIndex = all.findIndex(item => item.level === level && item.tool.routeId === tool.routeId);
+      const card = document.createElement('article');
+      card.className = 'notes-card';
+      card.style.setProperty('--level-color', levelColor(level));
+      const head = document.createElement('header');
+      head.className = 'notes-head';
+      const emoji = document.createElement('span');
+      emoji.className = 'notes-emoji';
+      emoji.textContent = tool.icon || '🔖';
+      const heading = document.createElement('div');
+      const eyebrow = document.createElement('p');
+      eyebrow.textContent = `Level ${level} · ${levelData.name}`;
+      const title = document.createElement('h2');
+      title.textContent = tool.name;
+      heading.append(eyebrow, title);
+      head.append(emoji, heading);
+      const content = document.createElement('div');
+      content.className = 'notes-content';
+
+      const descriptionHeading = document.createElement('div');
+      descriptionHeading.className = 'section-heading';
+      descriptionHeading.innerHTML = '<h3>About this tool</h3>';
+      const editDescriptionButton = document.createElement('button');
+      editDescriptionButton.type = 'button';
+      editDescriptionButton.className = 'small-button';
+      editDescriptionButton.textContent = 'Edit';
+      const descriptionBody = document.createElement('div');
+      descriptionBody.className = 'description-text';
+      descriptionBody.textContent = notes.description || 'Add a short description for this tool.';
+      editDescriptionButton.addEventListener('click', () => editDescription(level, tool, notes, descriptionBody, () => renderNotes(level, tool)));
+      descriptionHeading.appendChild(editDescriptionButton);
+      content.append(descriptionHeading, descriptionBody);
+
+      const keyHeading = document.createElement('div');
+      keyHeading.className = 'section-heading';
+      keyHeading.innerHTML = '<h3>Key points</h3>';
+      const list = document.createElement('ul');
+      list.className = 'key-list';
+      notes.points.forEach((point, index) => list.appendChild(renderPoint(point, index, level, tool, notes, () => renderNotes(level, tool))));
+      if (!notes.points.length) {
+        const empty = document.createElement('li');
+        empty.className = 'live-message';
+        empty.textContent = 'No key points yet. Add one below.';
+        list.appendChild(empty);
+      }
+      const addForm = document.createElement('form');
+      addForm.className = 'inline-form';
+      const pointInput = document.createElement('input');
+      pointInput.className = 'text-input';
+      pointInput.maxLength = 500;
+      pointInput.placeholder = 'Add a key point…';
+      pointInput.setAttribute('aria-label', 'New key point');
+      const addPoint = document.createElement('button');
+      addPoint.className = 'button primary';
+      addPoint.type = 'submit';
+      addPoint.textContent = 'Add';
+      addForm.append(pointInput, addPoint);
+      addForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const value = pointInput.value.trim();
+        if (!value) return;
+        notes.points.push(value);
+        saveNotes(level, tool, notes);
+        renderNotes(level, tool);
+        notesView.querySelector('.inline-form input').focus();
+      });
+      content.append(keyHeading, list, addForm);
+
+      const pdfPanel = document.createElement('section');
+      pdfPanel.className = 'pdf-panel';
+      const pdfHeading = document.createElement('div');
+      pdfHeading.className = 'section-heading';
+      pdfHeading.innerHTML = '<h3>PDF notes</h3>';
+      const pdfActions = document.createElement('div');
+      pdfActions.className = 'pdf-actions';
+      const attach = document.createElement('button');
+      attach.type = 'button';
+      attach.className = 'small-button';
+      attach.textContent = tool.pdfId ? 'Replace PDF' : 'Attach PDF';
+      const removePdf = document.createElement('button');
+      removePdf.type = 'button';
+      removePdf.className = 'small-button delete';
+      removePdf.textContent = 'Remove PDF';
+      removePdf.hidden = !tool.pdfId;
+      const pdfInput = document.getElementById('pdfPicker');
+      attach.addEventListener('click', () => {
+        pdfInput.value = '';
+        pdfInput.click();
+      });
+      pdfInput.onchange = async () => {
+        const file = pdfInput.files && pdfInput.files[0];
+        const error = validatePdf(file);
+        if (error) { pdfMessage.textContent = error; return; }
+        const newId = `pdf-${makeId()}`;
+        attach.disabled = true;
+        pdfMessage.textContent = 'Saving PDF…';
+        try {
+          await putPdf(newId, file);
+          const oldId = tool.pdfId;
+          tool.pdfId = newId;
+          if (tool.added) {
+            const added = getAdded(level).find(item => item.id === tool.id);
+            if (added) added.pdfId = newId;
+            saveState();
+          } else {
+            const saved = { ...notes, pdfId: newId };
+            saveNotes(level, tool, saved);
+          }
+          if (oldId) await deletePdf(oldId);
+          renderNotes(level, tool);
+          announce('PDF notes attached.');
+        } catch (errorSaving) {
+          pdfMessage.textContent = errorSaving.message;
+        } finally { attach.disabled = false; }
+      };
+      removePdf.addEventListener('click', async () => {
+        if (!tool.pdfId) return;
+        const oldId = tool.pdfId;
+        removePdf.disabled = true;
+        try {
+          await deletePdf(oldId);
+          tool.pdfId = '';
+          if (tool.added) {
+            const added = getAdded(level).find(item => item.id === tool.id);
+            if (added) added.pdfId = '';
+            saveState();
+          } else {
+            const saved = { ...notes };
+            delete saved.pdfId;
+            saveNotes(level, tool, saved);
+          }
+          renderNotes(level, tool);
+          announce('PDF notes removed.');
+        } catch (error) {
+          pdfMessage.textContent = error.message;
+          removePdf.disabled = false;
+        }
+      });
+      pdfActions.append(attach, removePdf);
+      pdfHeading.appendChild(pdfActions);
+      const pdfMessage = document.createElement('p');
+      pdfMessage.className = 'pdf-message';
+      pdfMessage.textContent = tool.pdfId ? 'Loading PDF notes…' : 'No PDF attached yet.';
+      const pages = document.createElement('div');
+      pages.className = 'pdf-pages';
+      pdfPanel.append(pdfHeading, pdfMessage, pages);
+      content.appendChild(pdfPanel);
+      const nav = document.createElement('nav');
+      nav.className = 'notes-nav';
+      nav.setAttribute('aria-label', 'Navigate tools');
+      const previous = document.createElement('a');
+      previous.className = 'button';
+      previous.textContent = '← Previous';
+      const next = document.createElement('a');
+      next.className = 'button';
+      next.textContent = 'Next →';
+      if (currentIndex > 0) previous.href = `#l${all[currentIndex - 1].level}-${all[currentIndex - 1].tool.routeId}`;
+      else { previous.removeAttribute('href'); previous.setAttribute('aria-disabled', 'true'); }
+      if (currentIndex < all.length - 1) next.href = `#l${all[currentIndex + 1].level}-${all[currentIndex + 1].tool.routeId}`;
+      else { next.removeAttribute('href'); next.setAttribute('aria-disabled', 'true'); }
+      nav.append(previous, next);
+      content.appendChild(nav);
+      if (tool.added) {
+        const deleteTool = document.createElement('button');
+        deleteTool.type = 'button';
+        deleteTool.className = 'button danger';
+        deleteTool.textContent = 'Delete this added tool';
+        deleteTool.style.marginTop = '12px';
+        deleteTool.addEventListener('click', async () => {
+          if (!window.confirm(`Delete ${tool.name} from this level?`)) return;
+          try {
+            await deletePdf(tool.pdfId);
+            state.added[level] = getAdded(level).filter(item => item.id !== tool.id);
+            delete state.notes[toolKey(level, tool)];
+            saveState();
+            window.location.hash = '';
+            announce('Added tool deleted.');
+          } catch (error) { announce(error.message); }
+        });
+        content.appendChild(deleteTool);
+      }
+      card.append(head, content);
+      const back = document.createElement('a');
+      back.className = 'back-link';
+      back.href = '#';
+      back.textContent = '← Back to roadmap';
+      notesView.append(back, card);
+      showPdf(tool, pdfPanel);
+    }
+
+    function navigate() {
+      const match = /^#l([0-8])-(.+)$/.exec(window.location.hash);
+      if (!match) {
+        notesView.classList.remove('active');
+        roadmap.classList.remove('hidden');
+        activeLevel = null;
+        activeTool = null;
+        return;
+      }
+      const level = Number(match[1]);
+      const tool = getTools(level).find(item => item.routeId === match[2]);
+      if (!tool) {
+        notesView.classList.remove('active');
+        roadmap.classList.remove('hidden');
+        announce('That tool is unavailable; return to the roadmap and choose another.');
+        return;
+      }
+      renderNotes(level, tool);
+    }
+
+    roadmap.addEventListener('click', event => {
+      const addButton = event.target.closest('[data-add-level]');
+      if (addButton) {
+        document.getElementById('addForm').dataset.level = addButton.dataset.addLevel;
+        document.getElementById('addForm').reset();
+        document.getElementById('addError').textContent = '';
+        dialog.showModal();
+        document.getElementById('newToolName').focus();
+        return;
+      }
+      const tile = event.target.closest('[data-route]');
+      if (tile) window.location.hash = tile.dataset.route;
+    });
+    document.getElementById('addForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const level = Number(form.dataset.level);
+      const name = document.getElementById('newToolName').value.trim();
+      const description = document.getElementById('newToolDescription').value.trim();
+      const points = document.getElementById('newToolPoints').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const file = document.getElementById('newToolPdf').files[0];
+      const errorBox = document.getElementById('addError');
+      errorBox.textContent = '';
+      if (getTools(level).some(tool => tool.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        errorBox.textContent = 'A tool with this name already exists in this level.';
+        return;
+      }
+      if (file) {
+        const error = validatePdf(file);
+        if (error) { errorBox.textContent = error; return; }
+      }
+      const id = makeId();
+      const addedTool = {
+        id,
+        routeId: `a${id}`,
+        name,
+        icon: '🔖',
+        description,
+        points,
+        pdfId: ''
+      };
+      if (file) {
+        addedTool.pdfId = `pdf-${id}`;
+        try { await putPdf(addedTool.pdfId, file); }
+        catch (error) { errorBox.textContent = error.message; return; }
+      }
+      state.added[level] = getAdded(level).concat(addedTool);
+      saveState();
+      dialog.close();
+      renderRoadmap();
+      window.location.hash = `#l${level}-${addedTool.routeId}`;
+      announce('Tool added to the roadmap.');
+    });
+    document.getElementById('cancelAdd').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) dialog.close();
+    });
+    loadState();
+    renderRoadmap();
+    window.addEventListener('hashchange', navigate);
+    navigate();
+  </script>
 </body>
 </html>
