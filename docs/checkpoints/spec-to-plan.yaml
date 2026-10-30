@@ -1,0 +1,153 @@
+# Spec-to-Plan Traceability Checkpoint
+metadata:
+  generated: "2026-10-30"
+  source_spec: "User request in conversation; Test Case Generator.html was inaccessible"
+  target_plan: "docs/TEST-CASE-GENERATOR-PLAN.md"
+
+summary:
+  total_requirements: 10
+  covered_requirements: 10
+  missing_requirements: 0
+  coverage_percentage: 100.0
+
+requirements:
+  - req_id: "REQ-001"
+    req_description: "Provide a separate Test Case Generator page linked from QARP."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "User Story 1: Create and review cases"
+      items:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+      follow_up:
+        - item_id: "3.1"
+          description: "Integrate navigation and documentation."
+    notes: ""
+  - req_id: "REQ-002"
+    req_description: "Use the shared theme and accessible responsive UX."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "User Story 1: Create and review cases"
+      items:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+      follow_up:
+        - item_id: "3.1"
+          description: "Integrate navigation and documentation."
+    notes: ""
+  - req_id: "REQ-003"
+    req_description: "Author test cases from feature/requirement context and reusable fields."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-1"
+      phase_name: "Shared feature foundation"
+      items:
+        - item_id: "1.1"
+          description: "Define the test-case and matrix model."
+      follow_up:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+    notes: ""
+  - req_id: "REQ-004"
+    req_description: "Generate deterministic test-data combinations with a configured cap."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-1"
+      phase_name: "Shared feature foundation"
+      items:
+        - item_id: "1.1"
+          description: "Define the test-case and matrix model."
+      follow_up:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+    notes: ""
+  - req_id: "REQ-005"
+    req_description: "Review, edit, and remove generated cases."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "User Story 1: Create and review cases"
+      items:
+        - item_id: "2.2"
+          description: "Add review, edit, save, and export interactions."
+    notes: ""
+  - req_id: "REQ-006"
+    req_description: "Save and restore drafts locally with clear/reset behavior."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-1"
+      phase_name: "Shared feature foundation"
+      items:
+        - item_id: "1.2"
+          description: "Add bounded persistence and exports."
+      follow_up:
+        - item_id: "2.2"
+          description: "Add review, edit, save, and export interactions."
+    notes: ""
+  - req_id: "REQ-007"
+    req_description: "Export reviewed test cases as CSV and JSON."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-1"
+      phase_name: "Shared feature foundation"
+      items:
+        - item_id: "1.2"
+          description: "Add bounded persistence and exports."
+      follow_up:
+        - item_id: "2.2"
+          description: "Add review, edit, save, and export interactions."
+    notes: ""
+  - req_id: "REQ-008"
+    req_description: "Provide validation, explicit limits, errors, and status states."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-1"
+      phase_name: "Shared feature foundation"
+      items:
+        - item_id: "1.2"
+          description: "Add bounded persistence and exports."
+      follow_up:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+        - item_id: "2.2"
+          description: "Add review, edit, save, and export interactions."
+        - item_id: "3.2"
+          description: "Verify behavior with focused tests."
+    notes: ""
+  - req_id: "REQ-009"
+    req_description: "Render user content safely without HTML injection."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "User Story 1: Create and review cases"
+      items:
+        - item_id: "2.1"
+          description: "Build the generator page and matrix workflow."
+      follow_up:
+        - item_id: "3.2"
+          description: "Verify behavior with focused tests."
+    notes: ""
+  - req_id: "REQ-010"
+    req_description: "Add focused tests and documentation."
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-3"
+      phase_name: "Integration, verification, and documentation"
+      items:
+        - item_id: "3.1"
+          description: "Integrate dashboard navigation and docs."
+        - item_id: "3.2"
+          description: "Verify behavior with focused tests."
+    notes: ""
+
+missing_requirements: []
+orphan_plan_items: []
+
+validation:
+  passed: true
+  errors: []
+  warnings:
+    - "Requirements were derived from the user conversation because no formal feature spec was supplied."
+    - "Exact reference HTML parity remains unverified because the attachment was blocked by sandbox policy."

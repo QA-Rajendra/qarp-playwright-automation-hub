@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en" data-theme="sage">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Case Generator - QARP</title>
+  <link rel="stylesheet" href="../assets/css/custom.css">
+  <style>
+    body { padding: clamp(.7rem, 3vw, 1.8rem); }
+    main { position: relative; z-index: 1; width: min(1440px, 100%); margin: 0 auto; }
+    h1 { margin: .25rem 0; font-size: 1.5rem; }
+    h2 { margin: 0; font-size: 1rem; }
+    h3 { margin: 0; font-size: .88rem; }
+    p { line-height: 1.5; }
+    .muted, .hint { color: var(--muted-text); }
+    .hint { font-size: .7rem; }
+    .panel, .field-card, .condition-card, .test-card, .status {
+      background: color-mix(in srgb, var(--card) 94%, transparent);
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+    }
+    .panel { padding: .8rem; margin-top: .9rem; }
+    .topline, .controls, .field-row, .condition-row, .condition-actions, .case-head {
+      display: flex; align-items: center; gap: .45rem;
+    }
+    .topline, .case-head { justify-content: space-between; }
+    .topline { align-items: flex-start; }
+    .controls { flex-wrap: wrap; }
+    label { color: var(--muted-text); font-size: .68rem; }
+    input, select, textarea, button {
+      max-width: 100%; color: var(--text); font: inherit;
+      border: 1px solid var(--border2); border-radius: .4rem;
+      background: var(--background); padding: .42rem .52rem;
+    }
+    input, select { min-width: 0; }
+    button { cursor: pointer; font-size: .72rem; font-weight: 700; }
+    button:hover, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary);
+    }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .primary { color: var(--background); background: var(--primary); border-color: var(--primary); }
+    .subtle { background: var(--surface2); }
+    .danger { color: var(--error); }
+    .status { padding: .55rem .75rem; margin-top: .75rem; font-size: .75rem; }
+    .status[data-state="error"] { color: var(--error); border-color: var(--error); }
+    .status[data-state="success"] { color: var(--success); border-color: var(--success); }
+    .status[data-state="warning"] { color: var(--warning); border-color: var(--warning); }
+    .filter-row { display: grid; grid-template-columns: auto minmax(100px, 1fr) minmax(140px, 1fr) auto auto; align-items: center; gap: .45rem; }
+    .category-count { font-size: .68rem; color: var(--muted-text); margin: .5rem 0; }
+    .field-table-wrap { overflow-x: auto; }
+    .field-table { border-collapse: separate; border-spacing: 0 .4rem; width: 100%; min-width: 1050px; }
+    .field-table th { padding: .1rem .35rem; text-align: left; color: var(--muted-text); font-size: .65rem; font-weight: 500; }
+    .field-table td { padding: .2rem .25rem; vertical-align: middle; }
+    .field-table input, .field-table select { width: 100%; }
+    .field-table input[type="checkbox"] { width: auto; }
+    .field-row td:first-child input { min-width: 100px; }
+    .rule-actions { display: flex; gap: .3rem; }
+    .rule-actions button { white-space: nowrap; }
+    .icon-button { padding: .4rem .55rem; }
+    .small { font-size: .63rem; }
+    .section-label { margin: 1.2rem 0 .55rem; font-weight: 800; font-size: .84rem; }
+    .condition-list { display: grid; gap: .4rem; }
+    .condition-card { padding: .65rem; }
+    .condition-row { flex-wrap: wrap; margin-bottom: .35rem; }
+    .condition-row select, .condition-row input { min-width: 100px; }
+    .condition-actions { flex-wrap: wrap; margin-top: .45rem; font-size: .7rem; }
+    .condition-actions select { min-width: 120px; }
+    .condition-title { font-weight: 800; font-size: .7rem; }
+    .preview-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; }
+    .preview-field { display: grid; align-content: start; gap: .3rem; padding: .65rem; border: 1px solid var(--border); border-radius: .55rem; background: var(--background); }
+    .preview-field label { font-weight: 700; }
+    .preview-field input, .preview-field select, .preview-field textarea { width: 100%; }
+    .preview-field [data-preview-error] { min-height: 1em; color: var(--error); font-size: .67rem; }
+    .preview-buttons { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .65rem; }
+    .preview-status { min-height: 1.2em; margin: .55rem 0 0; font-size: .72rem; color: var(--muted-text); }
+    .test-tabs { display: flex; flex-wrap: wrap; gap: .35rem; margin: .55rem 0 .8rem; }
+    .test-tabs button[aria-pressed="true"] { color: var(--background); background: var(--primary); border-color: var(--primary); }
+    .test-summary { margin: .3rem 0; color: var(--muted-text); font-size: .7rem; }
+    .test-results-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .6rem; }
+    .test-results { width: 100%; min-width: 930px; border-collapse: collapse; background: color-mix(in srgb, var(--card) 94%, transparent); }
+    .test-results th { padding: .55rem .65rem; text-align: left; color: var(--muted-text); font-size: .67rem; font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--border); }
+    .test-results td { padding: .5rem .65rem; vertical-align: top; font-size: .7rem; border-bottom: 1px solid var(--border); }
+    .test-results tr:last-child td { border-bottom: 0; }
+    .test-results tbody tr:hover { background: color-mix(in srgb, var(--surface2) 55%, transparent); }
+    .test-results input, .test-results textarea { width: 100%; min-width: 100px; padding: .3rem; font-size: .68rem; }
+    .test-results textarea { min-height: 2.4rem; resize: vertical; }
+    .result-field { min-width: 90px; font-weight: 700; }
+    .result-field small { display: block; color: var(--muted-text); font-weight: 400; }
+    .result-condition { min-width: 180px; max-width: 300px; }
+    .result-type { font-weight: 700; white-space: nowrap; }
+    .result-type[data-type="Positive"] { color: var(--success); }
+    .result-type[data-type="Boundary"] { color: var(--warning); }
+    .result-type[data-type="Negative"] { color: var(--error); }
+    .result-type[data-type="Condition"] { color: var(--info); }
+    .result-actions { display: flex; gap: .25rem; align-items: center; }
+    .result-actions button { padding: .28rem .4rem; }
+    .badge { border: 1px solid var(--border2); border-radius: 999px; padding: .18rem .45rem; }
+    .empty { color: var(--muted-text); border: 1px dashed var(--border2); border-radius: .6rem; padding: 1rem; text-align: center; font-size: .75rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    details summary { cursor: pointer; font-size: .7rem; color: var(--info); }
+    details .message-editor { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; padding: .45rem 0; }
+    details .message-editor label { display: grid; gap: .2rem; }
+    [hidden] { display: none !important; }
+    @media (max-width: 680px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row label { grid-column: 1 / -1; }
+      .filter-row > * { min-width: 0; }
+      details .message-editor { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="../js/theme.js"></script>
+  <script src="../js/test-case-generator.js"></script>
+</head>
+<body>
+  <main>
+    <header class="topline">
+      <div>
+        <a href="../index.html">← Back to QARP</a>
+        <h1>Test Case Generator</h1>
+        <p class="muted small">Add the fields from your screen. Every field gets 8 test case types: positive, boundary, negative, equivalence partitioning, decision table, state transition, error guessing, and use case.</p>
+      </div>
+      <button type="button" class="subtle" aria-label="Toggle application theme" onclick="theme.toggleThemeMenu(event)">Toggle theme</button>
+    </header>
+    <div id="status" class="status" role="status" aria-live="polite">Ready. Edit the login example, add fields, or load a starter form.</div>
+
+    <section class="panel" aria-label="Screen controls">
+      <div class="filter-row">
+        <label for="categoryFilter">Filter controls</label>
+        <select id="categoryFilter" aria-label="Filter controls by category"></select>
+        <input id="controlSearch" type="search" placeholder="Search control name…" aria-label="Search control name">
+        <button id="addAllVisible" type="button" class="primary">＋ Add all (apply to list)</button>
+        <button id="clearFields" type="button" class="subtle">Clear all fields</button>
+      </div>
+      <div id="controlCount" class="category-count"></div>
+      <div class="field-table-wrap">
+        <table class="field-table">
+          <thead><tr>
+            <th>Field name</th><th>Type</th><th>Required</th><th>Rules (min, max or options)</th>
+            <th>Error: required</th><th>Error: invalid</th><th>Conditions / messages</th><th></th>
+          </tr></thead>
+          <tbody id="fieldRows"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="addField" type="button" class="primary">＋ Add field</button>
+        <button id="loadLogin" type="button" class="subtle">Load login example</button>
+        <button id="loadRegistration" type="button" class="subtle">Load registration example</button>
+      </div>
+      <p class="hint">Error messages describe the exact expected-result text (leave blank for a generic message). Rules: text, number and password accept min,max (e.g. 3,20); dropdown/radio accept comma-separated options; file accepts extensions and max size such as .jpg,.png;2MB.</p>
+    </section>
+
+    <h2 class="section-label">Conditions between fields (IF / ELSE)</h2>
+    <section class="panel">
+      <div id="conditionList" class="condition-list"></div>
+      <div class="actions">
+        <button id="quickRule" type="button" class="primary">⚡ Quick rule: disable button if a required field is empty</button>
+        <button id="addCondition" type="button" class="subtle">＋ Add condition</button>
+      </div>
+      <p class="hint">Pick a trigger field and rule, then say what happens to the target field. Conditions can run on page load, field change, or button click.</p>
+    </section>
+
+    <h2 class="section-label">1. Test cases per field (<span id="typeCount">8</span> types)</h2>
+    <nav id="testTypeTabs" class="test-tabs" aria-label="Filter test cases by type"></nav>
+    <div class="actions" style="margin-bottom:.6rem">
+      <button id="generateCases" type="button" class="primary">Generate test cases</button>
+      <button id="exportCsv" type="button" class="subtle" disabled>Export CSV</button>
+      <button id="exportJson" type="button" class="subtle" disabled>Export JSON</button>
+      <button id="resetDraft" type="button" class="danger">Reset draft</button>
+      <span id="saveState" class="muted small" role="status" aria-live="polite">Draft ready</span>
+    </div>
+    <h2 class="section-label">2. Form-level decision table matrix</h2>
+    <p class="hint">Generate all Valid, Invalid, and Empty combinations for input controls. Buttons and hidden controls are excluded. The matrix is limited by the 5,000-case safety cap.</p>
+    <div class="actions" style="margin-bottom:.6rem">
+      <button id="generateMatrix" type="button" class="subtle">Generate decision table matrix</button>
+    </div>
+    <h2 class="section-label">3. Live preview: apply the conditions</h2>
+    <section class="panel" aria-label="Live form preview">
+      <p class="hint">Try the fields and buttons. Configured conditions apply at their selected stage.</p>
+      <div id="previewFields" class="preview-form"></div>
+      <div id="previewButtons" class="preview-buttons"></div>
+      <p id="previewStatus" class="preview-status" role="status" aria-live="polite"></p>
+      <div class="actions">
+        <button id="resetPreview" type="button" class="subtle">Reset preview</button>
+        <button id="copyAllCsv" type="button" class="subtle" disabled>Copy all as CSV</button>
+      </div>
+    </section>
+    <p id="testSummary" class="test-summary" aria-live="polite">No test cases generated yet.</p>
+    <div class="test-results-wrap">
+      <table class="test-results" aria-label="Generated test case results">
+        <thead><tr><th>ID</th><th>Field</th><th>Scenario</th><th>Input</th><th>Expected result</th><th>IF / ELSE condition</th><th>Type</th><th>Actions</th></tr></thead>
+        <tbody id="testList"><tr><td class="empty" colspan="8">Add screen controls and select Generate test cases.</td></tr></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const G = window.QarpTestCaseGenerator;
+      const byId = id => document.getElementById(id);
+      const categories = G.CONTROL_CATEGORIES;
+      const testTypes = [...G.TEST_TYPES, 'Condition', 'Decision Table Matrix'];
+      const catalog = [
+        ['Text', 'Username', 'text', true, '3,20'], ['Text', 'Password', 'password', true, '8,16'],
+        ['Text', 'Email', 'email', true, ''], ['Text', 'Phone number', 'tel', false, '10,15'],
+        ['Text', 'Search query', 'search', false, ''], ['Text', 'Description', 'textarea', false, '0,500'],
+        ['Text', 'First name', 'text', true, '1,50'], ['Text', 'Last name', 'text', true, '1,50'],
+        ['Text', 'Company name', 'text', false, ''], ['Text', 'Website URL', 'url', false, ''],
+        ['Number', 'Age', 'number', true, '18,120'], ['Number', 'Quantity', 'number', true, '1,999'],
+        ['Number', 'Price', 'number', true, '0,100000'], ['Number', 'Postal code', 'text', false, '5,10'],
+        ['Choice', 'Country', 'select', true, 'United States,Canada,Other'],
+        ['Choice', 'Account type', 'radio', true, 'Personal,Business'],
+        ['Choice', 'Remember me', 'checkbox', false, ''], ['Choice', 'Terms accepted', 'checkbox', true, ''],
+        ['Choice', 'Preferred contact', 'select', false, 'Email,Phone,SMS'],
+        ['Date & time', 'Date of birth', 'date', false, ''], ['Date & time', 'Start date', 'date', true, ''],
+        ['Date & time', 'Appointment time', 'time', false, ''], ['Date & time', 'Created at', 'datetime-local', false, ''],
+        ['File', 'Profile photo', 'file', false, '.jpg,.png;2MB'], ['File', 'Attachment', 'file', false, '.pdf,.docx;10MB'],
+        ['File', 'Resume', 'file', true, '.pdf,.docx;5MB'],
+        ['Button', 'Login', 'submit', false, ''], ['Button', 'Register', 'submit', false, ''],
+        ['Button', 'Cancel', 'button', false, ''], ['Button', 'Save changes', 'submit', false, ''],
+        ['Toggle', 'Notifications enabled', 'checkbox', false, ''], ['Toggle', 'Two-factor authentication', 'checkbox', false, ''],
+        ['Other', 'Verification code', 'text', true, '6,6'], ['Other', 'Hidden token', 'hidden', false, '']
+      ].map((item, index) => ({ id: `catalog-${index + 1}`, category: item[0], name: item[1], type: item[2], required: item[3], min: item[4].includes(',') ? item[4].split(',')[0] : '', max: item[4].includes(',') ? item[4].split(',')[1] : '', options: ['select', 'radio'].includes(item[2]) ? item[4] : '', fileTypes: item[2] === 'file' ? item[4].split(';')[0] : '', maxFileSize: item[2] === 'file' ? item[4].split(';')[1] : '' }));
+      const additionalControls = {
+        Text: 'Middle name,Display name,Address line,City,State or province,Country code',
+        Number: 'Discount,Tax amount,Score,Rating,Latitude,Longitude,Page size,Sort order,Start index,End index,Percentage,Retry count',
+        Choice: 'Language,Time zone,Currency,Department,Role,Status,Gender,Plan,Payment method,Shipping method,Notification channel',
+        'Date & time': 'Due date,Expiry date,Renewal date,Check-in date,Check-out date,Start time,End time,Delivery date,Last updated,Reminder date,Month,Year',
+        File: 'Avatar,Product image,Gallery image,Document,Invoice,Receipt,Proof of address,Identity document,CSV import,Data export,Audio clip,Video clip,Archive',
+        Button: 'Submit form,Continue,Next,Previous,Search,Upload,Download,Delete,Edit,Add item,Apply,Reset',
+        Toggle: 'Marketing consent,Email alerts,SMS alerts,Push alerts,Dark mode,Auto-renew,Public profile,Share data,Location services,Remember device,Subscribe,Offline mode,Draft mode,Show password',
+        Other: 'Captcha response,OTP code,API key,CSRF token,Session ID,Referral code,Promo code,Signature,Color picker,Slider'
+      };
+      Object.entries(additionalControls).forEach(([category, names]) => {
+        names.split(',').forEach(name => {
+          const type = category === 'Number' ? 'number'
+            : category === 'Choice' ? 'select'
+              : category === 'Date & time' ? 'date'
+                : category === 'File' ? 'file'
+                  : category === 'Button' ? 'button'
+                    : category === 'Toggle' ? 'checkbox'
+                      : category === 'Other' ? 'text' : 'text';
+          catalog.push({
+            id: `catalog-${catalog.length + 1}`,
+            category,
+            name,
+            type,
+            required: false,
+            min: '',
+            max: '',
+            options: '',
+            fileTypes: '',
+            maxFileSize: ''
+          });
+        });
+      });
+      let fields = [];
+      let conditions = [];
+      let cases = [];
+      let activeType = 'All';
+      let casesModified = false;
+      let casesSource = '';
+      let saveTimer;
+      let previewControls = new Map();
+      let previewButtons = new Map();
+      let previewPageLoadValues = {};
+
+      function status(message, state) {
+        byId('status').textContent = message;
+        byId('status').dataset.state = state || '';
+      }
+
+      function generateDecisionMatrix() {
+        try {
+          const existingMatrix = cases.filter(testCase => testCase.testType === 'Decision Table Matrix');
+          const otherCases = cases.filter(testCase => testCase.testType !== 'Decision Table Matrix');
+          if (existingMatrix.some(testCase => testCase.edited)
+              && !window.confirm('Regenerating will replace your edited decision-table rows. Continue?')) return;
+          fields.forEach(G.normalizeControl);
+          const matrixCases = G.generateDecisionTableMatrix(fields, G.MAX_CONTROL_CASES - otherCases.length);
+          cases = [...otherCases, ...matrixCases];
+          casesSource = currentCasesSource();
+          casesModified = otherCases.some(testCase => testCase.edited);
+          renderCases(); renderTabs(); queueSave();
+          status(`Generated ${matrixCases.length} decision-table matrix cases from ${fields.filter(field => !['button', 'submit', 'hidden'].includes(field.type)).length} input controls.`, 'success');
+        } catch (error) {
+          status(error.message, 'error');
+        }
+      }
+
+      function currentCasesSource() {
+        return JSON.stringify({ fields, conditions });
+      }
+
+      function casesAreStale() {
+        return cases.length > 0 && casesSource !== currentCasesSource();
+      }
+
+      function fillCategoryFilter() {
+        const select = byId('categoryFilter');
+        select.replaceChildren();
+        [['All categories', 'All'], ...categories.map(category => [category, category])].forEach(([label, value]) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+      }
+
+      function visibleCatalog() {
+        const category = byId('categoryFilter').value;
+        const search = byId('controlSearch').value.trim().toLowerCase();
+        return catalog.filter(item => (category === 'All' || item.category === category)
+          && (!search || item.name.toLowerCase().includes(search)));
+      }
+
+      function updateCatalogCount() {
+        const shown = visibleCatalog().length;
+        byId('controlCount').textContent = `${shown} controls shown in ${categories.length} categories · ${fields.length} fields in your form`;
+      }
+
+      function syncFieldFromRow(row, field) {
+        field.name = row.querySelector('[data-key="name"]').value;
+        field.type = row.querySelector('[data-key="type"]').value;
+        field.required = row.querySelector('[data-key="required"]').checked;
+        const rules = row.querySelector('[data-key="rules"]').value.split(',').map(part => part.trim());
+        if (field.type === 'select' || field.type === 'radio') {
+          field.options = row.querySelector('[data-key="rules"]').value;
+        } else if (field.type === 'file') {
+          const parts = row.querySelector('[data-key="rules"]').value.split(';');
+          field.fileTypes = parts[0].trim();
+          field.maxFileSize = (parts[1] || '').trim();
+        } else {
+          field.min = rules[0] || '';
+          field.max = rules[1] || '';
+        }
+        field.errorRequired = row.querySelector('[data-key="required-message"]').value;
+        field.errorInvalid = row.querySelector('[data-key="invalid-message"]').value;
+      }
+
+      function createFieldRow(field) {
+        const row = document.createElement('tr');
+        row.className = 'field-row';
+        const cell = () => { const td = document.createElement('td'); row.appendChild(td); return td; };
+        const name = document.createElement('input');
+        name.value = field.name;
+        name.setAttribute('aria-label', 'Field name');
+        name.dataset.key = 'name';
+        cell().appendChild(name);
+        const type = document.createElement('select');
+        type.setAttribute('aria-label', `${field.name} type`);
+        type.dataset.key = 'type';
+        ['text','password','email','number','tel','url','search','textarea','select','radio','checkbox','date','time','datetime-local','file','submit','button','hidden'].forEach(value => {
+          const option = document.createElement('option'); option.value = value; option.textContent = value; type.appendChild(option);
+        });
+        type.value = field.type;
+        cell().appendChild(type);
+        const required = document.createElement('input');
+        required.type = 'checkbox'; required.checked = field.required;
+        required.setAttribute('aria-label', `${field.name} required`);
+        required.dataset.key = 'required';
+        cell().appendChild(required);
+        const rules = document.createElement('input');
+        rules.dataset.key = 'rules';
+        rules.setAttribute('aria-label', `${field.name} rules`);
+        rules.placeholder = ['select','radio'].includes(field.type) ? 'option1, option2' : field.type === 'file' ? '.jpg,.png;2MB' : 'min,max';
+        rules.value = ['select','radio'].includes(field.type) ? field.options : field.type === 'file' ? `${field.fileTypes}${field.maxFileSize ? `;${field.maxFileSize}` : ''}` : [field.min,field.max].filter(Boolean).join(',');
+        cell().appendChild(rules);
+        const requiredMessage = document.createElement('input');
+        requiredMessage.dataset.key = 'required-message'; requiredMessage.value = field.errorRequired;
+        requiredMessage.placeholder = `${field.name} is required`;
+        requiredMessage.setAttribute('aria-label', `${field.name} required error`);
+        cell().appendChild(requiredMessage);
+        const invalidMessage = document.createElement('input');
+        invalidMessage.dataset.key = 'invalid-message'; invalidMessage.value = field.errorInvalid;
+        invalidMessage.placeholder = `Invalid ${field.name.toLowerCase()}`;
+        invalidMessage.setAttribute('aria-label', `${field.name} invalid error`);
+        cell().appendChild(invalidMessage);
+        const tools = document.createElement('div'); tools.className = 'rule-actions';
+        const conditionButton = document.createElement('button'); conditionButton.type = 'button'; conditionButton.className = 'subtle'; conditionButton.textContent = '⚙ If/Else';
+        conditionButton.addEventListener('click', () => {
+          if (addCondition({ fieldId: field.id })) status(`Condition added for ${field.name}.`, 'success');
+        });
+        const messagesButton = document.createElement('button'); messagesButton.type = 'button'; messagesButton.className = 'subtle'; messagesButton.textContent = '✎ Messages';
+        messagesButton.addEventListener('click', () => requiredMessage.focus());
+        tools.append(conditionButton, messagesButton); cell().appendChild(tools);
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'danger icon-button'; remove.textContent = '×';
+        remove.setAttribute('aria-label', `Remove ${field.name}`);
+        remove.addEventListener('click', () => {
+          fields = fields.filter(item => item.id !== field.id);
+          conditions = conditions.filter(item => item.thenTarget !== field.id && item.elseTarget !== field.id
+            && !item.rules.some(rule => rule.fieldId === field.id));
+          renderFields(); renderConditions(); queueSave();
+        });
+        cell().appendChild(remove);
+        [name, type, required, rules, requiredMessage, invalidMessage].forEach(input => input.addEventListener('input', () => {
+          syncFieldFromRow(row, field);
+          updateConditionFieldOptions();
+          updateCounts();
+          renderPreview();
+          queueSave();
+        }));
+        type.addEventListener('change', () => {
+          row.querySelector('[data-key="rules"]').value = '';
+          field.min = ''; field.max = ''; field.options = ''; field.fileTypes = ''; field.maxFileSize = '';
+          syncFieldFromRow(row, field);
+          renderFields();
+          updateConditionFieldOptions();
+          queueSave();
+        });
+        return row;
+      }
+
+      function renderFields() {
+        const body = byId('fieldRows');
+        body.replaceChildren();
+        fields.forEach(field => body.appendChild(createFieldRow(field)));
+        updateCounts();
+        renderPreview();
+      }
+
+      function updateCounts() {
+        byId('typeCount').textContent = String(G.TEST_TYPES.length);
+        byId('controlCount').textContent = `${visibleCatalog().length} controls shown in ${categories.length} categories · ${fields.length} fields in your form`;
+      }
+
+      function optionList(selectedId, ariaLabel, include = []) {
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', ariaLabel);
+        [...fields, ...include].forEach(field => {
+          const option = document.createElement('option');
+          option.value = field.id;
+          option.textContent = field.name || 'Unnamed field';
+          select.appendChild(option);
+        });
+        if (selectedId) select.value = selectedId;
+        return select;
+      }
+
+      function addCondition(seed) {
+        if (!fields.length) { status('Add a field before adding an IF / ELSE condition.', 'warning'); return false; }
+        if (conditions.length >= G.MAX_CONDITIONS) { status(`A screen can have at most ${G.MAX_CONDITIONS} conditions.`, 'error'); return false; }
+        const target = seed && fields.some(field => field.id === seed.fieldId) ? seed.fieldId : fields[0].id;
+        conditions.push({
+          id: `condition-${Date.now()}-${conditions.length}`,
+          rules: [{ fieldId: target, operator: 'is empty', value: '', join: 'AND' }],
+          thenAction: 'Disable', thenTarget: target, apply: 'On field change',
+          elseAction: 'No change', elseTarget: target
+        });
+        renderConditions();
+        renderPreview();
+        queueSave();
+        return true;
+      }
+
+      function renderConditions() {
+        const list = byId('conditionList');
+        list.replaceChildren();
+        if (!conditions.length) {
+          const empty = document.createElement('div'); empty.className = 'empty';
+          empty.textContent = 'No conditions yet. Add an IF / ELSE rule or use a quick rule.';
+          list.appendChild(empty);
+          return;
+        }
+        conditions.forEach(condition => {
+          const card = document.createElement('article'); card.className = 'condition-card';
+          const removeCondition = document.createElement('button');
+          removeCondition.type = 'button'; removeCondition.className = 'danger'; removeCondition.textContent = '×';
+          removeCondition.setAttribute('aria-label', 'Remove condition');
+          removeCondition.addEventListener('click', () => {
+            conditions = conditions.filter(item => item.id !== condition.id);
+            renderConditions(); renderPreview(); queueSave();
+          });
+          condition.rules.forEach((rule, ruleIndex) => {
+            const line = document.createElement('div'); line.className = 'condition-row';
+            const prefix = document.createElement('strong'); prefix.className = 'condition-title'; prefix.textContent = ruleIndex === 0 ? 'IF' : rule.join;
+            const fieldSelect = optionList(rule.fieldId, `Condition ${condition.id} field`);
+            fieldSelect.addEventListener('change', () => { rule.fieldId = fieldSelect.value; queueSave(); renderPreview(); });
+            const operator = document.createElement('select'); operator.setAttribute('aria-label', 'Condition operator');
+            ['is empty','is not empty','equals','does not equal','contains','is checked','is unchecked'].forEach(value => { const option = document.createElement('option'); option.value = value; option.textContent = value; operator.appendChild(option); });
+            operator.value = rule.operator;
+            operator.addEventListener('change', () => { rule.operator = operator.value; valueInput.hidden = ['is empty','is not empty','is checked','is unchecked'].includes(rule.operator); queueSave(); renderPreview(); });
+            const valueInput = document.createElement('input'); valueInput.placeholder = 'value'; valueInput.value = rule.value;
+            valueInput.setAttribute('aria-label', 'Condition comparison value'); valueInput.hidden = ['is empty','is not empty','is checked','is unchecked'].includes(rule.operator);
+            valueInput.addEventListener('input', () => { rule.value = valueInput.value; queueSave(); renderPreview(); });
+            line.append(prefix, fieldSelect, operator, valueInput);
+            if (ruleIndex > 0) {
+              const joinSelect = document.createElement('select');
+              joinSelect.setAttribute('aria-label', 'Condition join');
+              ['AND', 'OR'].forEach(value => { const option = document.createElement('option'); option.value = value; option.textContent = value; joinSelect.appendChild(option); });
+              joinSelect.value = rule.join;
+              joinSelect.addEventListener('change', () => { rule.join = joinSelect.value; prefix.textContent = rule.join; queueSave(); renderPreview(); });
+              line.insertBefore(joinSelect, fieldSelect);
+              const removeRule = document.createElement('button'); removeRule.type = 'button'; removeRule.className = 'danger'; removeRule.textContent = '×';
+              removeRule.setAttribute('aria-label', 'Remove condition rule');
+              removeRule.addEventListener('click', () => { condition.rules.splice(ruleIndex, 1); renderConditions(); renderPreview(); queueSave(); });
+              line.appendChild(removeRule);
+            }
+            card.appendChild(line);
+          });
+          const addRule = document.createElement('button'); addRule.type = 'button'; addRule.className = 'subtle small'; addRule.textContent = '+ AND / OR';
+          addRule.addEventListener('click', () => {
+            if (condition.rules.length >= G.MAX_CONDITION_RULES) {
+              status(`A condition can have at most ${G.MAX_CONDITION_RULES} IF rules.`, 'error');
+              return;
+            }
+            condition.rules.push({ fieldId: fields[0].id, operator: 'is empty', value: '', join: 'OR' });
+            renderConditions(); renderPreview(); queueSave();
+          });
+          card.appendChild(addRule);
+          const actions = document.createElement('div'); actions.className = 'condition-actions';
+          const thenLabel = document.createElement('strong'); thenLabel.textContent = 'THEN';
+          const thenAction = actionSelect(condition.thenAction); thenAction.setAttribute('aria-label', 'THEN action');
+          thenAction.addEventListener('change', () => { condition.thenAction = thenAction.value; queueSave(); renderPreview(); });
+          const thenTarget = optionList(condition.thenTarget, 'THEN target field');
+          thenTarget.addEventListener('change', () => { condition.thenTarget = thenTarget.value; queueSave(); renderPreview(); });
+          const applyLabel = document.createElement('strong'); applyLabel.textContent = 'APPLY';
+          const apply = document.createElement('select'); apply.setAttribute('aria-label', 'Condition apply timing');
+          ['On page load', 'On field change', 'On button click'].forEach(value => { const option = document.createElement('option'); option.value = value; option.textContent = value; apply.appendChild(option); });
+          apply.value = condition.apply; apply.addEventListener('change', () => { condition.apply = apply.value; queueSave(); renderPreview(); });
+          const elseLabel = document.createElement('strong'); elseLabel.textContent = 'ELSE';
+          const elseAction = actionSelect(condition.elseAction, true); elseAction.setAttribute('aria-label', 'ELSE action');
+          elseAction.addEventListener('change', () => { condition.elseAction = elseAction.value; queueSave(); renderPreview(); });
+          const elseTarget = optionList(condition.elseTarget, 'ELSE target field');
+          elseTarget.addEventListener('change', () => { condition.elseTarget = elseTarget.value; queueSave(); renderPreview(); });
+          actions.append(thenLabel, thenAction, thenTarget, applyLabel, apply, elseLabel, elseAction, elseTarget, removeCondition);
+          card.appendChild(actions);
+          list.appendChild(card);
+        });
+      }
+
+      function actionSelect(selected, allowNoChange = false) {
+        const select = document.createElement('select');
+        ['Show','Hide','Enable','Disable','Require', ...(allowNoChange ? ['No change'] : [])].forEach(value => {
+          const option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option);
+        });
+        select.value = selected;
+        return select;
+      }
+
+      function previewValueMap() {
+        return Object.fromEntries([...previewControls.entries()].map(([id, preview]) => [
+          id,
+          preview.input.type === 'checkbox' ? preview.input.checked : preview.input.value
+        ]));
+      }
+
+      function updatePreviewRequiredLabel(preview) {
+        preview.label.textContent = `${preview.field.name}${preview.input.required ? ' *' : ''}`;
+      }
+
+      function resetPreviewActions() {
+        previewControls.forEach(preview => {
+          preview.wrapper.hidden = false;
+          preview.input.disabled = false;
+          preview.input.required = Boolean(preview.field.required);
+          updatePreviewRequiredLabel(preview);
+        });
+        previewButtons.forEach(button => {
+          button.disabled = false;
+          button.hidden = false;
+        });
+      }
+
+      function applyPreviewAction(action, targetId) {
+        if (action === 'No change') return;
+        const preview = previewControls.get(targetId);
+        const button = previewButtons.get(targetId);
+        if (action === 'Show' && preview) preview.wrapper.hidden = false;
+        if (action === 'Show' && button) button.hidden = false;
+        if (action === 'Hide' && preview) preview.wrapper.hidden = true;
+        if (action === 'Hide' && button) button.hidden = true;
+        if (action === 'Enable') {
+          if (preview) preview.input.disabled = false;
+          if (button) button.disabled = false;
+        }
+        if (action === 'Disable') {
+          if (preview) preview.input.disabled = true;
+          if (button) button.disabled = true;
+        }
+        if (action === 'Require' && preview) {
+          preview.input.required = true;
+          updatePreviewRequiredLabel(preview);
+        }
+      }
+
+      function applyPreviewConditions(stage) {
+        resetPreviewActions();
+        const values = previewValueMap();
+        conditions.forEach(condition => {
+          if (condition.apply !== 'On page load'
+              && condition.apply !== 'On field change'
+              && !(stage === 'On button click' && condition.apply === 'On button click')) return;
+          const matches = G.evaluateCondition(condition,
+            condition.apply === 'On page load' ? previewPageLoadValues : values);
+          const action = matches ? condition.thenAction : condition.elseAction;
+          const target = matches ? condition.thenTarget : condition.elseTarget;
+          applyPreviewAction(action, target);
+        });
+      }
+
+      function previewElement(field) {
+        let control;
+        if (field.type === 'select') {
+          control = document.createElement('select');
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Select…';
+          control.appendChild(placeholder);
+          G.parseMatrixValues(field.options).forEach(value => {
+            const option = document.createElement('option'); option.value = value; option.textContent = value; control.appendChild(option);
+          });
+        } else if (field.type === 'textarea') {
+          control = document.createElement('textarea');
+        } else if (field.type === 'radio') {
+          control = document.createElement('select');
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Select…';
+          control.appendChild(placeholder);
+          G.parseMatrixValues(field.options).forEach(value => {
+            const option = document.createElement('option'); option.value = value; option.textContent = value; control.appendChild(option);
+          });
+        } else {
+          control = document.createElement('input');
+          control.type = ['text', 'email', 'password', 'number', 'tel', 'url', 'search', 'date', 'time', 'datetime-local'].includes(field.type)
+            ? field.type : 'text';
+        }
+        control.id = `preview-${field.id}`;
+        control.setAttribute('aria-label', field.name);
+        control.required = Boolean(field.required);
+        if (field.type === 'number') {
+          if (field.min !== '') control.min = field.min;
+          if (field.max !== '') control.max = field.max;
+        } else if (['text', 'email', 'password', 'textarea', 'tel', 'url', 'search'].includes(field.type)) {
+          if (field.min !== '') control.minLength = Number(field.min);
+          if (field.max !== '') control.maxLength = Number(field.max);
+        }
+        return control;
+      }
+
+      function renderPreview() {
+        const previousControls = new Map([...previewControls].map(([id, preview]) => [
+          id,
+          {
+            type: preview.field.type,
+            value: preview.input.type === 'checkbox' ? preview.input.checked : preview.input.value
+          }
+        ]));
+        const previousPageLoadValues = { ...previewPageLoadValues };
+        const container = byId('previewFields');
+        const buttonsContainer = byId('previewButtons');
+        container.replaceChildren();
+        buttonsContainer.replaceChildren();
+        previewControls = new Map();
+        previewButtons = new Map();
+        fields.filter(field => field.type !== 'hidden' && !['button', 'submit'].includes(field.type)).forEach(field => {
+          const wrapper = document.createElement('div'); wrapper.className = 'preview-field';
+          const label = document.createElement('label');
+          label.htmlFor = `preview-${field.id}`;
+          const input = previewElement(field);
+          label.textContent = `${field.name}${field.required ? ' *' : ''}`;
+          const error = document.createElement('span'); error.dataset.previewError = '';
+          error.id = `preview-error-${field.id}`;
+          input.setAttribute('aria-describedby', error.id);
+          input.addEventListener('input', () => {
+            error.textContent = '';
+            applyPreviewConditions('On field change');
+            byId('previewStatus').textContent = 'Conditions evaluated after field change.';
+          });
+          input.addEventListener('change', () => {
+            error.textContent = '';
+            applyPreviewConditions('On field change');
+            byId('previewStatus').textContent = 'Conditions evaluated after field change.';
+          });
+          wrapper.append(label, input, error);
+          container.appendChild(wrapper);
+          previewControls.set(field.id, { field, wrapper, label, input, error });
+        });
+        fields.filter(field => ['button', 'submit'].includes(field.type)).forEach(field => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'primary';
+          button.id = `preview-action-${field.id}`;
+          button.textContent = field.name;
+          button.addEventListener('click', () => runPreviewButton(field));
+          buttonsContainer.appendChild(button);
+          previewButtons.set(field.id, button);
+        });
+        if (!previewButtons.size && fields.some(field => field.type !== 'hidden')) {
+          const button = document.createElement('button');
+          button.type = 'button'; button.className = 'primary'; button.textContent = 'Submit';
+          button.addEventListener('click', () => runPreviewButton({ id: '', name: 'Submit' }));
+          buttonsContainer.appendChild(button);
+        }
+        byId('previewStatus').textContent = fields.length ? 'Preview ready.' : 'Add controls to build a live preview.';
+        previewPageLoadValues = previewValueMap();
+        previewControls.forEach((preview, id) => {
+          const previous = previousControls.get(id);
+          if (!previous || previous.type !== preview.field.type) return;
+          if (preview.input.type === 'checkbox') preview.input.checked = Boolean(previous.value);
+          else preview.input.value = String(previous.value || '');
+          if (Object.prototype.hasOwnProperty.call(previousPageLoadValues, id)) {
+            previewPageLoadValues[id] = previousPageLoadValues[id];
+          }
+        });
+        applyPreviewConditions('On page load');
+        byId('copyAllCsv').disabled = cases.length === 0 || casesAreStale();
+      }
+
+      function validatePreview() {
+        let firstInvalid = null;
+        previewControls.forEach(preview => {
+          const { field, input, error, wrapper } = preview;
+          error.textContent = '';
+          if (wrapper.hidden || input.disabled) return;
+          const value = input.type === 'checkbox' ? input.checked : input.value;
+          let message = '';
+          if (input.required && (input.type === 'checkbox' ? !value : String(value).trim() === '')) {
+            message = field.errorRequired || `${field.name} is required`;
+          } else if (String(value).trim() !== '' && !input.checkValidity()) {
+            message = field.errorInvalid || `Invalid ${field.name.toLowerCase()}`;
+          }
+          if (message) {
+            error.textContent = message;
+            if (!firstInvalid) firstInvalid = input;
+          }
+        });
+        if (firstInvalid) firstInvalid.focus();
+        return !firstInvalid;
+      }
+
+      function runPreviewButton(field) {
+        applyPreviewConditions('On button click');
+        const button = previewButtons.get(field.id);
+        if (button && button.disabled) {
+          byId('previewStatus').textContent = `${field.name} is disabled by a condition.`;
+          return;
+        }
+        byId('previewStatus').textContent = validatePreview()
+          ? `${field.name} action completed in preview.`
+          : 'Fix the highlighted validation errors before continuing.';
+      }
+
+      function resetPreview() {
+        previewControls.forEach(preview => {
+          if (preview.input.type === 'checkbox') preview.input.checked = false;
+          else preview.input.value = '';
+          preview.error.textContent = '';
+        });
+        applyPreviewConditions('On page load');
+        byId('previewStatus').textContent = 'Preview reset.';
+      }
+
+      function updateConditionFieldOptions() {
+        if (!conditions.length) return;
+        conditions = conditions.filter(condition => fields.some(field => field.id === condition.thenTarget)
+          && fields.some(field => field.id === (condition.elseTarget || condition.thenTarget))
+          && condition.rules.every(rule => fields.some(field => field.id === rule.fieldId)));
+        renderConditions();
+        renderPreview();
+      }
+
+      function addCatalogFields(items) {
+        if (fields.length + items.filter(item => !fields.some(field => field.name.toLowerCase() === item.name.toLowerCase())).length > G.MAX_CONTROL_FIELDS) {
+          status(`A screen can contain at most ${G.MAX_CONTROL_FIELDS} controls.`, 'error');
+          return;
+        }
+        let added = 0;
+        items.forEach(item => {
+          if (fields.some(field => field.name.toLowerCase() === item.name.toLowerCase())) return;
+          fields.push(G.createControl(item.name, item.type, item.category, item));
+          added += 1;
+        });
+        renderFields();
+        renderConditions();
+        queueSave();
+        status(added ? `Added ${added} control${added === 1 ? '' : 's'} to your form.` : 'Those controls are already in your form.', added ? 'success' : 'warning');
+      }
+
+      function loadPreset(type, save = true) {
+        if (save && (fields.length || conditions.length || cases.length)
+            && !window.confirm('Replace the current screen fields, conditions, and generated cases with this example?')) return;
+        fields = type === 'registration' ? [
+          G.createControl('Username', 'text', 'Text', { required: true, min: 3, max: 20, errorRequired: 'Username is required', errorInvalid: 'Username must be 3–20 characters' }),
+          G.createControl('Email', 'email', 'Text', { required: true, errorRequired: 'Email is required', errorInvalid: 'Enter a valid email address' }),
+          G.createControl('Password', 'password', 'Text', { required: true, min: 8, max: 16, errorRequired: 'Password is required', errorInvalid: 'Password must be 8–16 characters' }),
+          G.createControl('Confirm password', 'password', 'Text', { required: true, errorRequired: 'Confirm your password', errorInvalid: 'Passwords do not match' }),
+          G.createControl('Terms accepted', 'checkbox', 'Choice', { required: true, errorRequired: 'Accept the terms to continue' }),
+          G.createControl('Register', 'submit', 'Button')
+        ] : [
+          G.createControl('Username', 'text', 'Text', { required: true, min: 3, max: 20, errorRequired: 'Username is required', errorInvalid: 'Invalid username' }),
+          G.createControl('Password', 'password', 'Text', { required: true, min: 8, max: 16, errorRequired: 'Password is required', errorInvalid: 'Invalid password' }),
+          G.createControl('Remember me', 'checkbox', 'Choice'),
+          G.createControl('Login', 'submit', 'Button')
+        ];
+        conditions = [];
+        cases = [];
+        casesModified = false;
+        casesSource = '';
+        renderFields(); renderConditions(); renderCases();
+        if (save) queueSave();
+        status(`Loaded ${type} example.`, 'success');
+      }
+
+      function persist() {
+        try {
+          G.saveDraft(localStorage, { version: 2, mode: 'controls', fields, conditions, cases, casesSource });
+          byId('saveState').textContent = 'Saved locally';
+        } catch (error) {
+          byId('saveState').textContent = 'Save failed';
+          status(`Draft could not be saved: ${error.message}`, 'error');
+        }
+      }
+
+      function queueSave() {
+        byId('saveState').textContent = 'Saving…';
+        const stale = casesAreStale();
+        byId('exportCsv').disabled = cases.length === 0 || stale;
+        byId('exportJson').disabled = cases.length === 0 || stale;
+        byId('copyAllCsv').disabled = cases.length === 0 || stale;
+        if (stale) status('Controls or conditions changed. Regenerate test cases before exporting.', 'warning');
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(persist, 250);
+      }
+
+      function restoreDraft() {
+        try {
+          const draft = G.loadDraft(localStorage);
+          if (!draft) return;
+          if (draft.version === 1 && draft.template && Array.isArray(draft.matrix)) {
+            status('A draft from the previous generator version was found. Load a login or registration example to begin the control workflow.', 'warning');
+            return;
+          }
+          if (draft.version !== 2 || !Array.isArray(draft.fields) || !Array.isArray(draft.conditions) || !Array.isArray(draft.cases)) {
+            throw new Error('Saved control-form draft has an unsupported format.');
+          }
+          fields = G.normalizeControls(draft.fields);
+          conditions = G.validateConditions(draft.conditions, fields);
+          cases = draft.cases;
+          casesSource = typeof draft.casesSource === 'string'
+            ? draft.casesSource
+            : cases.length ? JSON.stringify({ fields, conditions }) : '';
+          renderFields(); renderConditions(); renderCases();
+          status('Saved screen form restored.', 'success');
+        } catch (error) {
+          status(`Saved draft could not be loaded: ${error.message}`, 'warning');
+        }
+      }
+
+      function renderTabs() {
+        const tabs = byId('testTypeTabs');
+        tabs.replaceChildren();
+        ['All', ...testTypes].forEach(type => {
+          const button = document.createElement('button');
+          button.type = 'button'; button.textContent = type;
+          button.setAttribute('aria-pressed', String(activeType === type));
+          button.addEventListener('click', () => { activeType = type; renderTabs(); renderCases(); });
+          tabs.appendChild(button);
+        });
+      }
+
+      function makeCaseEditor(testCase, key, labelText, multiline = false) {
+        const input = multiline ? document.createElement('textarea') : document.createElement('input');
+        input.value = testCase[key] || '';
+        input.setAttribute('aria-label', `${testCase.id} ${labelText}`);
+        input.addEventListener('input', () => { testCase[key] = input.value; testCase.edited = true; casesModified = true; queueSave(); });
+        const cell = document.createElement('td');
+        cell.appendChild(input);
+        return cell;
+      }
+
+      function renderCases() {
+        const list = byId('testList');
+        list.replaceChildren();
+        const filtered = cases.filter(item => activeType === 'All' || item.testType === activeType);
+        const stale = casesAreStale();
+        const summaryOrder = ['Positive', 'Boundary', 'Negative', 'Equivalence Partitioning', 'Decision Table', 'State Transition', 'Error Guessing', 'Condition', 'Use Case', 'Decision Table Matrix'];
+        const summaryLabels = {
+          Positive: 'positive', Boundary: 'boundary', Negative: 'negative',
+          'Equivalence Partitioning': 'equivalence', 'Decision Table': 'decision table',
+          'State Transition': 'state transition', 'Error Guessing': 'error guessing',
+          Condition: 'condition', 'Use Case': 'use case', 'Decision Table Matrix': 'decision table matrix'
+        };
+        const counts = cases.reduce((result, item) => {
+          result[item.testType] = (result[item.testType] || 0) + 1;
+          return result;
+        }, {});
+        byId('testSummary').textContent = cases.length
+          ? `${cases.length} test cases · ${summaryOrder.filter(type => counts[type]).map(type => `${counts[type]} ${summaryLabels[type]}`).join(' · ')}`
+          : 'No test cases generated yet.';
+        byId('exportCsv').disabled = cases.length === 0 || stale;
+        byId('exportJson').disabled = cases.length === 0 || stale;
+        byId('copyAllCsv').disabled = cases.length === 0 || stale;
+        if (stale) {
+          const warning = document.createElement('tr');
+          warning.className = 'status';
+          warning.dataset.state = 'warning';
+          const warningCell = document.createElement('td');
+          warningCell.colSpan = 8;
+          warningCell.textContent = 'The screen controls or conditions changed after generation. Regenerate before exporting these cases.';
+          warning.appendChild(warningCell);
+          list.appendChild(warning);
+        }
+        if (!filtered.length) {
+          const empty = document.createElement('tr');
+          const cell = document.createElement('td'); cell.className = 'empty'; cell.colSpan = 8;
+          cell.textContent = cases.length ? `No ${activeType} cases. Generate cases or choose another filter.` : 'Add screen controls and select Generate test cases.';
+          empty.appendChild(cell);
+          list.appendChild(empty); return;
+        }
+        filtered.forEach(testCase => {
+          const row = document.createElement('tr'); row.className = 'test-card';
+          const id = document.createElement('td'); id.textContent = testCase.id;
+          const field = document.createElement('td'); field.className = 'result-field';
+          field.appendChild(document.createTextNode(testCase.fieldName));
+          const fieldType = document.createElement('small'); fieldType.textContent = testCase.fieldType;
+          field.appendChild(fieldType);
+          row.append(id, field, makeCaseEditor(testCase, 'title', 'Test case title (scenario)'),
+            makeCaseEditor(testCase, 'input', 'Input / scenario'), makeCaseEditor(testCase, 'expectedResult', 'Expected result', true));
+          const condition = document.createElement('td'); condition.className = 'result-condition'; condition.textContent = testCase.condition || '';
+          row.appendChild(condition);
+          const type = document.createElement('td'); type.className = 'result-type'; type.dataset.type = testCase.testType;
+          type.textContent = testCase.testType;
+          row.appendChild(type);
+          const actions = document.createElement('td'); actions.className = 'result-actions';
+          const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'danger'; remove.textContent = 'Remove';
+          remove.setAttribute('aria-label', `Remove ${testCase.id}`);
+          remove.addEventListener('click', () => { cases = cases.filter(item => item.id !== testCase.id); casesModified = true; renderCases(); queueSave(); });
+          actions.appendChild(remove);
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      }
+
+      function generate() {
+        try {
+          if ((casesModified || cases.some(testCase => testCase.edited))
+              && !window.confirm('Regenerating will replace your edited test cases. Continue?')) return;
+          fields.forEach(G.normalizeControl);
+          G.validateConditions(conditions, fields);
+          cases = G.generateFieldTestCases(fields, conditions);
+          casesSource = currentCasesSource();
+          casesModified = false;
+          renderCases(); renderTabs(); queueSave();
+          status(`Generated ${cases.length} test cases: ${fields.length} controls × ${G.TEST_TYPES.length} types plus ${conditions.length * 2} IF/ELSE condition cases.`, 'success');
+        } catch (error) { status(error.message, 'error'); }
+      }
+
+      byId('addField').addEventListener('click', () => {
+        if (fields.length >= G.MAX_CONTROL_FIELDS) { status(`A screen can contain at most ${G.MAX_CONTROL_FIELDS} controls.`, 'error'); return; }
+        fields.push(G.createControl('New field', 'text', 'Text'));
+        renderFields(); queueSave();
+      });
+      byId('categoryFilter').addEventListener('change', updateCounts);
+      byId('controlSearch').addEventListener('input', updateCounts);
+      byId('addAllVisible').addEventListener('click', () => addCatalogFields(visibleCatalog()));
+      byId('clearFields').addEventListener('click', () => {
+        if ((!fields.length && !conditions.length && !cases.length)
+            || !window.confirm('Clear every field, condition, and generated case?')) return;
+        fields = []; conditions = []; cases = []; casesModified = false; casesSource = '';
+        renderFields(); renderConditions(); renderCases(); queueSave();
+        status('All screen fields and generated cases were cleared.', 'success');
+      });
+      byId('loadLogin').addEventListener('click', () => loadPreset('login'));
+      byId('loadRegistration').addEventListener('click', () => loadPreset('registration'));
+      byId('addCondition').addEventListener('click', () => addCondition());
+      byId('quickRule').addEventListener('click', () => {
+        if (conditions.length >= G.MAX_CONDITIONS) { status(`A screen can have at most ${G.MAX_CONDITIONS} conditions.`, 'error'); return; }
+        const requiredField = fields.find(field => field.required);
+        const buttonField = fields.find(field => ['submit','button'].includes(field.type));
+        if (!requiredField || !buttonField) {
+          status('Add at least one required control and a button control to apply this quick rule.', 'warning');
+          return;
+        }
+        conditions.push({
+          id: `condition-${Date.now()}`,
+          rules: fields.filter(field => field.required).map((field, index) => ({
+            fieldId: field.id, operator: 'is empty', value: '', join: index === 0 ? 'AND' : 'OR'
+          })),
+          thenAction: 'Disable', thenTarget: buttonField.id, apply: 'On field change',
+          elseAction: 'Enable', elseTarget: buttonField.id
+        });
+        renderConditions(); renderPreview(); queueSave(); status('Quick rule added for empty required fields.', 'success');
+      });
+      byId('generateCases').addEventListener('click', generate);
+      byId('generateMatrix').addEventListener('click', generateDecisionMatrix);
+      byId('resetPreview').addEventListener('click', resetPreview);
+      byId('copyAllCsv').addEventListener('click', async () => {
+        try {
+          if (casesAreStale()) throw new Error('Regenerate cases after changing controls or conditions before copying.');
+          if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+            throw new Error('Clipboard access is unavailable in this browser context.');
+          }
+          await navigator.clipboard.writeText(G.exportControlCsv(cases));
+          byId('previewStatus').textContent = 'All test cases copied as CSV.';
+        } catch (error) {
+          byId('previewStatus').textContent = `CSV copy failed: ${error.message}`;
+        }
+      });
+      byId('exportCsv').addEventListener('click', () => {
+        try {
+          if (casesAreStale()) throw new Error('Regenerate cases after changing controls or conditions before exporting.');
+          const blob = new Blob([G.exportControlCsv(cases)], { type: 'text/csv;charset=utf-8' });
+          const url = URL.createObjectURL(blob); const link = document.createElement('a');
+          link.href = url; link.download = 'qarp-screen-test-cases.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+          status('CSV test cases exported.', 'success');
+        } catch (error) { status(`CSV export failed: ${error.message}`, 'error'); }
+      });
+      byId('exportJson').addEventListener('click', () => {
+        try {
+          if (casesAreStale()) throw new Error('Regenerate cases after changing controls or conditions before exporting.');
+          const blob = new Blob([G.exportControlJson(fields, conditions, cases)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob); const link = document.createElement('a');
+          link.href = url; link.download = 'qarp-screen-test-cases.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+          status('JSON test cases exported.', 'success');
+        } catch (error) { status(`JSON export failed: ${error.message}`, 'error'); }
+      });
+      byId('resetDraft').addEventListener('click', () => {
+        if (!window.confirm('Clear saved screen controls, conditions, and test cases?')) return;
+        try { clearTimeout(saveTimer); G.clearDraft(localStorage); fields = []; conditions = []; cases = []; casesModified = false; casesSource = ''; renderFields(); renderConditions(); renderCases(); byId('saveState').textContent = 'Draft cleared'; status('Draft cleared.', 'success'); }
+        catch (error) { status(`Draft could not be cleared: ${error.message}`, 'error'); }
+      });
+
+      fillCategoryFilter();
+      loadPreset('login', false);
+      restoreDraft();
+      renderTabs();
+    })();
+  </script>
+</body>
+</html>

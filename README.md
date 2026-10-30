@@ -132,6 +132,14 @@ The advisor is local-only and read-only: it does not accept a filesystem path, e
 
 These are static-analysis suggestions, not guaranteed defects or measured performance improvements. Review them manually, then verify code changes with the project's tests and benchmarks.
 
+## Test Case Generator
+
+Open **Test Case Generator** from the dashboard Quick Links to model a screen's controls, rules, and validation messages. Filter the 124-control built-in catalog across eight categories or search by name, add individual fields or the visible catalog set, and load login/registration examples. For each field, configure its type, required state, min/max or option rules, and required/invalid error messages.
+
+Add IF/ELSE conditions between fields using AND/OR rules, actions, targets, and apply timing. Generate eight test-design techniques per field (positive, boundary, negative, equivalence partitioning, decision table, state transition, error guessing, and use case), plus condition cases for IF/ELSE rules. **Generate decision table matrix** separately to create the full Cartesian product of Valid, Invalid, and Empty states across the form's input controls (for example, three fields produce 27 rows). Required and invalid rules determine expected validation messages; optional empty fields are treated as valid. Buttons and hidden controls are excluded from the matrix. The matrix is bounded by the overall 5,000-case limit and reports when the combination count is too large. Results appear in a compact table with ID, field, scenario, input, expected result, IF/ELSE condition, and type, with live totals by type. Field rules are validated before generation; changing a field or condition marks existing cases stale and disables export until they are regenerated. Filter generated tests by technique, edit or remove cases, and export CSV or versioned JSON with the control definitions and conditions included. CSV escapes cell syntax and protects spreadsheet formula-like values. Drafts are stored only in this browser's local storage; use **Reset draft** to clear them. Storage and validation failures are shown explicitly. These are suggested test cases, not executed tests.
+
+The **Live preview** panel renders the current form controls and evaluates IF/ELSE actions without submitting to or changing an application. Conditions can run on page load (against the initial preview values), after field changes, or when a preview button is clicked. Use **Reset preview** to clear preview inputs and restore page-load behavior. **Copy all as CSV** copies the current, non-stale generated cases when browser clipboard access is available.
+
 ## Record a Website Walkthrough
 
 1. Open **Walkthrough Recorder** from the dashboard navigation.

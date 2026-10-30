@@ -1,0 +1,106 @@
+# Plan-to-Tasks Traceability Checkpoint
+metadata:
+  generated: "2026-10-30"
+  source_plan: "docs/TEST-CASE-GENERATOR-PLAN.md"
+  target_tasks: "Task breakdown embedded in docs/TEST-CASE-GENERATOR-PLAN.md"
+
+summary:
+  total_plan_items: 6
+  covered_plan_items: 6
+  missing_plan_items: 0
+  coverage_percentage: 100.0
+  total_tasks_generated: 12
+  orphan_tasks: 0
+
+phases:
+  - phase_id: "Phase-1"
+    phase_name: "Shared feature foundation"
+    items:
+      - item_id: "1.1"
+        description: "Define the test-case and matrix model."
+        tasks:
+          - task_id: "T001"
+            description: "Define versioned test-case, template, and matrix contract."
+          - task_id: "T002"
+            description: "Implement deterministic matrix parsing, combinations, validation, and IDs."
+        notes: ""
+      - item_id: "1.2"
+        description: "Add bounded persistence and exports."
+        tasks:
+          - task_id: "T003"
+            description: "Implement versioned local draft persistence and error states."
+          - task_id: "T004"
+            description: "Implement CSV and JSON serialization helpers."
+        notes: ""
+  - phase_id: "Phase-2"
+    phase_name: "User Story 1: Create and review cases"
+    items:
+      - item_id: "2.1"
+        description: "Build the generator page and matrix workflow."
+        tasks:
+          - task_id: "T005"
+            description: "Create themed and accessible generator page."
+          - task_id: "T006"
+            description: "Implement template/matrix UI, validation, estimate, and capped generation."
+        notes: ""
+      - item_id: "2.2"
+        description: "Add review, edit, save, and export interactions."
+        tasks:
+          - task_id: "T007"
+            description: "Implement safe case rendering, editing, persistence, and confirmations."
+          - task_id: "T008"
+            description: "Wire CSV/JSON downloads and status feedback."
+        notes: ""
+  - phase_id: "Phase-3"
+    phase_name: "Integration, verification, and documentation"
+    items:
+      - item_id: "3.1"
+        description: "Integrate dashboard navigation and docs."
+        tasks:
+          - task_id: "T009"
+            description: "Add Quick Link and README feature guidance."
+        notes: ""
+      - item_id: "3.2"
+        description: "Verify behavior with focused tests."
+        tasks:
+          - task_id: "T010"
+            description: "Add focused unit tests."
+          - task_id: "T011"
+            description: "Add focused E2E tests."
+          - task_id: "T012"
+            description: "Run targeted suites and resolve regressions."
+        notes: ""
+
+missing_plan_items: []
+orphan_tasks: []
+
+upstream_trace:
+  - plan_item: "1.1"
+    source_requirements: ["REQ-003", "REQ-004"]
+    tasks: ["T001", "T002"]
+    full_trace: "REQ-003,REQ-004 → Phase-1.1 → T001,T002"
+  - plan_item: "1.2"
+    source_requirements: ["REQ-006", "REQ-007", "REQ-008"]
+    tasks: ["T003", "T004"]
+    full_trace: "REQ-006,REQ-007,REQ-008 → Phase-1.2 → T003,T004"
+  - plan_item: "2.1"
+    source_requirements: ["REQ-001", "REQ-002", "REQ-003", "REQ-004", "REQ-008", "REQ-009"]
+    tasks: ["T005", "T006"]
+    full_trace: "REQ-001,REQ-002,REQ-003,REQ-004,REQ-008,REQ-009 → Phase-2.1 → T005,T006"
+  - plan_item: "2.2"
+    source_requirements: ["REQ-005", "REQ-006", "REQ-007", "REQ-008"]
+    tasks: ["T007", "T008"]
+    full_trace: "REQ-005,REQ-006,REQ-007,REQ-008 → Phase-2.2 → T007,T008"
+  - plan_item: "3.1"
+    source_requirements: ["REQ-001", "REQ-002", "REQ-010"]
+    tasks: ["T009"]
+    full_trace: "REQ-001,REQ-002,REQ-010 → Phase-3.1 → T009"
+  - plan_item: "3.2"
+    source_requirements: ["REQ-008", "REQ-009", "REQ-010"]
+    tasks: ["T010", "T011", "T012"]
+    full_trace: "REQ-008,REQ-009,REQ-010 → Phase-3.2 → T010,T011,T012"
+
+validation:
+  passed: true
+  errors: []
+  warnings: []
